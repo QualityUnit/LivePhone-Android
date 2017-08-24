@@ -1,0 +1,7 @@
+<manifest package="com.qualityunit.common.android.restful"
+          xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application android:allowBackup="true" />
+
+
+</manifest>

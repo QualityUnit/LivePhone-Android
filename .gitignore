@@ -1,0 +1,14 @@
+*.iml
+.gradle
+*.log
+*.apk
+*.ap*
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+/.idea
+google-services.json
+cfg.properties

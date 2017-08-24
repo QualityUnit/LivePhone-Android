@@ -1,0 +1,49 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '25.0.0'
+    defaultConfig {
+        applicationId "com.qualityunit.android.liveagentphone"
+        minSdkVersion 18
+        targetSdkVersion 22 // be carefull, keep it less than 23 (http://forum.unity3d.com/threads/systeminfo-deviceuniqueidentifier-android-6-0.367028/)
+        versionCode 4
+        versionName "1.0.3-beta"
+        ndk {
+            abiFilters "armeabi", "armeabi-v7a", "x86"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+    lintOptions {
+        disable 'MissingTranslation'
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    testCompile 'junit:junit:4.12'
+    compile project(path: ':pjsua')
+    releaseCompile project(path: ':restful', configuration: 'release')
+    debugCompile project(path: ':restful', configuration: 'debug')
+    compile 'com.android.support:appcompat-v7:23.4.0'
+    compile 'com.android.support:design:23.4.0'
+    compile 'com.google.android.gms:play-services-gcm:9.0.0'
+    compile 'net.frakbot:glowpadbackport:2.1.1'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'fr.turri:jISO8601:0.2'
+    // test gcm
+    provided 'org.apache.commons:commons-io:1.3.2'
+}

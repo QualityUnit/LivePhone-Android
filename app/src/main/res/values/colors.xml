@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#F6921E</color>
+    <color name="primaryDark">#EF6C00</color>
+    <color name="accent">#5E7C88</color>
+    <color name="error">#F44336</color>
+    <color name="ok">#4CAF50</color>
+    <color name="callButtonRed">#F44336</color>
+    <color name="callButtonGreen">#4CAF50</color>
+    <color name="textPrimaryOnDark">#FFFFFFFF</color>
+    <color name="textSecondaryOnDark">#88FFFFFF</color>
+    <color name="textPrimaryOnWhite">#888888</color>
+    <color name="textSecondaryOnWhite">#888888</color>
+</resources>

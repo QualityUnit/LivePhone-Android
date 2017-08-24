@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/primary">
+
+    <TextView
+        android:id="@+id/tv_calling_as_label"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textStyle="bold"
+        android:text="@string/calling_as"
+        android:textColor="@color/textSecondaryOnDark"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="15dp"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+    <TextView
+        android:id="@+id/tv_calling_as"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textPrimaryOnDark"
+        android:layout_gravity="center_horizontal"
+        android:maxLines="1"
+        android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+    <TextView
+        android:id="@+id/tv_calling_to_label"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textStyle="bold"
+        android:text="@string/calling_to"
+        android:textColor="@color/textSecondaryOnDark"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="15dp"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+    <TextView
+        android:id="@+id/tv_calling_to"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textPrimaryOnDark"
+        android:layout_gravity="center_horizontal"
+        android:maxLines="1"
+        android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+    <TextView
+        android:id="@+id/tv_receiving_call_from_label"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:textStyle="bold"
+        android:text="@string/receiving_call_from"
+        android:textColor="@color/textSecondaryOnDark"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="15dp"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+    <TextView
+        android:id="@+id/tv_receiving_call_from"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textPrimaryOnDark"
+        android:layout_gravity="center_horizontal"
+        android:maxLines="1"
+        android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:gravity="center_vertical"
+        android:layout_marginTop="20dp"
+        android:background="@color/primaryDark"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/ib_speaker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:layout_gravity="center"
+                android:background="#00000000"
+                android:src="@drawable/ic_calling_speaker_24dp"/>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/ib_mute"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_calling_mic_off_24dp"
+                android:background="#00000000"
+                />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/ib_dialpad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:layout_gravity="center"
+                android:background="#00000000"
+                android:src="@drawable/ic_calling_dialpad_24dp"/>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:visibility="gone">
+
+            <ImageButton
+                android:id="@+id/ib_hold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:layout_gravity="center"
+                android:background="#00000000"
+                android:src="@drawable/ic_calling_pause_24dp"/>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="center"
+        android:layout_weight="1.0">
+
+        <net.frakbot.glowpadbackport.GlowPadView
+            android:id="@+id/glowPad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            app:gravity="center"
+            app:targetDrawables="@array/incoming_call_widget_2way_targets"
+            app:handleDrawable="@drawable/ic_glowpad_in_call_touch_handle"
+            app:innerRadius="@dimen/glowpadview_inner_radius"
+            app:outerRadius="@dimen/glowpadview_target_placement_radius"
+            app:outerRingDrawable="@drawable/ic_glowpad_outerring"
+            app:snapMargin="@dimen/glowpadview_snap_margin"
+            app:vibrationDuration="20"
+            app:feedbackCount="1"
+            app:glowRadius="@dimen/glowpadview_glow_radius"
+            app:pointDrawable="@drawable/ic_glowpad_glowdot"/>
+
+        <LinearLayout
+            android:id="@+id/ll_callState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/idle"
+                android:textColor="@color/textSecondaryOnDark"
+                android:layout_gravity="center"
+                android:maxLines="2"
+                android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+            <Chronometer
+                android:id="@+id/ch_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="15dp"
+                android:format="KK:MM:SS"
+                android:visibility="gone"
+                android:textColor="@color/textPrimaryOnDark"
+                android:layout_gravity="center"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+
+    </FrameLayout>
+
+</LinearLayout>

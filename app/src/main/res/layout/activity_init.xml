@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center">
+
+    <LinearLayout
+        android:id="@+id/pb_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_margin="10dp"
+            android:paddingTop="50dp"
+            android:tint="@color/primary"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_phone_icon"/>
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/tv_loading_status"
+            android:layout_width="wrap_content"
+            android:maxWidth="500dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_gravity="center"
+            android:paddingLeft="25dp"
+            android:paddingRight="25dp"
+            android:gravity="center_horizontal"
+            android:textColor="@color/error"
+            android:textAppearance="@android:style/TextAppearance.Large"/>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/b_quit"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:theme="@style/LiveAgent.Button"
+                android:text="@string/quit"/>
+
+            <Button
+                android:id="@+id/b_retry"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:theme="@style/LiveAgent.Button"
+                android:text="@string/retry" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>
