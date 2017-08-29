@@ -2,6 +2,7 @@ package com.qualityunit.android.liveagentphone.service;
 
 import android.accounts.AccountManager;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -17,6 +18,8 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,6 +27,7 @@ import android.util.Log;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.call.CallingActivity;
+import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.qualityunit.android.sip.SipAccount;
@@ -41,6 +45,7 @@ import org.pjsip.pjsua2.pjsip_inv_state;
 import org.pjsip.pjsua2.pjsip_status_code;
 import org.pjsip.pjsua2.pjsua_call_flag;
 
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -100,6 +105,7 @@ public class CallingService extends Service implements SipAppObserver {
     private boolean isMute;
     private boolean isSpeaker;
     private boolean isHold;
+    private boolean isMissedCall;
     private long startTime = System.currentTimeMillis();
     private String lastState = "";
     private String notificationContentText;
@@ -109,7 +115,7 @@ public class CallingService extends Service implements SipAppObserver {
     private final Handler mainHandler = new Handler();
     private volatile boolean hangingUpCall;
     private volatile boolean waitingToCall;
-    private volatile boolean finnishingService;
+    private volatile boolean finishingService;
     private String sipHost;
     private String callingPrefix;
     private String calleeNumber;
@@ -176,7 +182,7 @@ public class CallingService extends Service implements SipAppObserver {
                     sendDtfm(intent.getStringExtra("character"));
                     break;
                 case COMMANDS.HANGUP_CALL:
-                    hangupCallAndFinnishService();
+                    hangupCallAndFinishService();
                     break;
                 case COMMANDS.ADJUST_INCALL_VOLUME:
                     boolean increase = intent.getBooleanExtra("increase", true);
@@ -359,7 +365,7 @@ public class CallingService extends Service implements SipAppObserver {
                             Log.d(TAG, "#### Lib initialized successfully");
                         } catch (final Exception e) {
                             setError("Error while initializing sip lib", e);
-                            finnishService();
+                            finishService();
                         }
                     }
 
@@ -377,7 +383,7 @@ public class CallingService extends Service implements SipAppObserver {
                             Log.d(TAG, "#### Account registration fired");
                         } catch (final Exception e) {
                             setError("Error while creating and registering sipAccount", e);
-                            finnishService();
+                            finishService();
                         }
                     }
                     // wait for registration callback and continue from listener
@@ -385,7 +391,7 @@ public class CallingService extends Service implements SipAppObserver {
             });
         } catch (final Exception e) {
             setError("Error while initializing sip lib" + e.getMessage(), e);
-            finnishService();
+            finishService();
         }
     }
 
@@ -436,7 +442,7 @@ public class CallingService extends Service implements SipAppObserver {
                 } catch (final Exception e) {
                     call.delete();
                     setError("Error while making SIP call:" + e.getMessage(), e);
-                    finnishService();
+                    finishService();
                 }
             }
         });
@@ -450,7 +456,7 @@ public class CallingService extends Service implements SipAppObserver {
             public void run() {
                 if (waitingToCall) {
                     Log.d(TAG, "#### Hanging up call because waiting reached " + WAITING_TO_CALL_MILLIS + " seconds");
-                    finnishService();
+                    finishService();
                 }
             }
         }, WAITING_TO_CALL_MILLIS);
@@ -474,6 +480,12 @@ public class CallingService extends Service implements SipAppObserver {
                     prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
                     sipCurrentCall.answer(prm);
                     Log.d(TAG, "#### Call answered");
+                    mainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            isMissedCall = false;
+                        }
+                    });
                     setCallState(CALLBACKS.CALL_ESTABLISHED);
                 } catch (Exception e) {
                 }
@@ -491,7 +503,7 @@ public class CallingService extends Service implements SipAppObserver {
         });
     }
 
-    private void hangupCallAndFinnishService() {
+    private void hangupCallAndFinishService() {
         if (hangingUpCall) {
             Log.d(TAG, "#### Hanging up already started");
             return;
@@ -510,13 +522,13 @@ public class CallingService extends Service implements SipAppObserver {
                         Log.d(TAG, "#### Call successfully hanged up");
                     } catch (final Exception e) {
                         setError("Error while hanging up call", e);
-                        finnishService();
+                        finishService();
                     }
                 } else {
-                    finnishService();
+                    finishService();
                 }
 
-                // finnishing of service is called from notifyCallState
+                // finishing of service is called from notifyCallState
             }
         });
     }
@@ -576,15 +588,15 @@ public class CallingService extends Service implements SipAppObserver {
         });
     }
 
-    private void finnishService() {
-        if (finnishingService) {
+    private void finishService() {
+        if (finishingService) {
             Log.d(TAG, "#### Finnishing already started");
             return;
         }
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                finnishingService = true;
+                finishingService = true;
                 if (sipCore != null) {
                     Log.d(TAG, "#### Deinitializing library");
                     sipCore.deinit();
@@ -648,6 +660,38 @@ public class CallingService extends Service implements SipAppObserver {
                 }
             }
         });
+    }
+
+    private void showMissedCall(String remoteNumber) {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext());
+        String missedCallStr = getString(R.string.missed_call);
+        notificationBuilder.setContentTitle(missedCallStr);
+        notificationBuilder.setContentText(remoteNumber);
+        notificationBuilder.setTicker(missedCallStr);
+        notificationBuilder.setSmallIcon(R.drawable.ic_phone_icon);
+//        notificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+        notificationBuilder.setAutoCancel(true);
+
+        // Big view
+//        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+//        String[] lines = { "line 1","line 2" };
+//        inboxStyle.setBigContentTitle("");
+//        for (String line : lines) {
+//            inboxStyle.addLine(line);
+//        }
+//        notificationBuilder.setStyle(inboxStyle);
+
+        Intent notificationIntent = new Intent(getApplicationContext(), DialerActivity.class);
+        notificationIntent.putExtra("number", remoteNumber);
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
+        stackBuilder.addParentStack(DialerActivity.class);
+        stackBuilder.addNextIntent(notificationIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_CANCEL_CURRENT);
+        notificationBuilder.setContentIntent(resultPendingIntent);
+        NotificationManager notificationManager;
+        notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
     }
 
     private void setCallState(final String callback) {
@@ -738,13 +782,14 @@ public class CallingService extends Service implements SipAppObserver {
                         mainHandler.post(new Runnable() {
                             @Override
                             public void run() {
+                                isMissedCall = true;
                                 startActivity(createCallingActivityIntent());
                             }
                         });
                     }
                 } catch (Exception e) {
                     setError("Error while notifying incoming call", e);
-                    finnishService();
+                    finishService();
                 }
             }
         });
@@ -778,7 +823,7 @@ public class CallingService extends Service implements SipAppObserver {
                     }
                 } catch (CallingException e) {
                     Logger.e(TAG, e);
-                    finnishService();
+                    finishService();
                 }
             }
         });
@@ -809,7 +854,15 @@ public class CallingService extends Service implements SipAppObserver {
             }
             else if (state == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
                 setCallState(CALLBACKS.CALL_ENDED);
-                finnishService();
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isMissedCall) {
+                            showMissedCall(callerNumber);
+                        }
+                    }
+                });
+                finishService();
             }
         } catch (Exception e) {
             setError("Error while getting info about calling", e);

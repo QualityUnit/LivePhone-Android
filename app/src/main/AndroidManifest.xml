@@ -24,6 +24,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:process="com.qualityunit.android.liveagentphone.main"
         android:theme="@style/AppTheme">
 
         <meta-data
@@ -71,6 +72,7 @@
 
         <service
             android:name=".service.CallingService"
+            android:process="com.qualityunit.android.liveagentphone.call"
             android:exported="false"
             >
         </service>
@@ -127,6 +129,7 @@
 
         <activity
             android:name=".ui.call.CallingActivity"
+            android:process="com.qualityunit.android.liveagentphone.call"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
