@@ -81,9 +81,13 @@ public class ApiCall<T> {
             if (TextUtils.isEmpty(url)) {
                 removeAccountAndShowLogin();
             } else if (TextUtils.isEmpty(token)) {
-                makeReCallAuthorized(ErrorCode.UNAUTHORIZED, "Empty token");
+                makeReCallAuthorized(ErrorCode.UNAUTHORIZED, "Empty token", token);
             } else {
-                pingPong.onResponse(new LoaderResult(pingPong.onRequest(url, token), ErrorCode.OK));
+                Response resp = (Response) pingPong.onRequest(url, token);
+                if ((resp.code() / 100) != 2) {
+                    throw new ApiException(resp.message(), resp.code());
+                }
+                pingPong.onResponse(new LoaderResult(resp, resp.code()));
             }
         } catch (ApiException e) {
             int httpCode = e.getCode();
@@ -91,7 +95,7 @@ public class ApiCall<T> {
             switch (httpCode) {
                 case ErrorCode.UNAUTHORIZED:
                 case ErrorCode.FORBIDDEN:
-                    makeReCallAuthorized(httpCode, httpMessage);
+                    makeReCallAuthorized(httpCode, httpMessage, token);
                     break;
                 case ErrorCode.NOT_FOUND:
                     // fallback
@@ -118,7 +122,7 @@ public class ApiCall<T> {
         }
     }
 
-    private void makeReCallAuthorized(int httpCode, String httpMessage) {
+    private void makeReCallAuthorized(int httpCode, String httpMessage, String token) {
         if (reCalledAuthorize) {
             // if calling was fired second time with invalidating token then credetials are not valid
             if (activity != null) {
@@ -129,7 +133,7 @@ public class ApiCall<T> {
         }
         else {
             reCalledAuthorize = true;
-            accountManager.invalidateAuthToken(account.type, null);
+            accountManager.invalidateAuthToken(account.type, token);
             executeAuthorized(pingPong); // executeAuthorized again
         }
     }

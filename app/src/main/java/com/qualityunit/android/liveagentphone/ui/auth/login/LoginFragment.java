@@ -364,9 +364,8 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         final AccountManager accountManager = AccountManager.get(getActivity());
         String typedEmail = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
         final Account account = LaAccount.setAccount(typedEmail, intent.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE));
-        accountManager.addAccountExplicitly(account, null, null);
+        accountManager.addAccountExplicitly(account, intent.getStringExtra(AuthActivity.PARAM_USER_PASS), null);
         accountManager.setAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, intent.getStringExtra(AccountManager.KEY_AUTHTOKEN));
-        accountManager.setPassword(account, intent.getStringExtra(AuthActivity.PARAM_USER_PASS));
         accountManager.setUserData(account, LaAccount.USERDATA_URL_API, intent.getStringExtra(LaAccount.USERDATA_URL_API));
         String typedUrl = intent.getStringExtra(LaAccount.USERDATA_URL_TYPED);
         accountManager.setUserData(account, LaAccount.USERDATA_URL_TYPED, typedUrl);
