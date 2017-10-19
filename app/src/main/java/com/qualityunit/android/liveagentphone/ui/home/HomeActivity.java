@@ -109,7 +109,6 @@ public class HomeActivity extends AppCompatActivity {
 
     public void openDialer(String number) {
         startActivity(new Intent(this, DialerActivity.class).putExtra("number", number));
-        overridePendingTransition(0, 0);
     }
 
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {

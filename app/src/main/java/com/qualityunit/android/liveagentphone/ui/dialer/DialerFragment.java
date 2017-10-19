@@ -30,6 +30,7 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -128,18 +129,18 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
     /**
      * Loader for populating outgoing phones
      */
-    private static class PhonesLoader extends GenericLoader<List<OutGoingItem>> {
+    private static class PhonesLoader extends GenericLoader<Response> {
 
-        private static final boolean CACHE_ENABLED = true;
-        private static List<OutGoingItem> data = new ArrayList<>();
+        private static final boolean CACHE_ENABLED = false;
+        private static Response response;
 
         public PhonesLoader(Activity activity) {
             super(activity, activity, CACHE_ENABLED);
         }
 
         @Override
-        protected List<OutGoingItem> requestData(String basePath, String token) throws IOException {
-            if (data.isEmpty()) {
+        protected Response requestData(String basePath, String token) throws IOException {
+            if (response == null) {
                 JSONObject filters = new JSONObject();
                 try {
                     filters.put("type", "S"); // default
@@ -151,30 +152,9 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
                         .GET(basePath, "/phone_numbers", token)
                         .addEncodedParam("_filters", URLEncoder.encode(filters.toString(), "utf-8"))
                         .build();
-                Response response = client.newCall(request).execute();
-                if (response.isSuccessful()) {
-                    if (response.body() == null) {
-                        Logger.e(TAG, Tools.formatError("Missing response body"));
-                        return data;
-                    }
-                    try {
-                        JSONArray array = new JSONArray(response.body().string());
-                        for (int i = 0; i < array.length(); i++) {
-                            JSONObject jsonItem = array.getJSONObject(i);
-                            data.add(new OutGoingItem(
-                                    Tools.getStringFromJson(jsonItem, "id"),
-                                    Tools.getStringFromJson(jsonItem, "number"),
-                                    Tools.getStringFromJson(jsonItem, "name"),
-                                    Tools.getStringFromJson(jsonItem, "departmentid"),
-                                    Tools.fixDecimalsBefore(Tools.getIntFromJson(jsonItem, "dial_out_prefix"), 2)
-                            ));
-                        }
-                    } catch (IOException | JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
+                response = client.newCall(request).execute();
             }
-            return data;
+            return response;
         }
 
     }
@@ -182,59 +162,75 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
     /**
      * LoaderCallbacks for PhonesGetLoader
      */
-    private class PhonesLoaderCallbacks implements LoaderManager.LoaderCallbacks<LoaderResult<List<OutGoingItem>>> {
+    private class PhonesLoaderCallbacks implements LoaderManager.LoaderCallbacks<LoaderResult<Response>> {
 
-        private final String TAG = PhonesLoaderCallbacks.class.getSimpleName();
 
         @Override
-        public Loader<LoaderResult<List<OutGoingItem>>> onCreateLoader(int id, Bundle args) {
+        public Loader<LoaderResult<Response>> onCreateLoader(int id, Bundle args) {
             return new PhonesLoader(activity);
         }
 
         @Override
-        public void onLoadFinished(Loader<LoaderResult<List<OutGoingItem>>> loader, LoaderResult<List<OutGoingItem>> data) {
-            final List<OutGoingItem> list = data.getObject();
+        public void onLoadFinished(Loader<LoaderResult<Response>> loader, LoaderResult<Response> data) {
+            if (data.getObject().body() == null) {
+                String errMsg = "Missing response body";
+                Logger.e(TAG, Tools.formatError(errMsg));
+                Toast.makeText(getContext(), errMsg, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            final List<OutGoingItem> list = new ArrayList<>();
+            try {
+                JSONArray array = new JSONArray(data.getObject().body().string()); // WARNING - string() can be performed only once
+                for (int i = 0; i < array.length(); i++) {
+                    JSONObject jsonItem = array.getJSONObject(i);
+                    list.add(new OutGoingItem(
+                            Tools.getStringFromJson(jsonItem, "id"),
+                            Tools.getStringFromJson(jsonItem, "number"),
+                            Tools.getStringFromJson(jsonItem, "name"),
+                            Tools.getStringFromJson(jsonItem, "departmentid"),
+                            Tools.fixDecimalsBefore(Tools.getIntFromJson(jsonItem, "dial_out_prefix"), 2)
+                    ));
+                }
+            } catch (IOException | JSONException e) {
+                Toast.makeText(activity, "Could not load phone numbers", Toast.LENGTH_LONG).show();
+                return;
+            }
             activity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (list != null) {
-                        if (list.isEmpty()) {
-                            tvOutgoingnumber.setText(getString(R.string.no_outgoing_numbers));
-                        }
-                        else {
-                            if (list.size() == 1) {
-                                outGoingNumber = list.get(0);
-                                tvOutgoingnumber.setText(createSpinText(outGoingNumber));
-                            }
-                            else {
-                                final OutGoingAdapter outGoingAdapter = new OutGoingAdapter(getActivity());
-                                for (OutGoingItem outGoingItem : list) {
-                                    if (TextUtils.isEmpty(outGoingItem.number)) {
-                                        Toast.makeText(getActivity(), "Error: phoneNumber cannot be null or empty", Toast.LENGTH_LONG).show();
-                                    }
-                                    else {
-                                        outGoingAdapter.add(outGoingItem);
-                                    }
-                                }
-                                if (outGoingAdapter.isEmpty()) {
-                                    tvOutgoingnumber.setText(getString(R.string.no_outgoing_numbers));
-                                }
-                                else {
-                                    outgoingNumberPicker = new AlertDialog.Builder(getContext());
-                                    outgoingNumberPicker.setTitle(getString(R.string.choose_number));
-                                    outgoingNumberPicker.setAdapter(outGoingAdapter, new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            pickOutgoingNumber(which, outGoingAdapter);
-                                        }
-                                    });
-                                    pickOutgoingNumber(pickedOutgoingNumberIndex, outGoingAdapter);
-                                }
-                            }
-                        }
+                    if (list.isEmpty()) {
+                        tvOutgoingnumber.setText(getString(R.string.no_outgoing_numbers));
                     }
                     else {
-                        Toast.makeText(activity, "Could not load phone numbers", Toast.LENGTH_LONG).show();
+                        if (list.size() == 1) {
+                            outGoingNumber = list.get(0);
+                            tvOutgoingnumber.setText(createSpinText(outGoingNumber));
+                        }
+                        else {
+                            final OutGoingAdapter outGoingAdapter = new OutGoingAdapter(getActivity());
+                            for (OutGoingItem outGoingItem : list) {
+                                if (TextUtils.isEmpty(outGoingItem.number)) {
+                                    Toast.makeText(getActivity(), "Error: phoneNumber cannot be null or empty", Toast.LENGTH_LONG).show();
+                                }
+                                else {
+                                    outGoingAdapter.add(outGoingItem);
+                                }
+                            }
+                            if (outGoingAdapter.isEmpty()) {
+                                tvOutgoingnumber.setText(getString(R.string.no_outgoing_numbers));
+                            }
+                            else {
+                                outgoingNumberPicker = new AlertDialog.Builder(getContext());
+                                outgoingNumberPicker.setTitle(getString(R.string.choose_number));
+                                outgoingNumberPicker.setAdapter(outGoingAdapter, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        pickOutgoingNumber(which, outGoingAdapter);
+                                    }
+                                });
+                                pickOutgoingNumber(pickedOutgoingNumberIndex, outGoingAdapter);
+                            }
+                        }
                     }
                 }
 
@@ -249,10 +245,11 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
                     }
                 }
             });
+
         }
 
         @Override
-        public void onLoaderReset(Loader<LoaderResult<List<OutGoingItem>>> loader) {
+        public void onLoaderReset(Loader<LoaderResult<Response>> loader) {
 
         }
     }

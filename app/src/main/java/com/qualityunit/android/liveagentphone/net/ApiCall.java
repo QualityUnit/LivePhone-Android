@@ -23,6 +23,11 @@ import com.qualityunit.android.liveagentphone.ui.init.InitActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.internal.http.RealResponseBody;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 
@@ -85,7 +90,19 @@ public class ApiCall<T> {
             } else {
                 Response resp = (Response) pingPong.onRequest(url, token);
                 if ((resp.code() / 100) != 2) {
-                    throw new ApiException(resp.message(), resp.code());
+                    // check if body contains 'message'
+                    JSONObject object;
+                    String message = null;
+                    try {
+                        object = new JSONObject(resp.body().string());
+                        message = object.getString("message");
+                    } catch (JSONException e) {
+                        // do nothing - response does not contain body
+                    }
+                    if (TextUtils.isEmpty(message)) {
+                        message = resp.message();
+                    }
+                    throw new ApiException(message, resp.code());
                 }
                 pingPong.onResponse(new LoaderResult(resp, resp.code()));
             }
