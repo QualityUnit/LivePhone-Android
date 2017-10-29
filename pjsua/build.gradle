@@ -1,8 +1,7 @@
 apply plugin: 'com.android.library'
-
 android {
     compileSdkVersion 23
-    buildToolsVersion '25.0.0'
+    buildToolsVersion '26.0.2'
 
     defaultConfig {
         minSdkVersion 18
@@ -11,7 +10,7 @@ android {
         versionName "1.0.0"
 
         ndk {
-            abiFilters "armeabi-v7a", "x86"
+            abiFilters "armeabi", "armeabi-v7a", "x86"
             moduleName "libpjsua2"
         }
 
@@ -23,5 +22,17 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
-}
 
+    externalNativeBuild {
+        ndkBuild {
+            path 'Android.mk'
+        }
+    }
+
+    packagingOptions {
+        pickFirst 'lib/armeabi-v7a/libpjsua2.so'
+        pickFirst 'lib/armeabi/libpjsua2.so'
+        pickFirst 'lib/x86/libpjsua2.so'
+    }
+
+}

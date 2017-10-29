@@ -3,7 +3,7 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '25.0.0'
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.qualityunit.android.liveagentphone"
         minSdkVersion 18
@@ -36,8 +36,7 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile project(path: ':pjsua')
-    releaseCompile project(path: ':restful', configuration: 'release')
-    debugCompile project(path: ':restful', configuration: 'debug')
+    implementation project(':restful')
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support:design:23.4.0'
     compile 'com.google.android.gms:play-services-gcm:9.0.0'
