@@ -8,6 +8,7 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -42,6 +43,7 @@ import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
 import com.qualityunit.android.liveagentphone.ui.common.PaginationScrollListener;
+import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
 import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
@@ -56,7 +58,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
         SwipeRefreshLayout.OnRefreshListener, PaginationList.CallbackListener<ContactItem>,
         PaginationScrollListener.OnNextPageListener {
 
-    private static final String TAG = ContactFragment.class.getSimpleName();
+    public static final String TAG = ContactFragment.class.getSimpleName();
     public static final int FIRST_PAGE = 1;
     public static final int ITEMS_PER_PAGE = 100;
     public static final String SORT_DIRECTION = Const.SortDir.ASCENDING;
@@ -126,6 +128,10 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
         if (contactsRetainFragment != null) {
             contactsRetainFragment.stop();
         }
+        searchTerm = etSearch.getText().toString().trim();
+        scrollIndex = getListView().getFirstVisiblePosition();
+        View v = getListView().getChildAt(0);
+        scrollTop = (v == null) ? 0 : (v.getTop() - getListView().getPaddingTop());
         super.onDestroyView();
     }
 
@@ -144,13 +150,10 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        scrollIndex = getListView().getFirstVisiblePosition();
-        View v = getListView().getChildAt(0);
-        scrollTop = (v == null) ? 0 : (v.getTop() - getListView().getPaddingTop());
         outState.putInt("scrollIndex", scrollIndex);
         outState.putInt("scrollTop", scrollTop);
         outState.putBoolean("isSearchMode", isSearchMode);
-        outState.putString("searchTerm", etSearch.getText().toString().trim());
+        outState.putString("searchTerm", searchTerm);
         outState.putBoolean("isLastPage", isLastPage);
         super.onSaveInstanceState(outState);
     }
@@ -170,7 +173,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
         if (item == null || item.phones == null || item.phones.size() == 0) {
             Toast.makeText(activity, getString(R.string.no_number_in_contact), Toast.LENGTH_SHORT).show();
         } else if (item.phones.size() == 1){
-            activity.openDialer(item.phones.get(0));
+            startActivity(new Intent(getActivity(), DialerActivity.class).putExtra("number", item.phones.get(0)));
         } else {
             ArrayAdapter<String> calleeNumberAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, item.phones);
             AlertDialog.Builder calleeNumberPicker = new AlertDialog.Builder(getContext());
@@ -179,7 +182,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
             calleeNumberPicker.setAdapter(calleeNumberAdapter, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    activity.openDialer(item.phones.get(which));
+                    startActivity(new Intent(getActivity(), DialerActivity.class).putExtra("number", item.phones.get(which)));
                 }
             });
             calleeNumberPicker.create().show();

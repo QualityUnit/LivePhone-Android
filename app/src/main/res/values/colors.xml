@@ -5,6 +5,7 @@
     <color name="accent">#5E7C88</color>
     <color name="error">#F44336</color>
     <color name="ok">#4CAF50</color>
+    <color name="background">#FFFFFF</color>
     <color name="callButtonRed">#F44336</color>
     <color name="callButtonGreen">#4CAF50</color>
     <color name="textPrimaryOnDark">#FFFFFFFF</color>

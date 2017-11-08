@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:clipToPadding="false">
+    <FrameLayout
+        android:id="@+id/fl_mainSwitchPane"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:clipToPadding="false"
+        android:elevation="3dp">
+        <include android:id="@+id/ll_mainSwitch" layout="@layout/availability_item" />
+    </FrameLayout>
+
+    <ListView
+        android:id="@+id/lv_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.0"
+        android:choiceMode="none"
+        android:divider="@null"
+        android:dividerHeight="0dp"/>
+
+
+</LinearLayout>

@@ -15,16 +15,13 @@ public abstract class GenericLoader<T> extends BaseLoader<LoaderResult<T>, T> {
 
     private Activity activity;
 
-
     /**
      * @param activity from which is possible to run login screen
-     * @param loaderContext
-     * @param isCache When result is delivered we sometimes need to redeliver same result
      * every time after orientation is changed. If you want to enable this re-delivering then set
      * this flag to true.
      */
-    public GenericLoader(Activity activity, Context loaderContext, boolean isCache) {
-        super(loaderContext, isCache);
+    public GenericLoader(Activity activity) {
+        super(activity);
         this.activity = activity;
     }
 

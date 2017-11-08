@@ -15,22 +15,16 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.qualityunit.android.liveagentphone.R;
+import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 /**
  * Created by rasto on 21.8.17.
  */
 
-public class AboutFragment extends Fragment {
+public class AboutFragment extends BaseFragment<AboutActivity> {
 
     public static final String TAG = AboutFragment.class.getSimpleName();
-    private AboutActivity activity;
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        activity = (AboutActivity) context;
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,7 +41,7 @@ public class AboutFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        activity.setTitle(R.string.about);
+        getActivity().setTitle(R.string.about);
         ((TextView)view.findViewById(R.id.tv_version)).setText(Tools.getVersionName());
     }
 

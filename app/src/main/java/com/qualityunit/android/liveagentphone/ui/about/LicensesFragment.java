@@ -10,21 +10,15 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 
 import com.qualityunit.android.liveagentphone.R;
+import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 
 /**
  * Created by rasto on 21.8.17.
  */
 
-public class LicensesFragment extends Fragment {
+public class LicensesFragment extends BaseFragment<AboutActivity> {
 
     public static final String TAG = LicensesFragment.class.getSimpleName();
-    private AboutActivity activity;
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        activity = (AboutActivity) context;
-    }
 
     @Nullable
     @Override
@@ -35,7 +29,7 @@ public class LicensesFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        activity.setTitle(R.string.licenses);
+        getActivity().setTitle(R.string.licenses);
         ((WebView) view.findViewById(R.id.wv_content)).loadUrl("file:///android_asset/licenses.html");
     }
 }

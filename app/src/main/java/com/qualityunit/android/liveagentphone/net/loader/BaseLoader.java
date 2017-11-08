@@ -21,11 +21,10 @@ public abstract class BaseLoader<Result extends BaseLoaderResult<Type>, Type> ex
 
     /**
      * @param context
-     * @param isCached When result is delivered we sometimes need to redeliver same result
      * every time after orientation is changed. If you want to enable this re-delivering then set
      * this flag to true.
      */
-    public BaseLoader(Context context, boolean isCached) {
+    public BaseLoader(Context context) {
         super(context);
         handlerThread = new HandlerThread(TAG);
         handlerThread.start();

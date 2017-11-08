@@ -22,6 +22,8 @@ public class LaAccount {
     public static final String USERDATA_SIP_HOST = "USERDATA_SIP_HOST";
     public static final String USERDATA_SIP_USER = "USERDATA_SIP_USER";
     public static final String USERDATA_SIP_PASS = "USERDATA_SIP_PASS";
+    public static final String USERDATA_AGENT_ID = "USERDATA_AGENT_ID";
+    public static final String USERDATA_DEVICE_ID = "USERDATA_DEVICE_ID";
     private static Account account;
 
     /**

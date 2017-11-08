@@ -6,7 +6,7 @@ android {
     buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "com.qualityunit.android.liveagentphone"
-        minSdkVersion 18
+        minSdkVersion 21
         targetSdkVersion 22 // be carefull, keep it less than 23 (http://forum.unity3d.com/threads/systeminfo-deviceuniqueidentifier-android-6-0.367028/)
         versionCode 7
         versionName "1.0.6-beta"

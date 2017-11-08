@@ -18,7 +18,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -121,10 +120,6 @@ public class InitActivity extends AppCompatActivity {
                 finish();
             }
         });
-        if (checkPlayServices()) {
-            startInit(false);
-        }
-
     }
 
     @Override
@@ -148,6 +143,9 @@ public class InitActivity extends AppCompatActivity {
         }
         countDownStarted = System.currentTimeMillis();
         countDownTimer.start();
+        if (checkPlayServices()) {
+            startInit(false);
+        }
         super.onResume();
     }
 
@@ -199,9 +197,8 @@ public class InitActivity extends AppCompatActivity {
         else {
             if (phoneIsLoaded) {
                 registerPushNotifications();
-                return;
             } else {
-                getSupportLoaderManager().initLoader(LOADER_ID_PHONE_GET, null, phoneGetLoaderCallbacks);
+                getSupportLoaderManager().restartLoader(LOADER_ID_PHONE_GET, null, phoneGetLoaderCallbacks);
             }
         }
     }
@@ -355,11 +352,10 @@ public class InitActivity extends AppCompatActivity {
      */
     private static class PhoneGetLoader extends GenericLoader<Response> {
 
-        private static final boolean CACHE_ENABLED = true;
         private Call call;
 
-        public PhoneGetLoader(Activity activity, Context loaderContext) {
-            super(activity, loaderContext, CACHE_ENABLED);
+        public PhoneGetLoader(Activity activity) {
+            super(activity);
         }
 
         @Override
@@ -382,7 +378,7 @@ public class InitActivity extends AppCompatActivity {
 
         @Override
         public Loader<LoaderResult<Response>> onCreateLoader(int id, Bundle args) {
-            PhoneGetLoader loader = new PhoneGetLoader(InitActivity.this, InitActivity.this);
+            PhoneGetLoader loader = new PhoneGetLoader(InitActivity.this);
             return loader;
         }
 

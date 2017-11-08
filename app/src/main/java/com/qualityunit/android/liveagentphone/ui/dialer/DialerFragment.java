@@ -131,30 +131,24 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
      */
     private static class PhonesLoader extends GenericLoader<Response> {
 
-        private static final boolean CACHE_ENABLED = false;
-        private static Response response;
-
         public PhonesLoader(Activity activity) {
-            super(activity, activity, CACHE_ENABLED);
+            super(activity);
         }
 
         @Override
         protected Response requestData(String basePath, String token) throws IOException {
-            if (response == null) {
-                JSONObject filters = new JSONObject();
-                try {
-                    filters.put("type", "S"); // default
-                } catch (JSONException e) {
-                    Log.e(TAG, e.getMessage());
-                }
-                Client client = Client.getInstance();
-                Request request = client
-                        .GET(basePath, "/phone_numbers", token)
-                        .addEncodedParam("_filters", URLEncoder.encode(filters.toString(), "utf-8"))
-                        .build();
-                response = client.newCall(request).execute();
+            JSONObject filters = new JSONObject();
+            try {
+                filters.put("type", "S"); // default
+            } catch (JSONException e) {
+                Log.e(TAG, e.getMessage());
             }
-            return response;
+            Client client = Client.getInstance();
+            Request request = client
+                    .GET(basePath, "/phone_numbers", token)
+                    .addEncodedParam("_filters", URLEncoder.encode(filters.toString(), "utf-8"))
+                    .build();
+            return client.newCall(request).execute();
         }
 
     }
