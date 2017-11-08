@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.availability;
+package com.qualityunit.android.liveagentphone.ui.home.status;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
@@ -18,12 +18,12 @@ import java.util.List;
 /**
  * Created by rasto on 15.12.15.
  */
-public class AvailabilityListAdapter extends ArrayAdapter<DepartmentStatusItem> {
+public class StatusListAdapter extends ArrayAdapter<DepartmentStatusItem> {
 
-    private static final int layout = R.layout.availability_item;
+    private static final int layout = R.layout.status_list_item;
     private Activity activity;
 
-    public AvailabilityListAdapter(Activity activity, List<DepartmentStatusItem> list) {
+    public StatusListAdapter(Activity activity, List<DepartmentStatusItem> list) {
         super(activity, layout, list);
         this.activity = activity;
     }

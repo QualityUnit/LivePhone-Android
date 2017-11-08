@@ -22,7 +22,7 @@ public class CallingDtmfFragment extends BaseFragment<CallingActivity> implement
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_calling_dtmf, container, false);
+        return inflater.inflate(R.layout.calling_dtmf_fragment, container, false);
     }
 
     @Override

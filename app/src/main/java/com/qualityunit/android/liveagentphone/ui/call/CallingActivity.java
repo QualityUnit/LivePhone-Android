@@ -42,7 +42,7 @@ public class CallingActivity extends ToolbarActivity {
 
     @Override
     protected int getContentViewRes() {
-        return R.layout.activity_calling;
+        return R.layout.calling_activity;
     }
 
     @Override

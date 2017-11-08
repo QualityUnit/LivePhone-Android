@@ -1,14 +1,9 @@
 package com.qualityunit.android.liveagentphone.ui.home;
 
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
@@ -20,47 +15,46 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
-import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.about.AboutActivity;
 import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
-import com.qualityunit.android.liveagentphone.ui.home.availability.AvailabilityCallbacks;
-import com.qualityunit.android.liveagentphone.ui.home.availability.AvailabilityFragment;
-import com.qualityunit.android.liveagentphone.ui.home.availability.AvailabilityStore;
-import com.qualityunit.android.liveagentphone.ui.home.availability.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.home.contacts.ContactFragment;
-import com.qualityunit.android.liveagentphone.ui.init.InitActivity;
+import com.qualityunit.android.liveagentphone.ui.home.status.DepartmentStatusItem;
+import com.qualityunit.android.liveagentphone.ui.home.status.StatusCallbacks;
+import com.qualityunit.android.liveagentphone.ui.home.status.StatusFragment;
+import com.qualityunit.android.liveagentphone.ui.home.status.StatusStore;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.List;
 
 
-public class HomeActivity extends AppCompatActivity implements AvailabilityCallbacks, FragmentManager.OnBackStackChangedListener {
+public class HomeActivity extends AppCompatActivity implements StatusCallbacks, FragmentManager.OnBackStackChangedListener {
 
     private static final String TAG = HomeActivity.class.getSimpleName();
     private final int statusIdentifier = 1000000;
     private Menu actionItems;
-    private AvailabilityStore store;
-    private boolean isFinishing;
+    private StatusStore store;
+//    private boolean isFinishing;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.home_activity);
         setTitle(getString(R.string.title_contacts));
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        getSupportFragmentManager().addOnBackStackChangedListener(this);
-        onBackStackChanged();
         FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.addOnBackStackChangedListener(this);
+        onBackStackChanged();
         if (savedInstanceState == null) {
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.add(R.id.container, new ContactFragment(), ContactFragment.TAG);
-            fragmentTransaction.commit();
+            Fragment fragment = fragmentManager.findFragmentByTag(ContactFragment.TAG);
+            fragmentManager.beginTransaction()
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                    .add(R.id.container, fragment != null ? fragment : new ContactFragment(), ContactFragment.TAG)
+                    .commit();
         }
-        store = (AvailabilityStore) fragmentManager.findFragmentByTag(AvailabilityStore.TAG);
+        store = (StatusStore) fragmentManager.findFragmentByTag(StatusStore.TAG);
         if (store == null) {
-            store = new AvailabilityStore();
-            fragmentManager.beginTransaction().add(store, AvailabilityStore.TAG).commit();
+            store = new StatusStore();
+            fragmentManager.beginTransaction().add(store, StatusStore.TAG).commit();
         }
         store.addCallBacks(this);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_dialpad);
@@ -82,7 +76,7 @@ public class HomeActivity extends AppCompatActivity implements AvailabilityCallb
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_home, menu);
+        getMenuInflater().inflate(R.menu.home_menu, menu);
         actionItems = menu;
         store.getDevice();
         return true;
@@ -94,20 +88,20 @@ public class HomeActivity extends AppCompatActivity implements AvailabilityCallb
             case R.id.action_about:
                 startActivity(new Intent(this, AboutActivity.class));
                 return true;
-            case R.id.action_logout:
-                isFinishing = true;
-                store.updateDevice(false);
-                return true;
+//            case R.id.action_logout:
+//                isFinishing = true;
+//                store.updateDevice(false);
+//                return true;
             case statusIdentifier:
                 FragmentManager fragmentManager = getSupportFragmentManager();
-                AvailabilityFragment availabilityFragment = (AvailabilityFragment) fragmentManager.findFragmentByTag(AvailabilityFragment.TAG);
+                StatusFragment availabilityFragment = (StatusFragment) fragmentManager.findFragmentByTag(StatusFragment.TAG);
                 if (availabilityFragment == null) {
-                    availabilityFragment = new AvailabilityFragment();
+                    availabilityFragment = new StatusFragment();
                 }
                 fragmentManager.beginTransaction()
                         .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                         .replace(R.id.container, availabilityFragment)
-                        .addToBackStack(AvailabilityFragment.TAG)
+                        .addToBackStack(StatusFragment.TAG)
                         .commit();
                 return true;
         }
@@ -147,24 +141,24 @@ public class HomeActivity extends AppCompatActivity implements AvailabilityCallb
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             return;
         }
-        if (isFinishing) {
-            isFinishing = false;
-            final AccountManager accountManager = AccountManager.get(this);
-            final Handler handler = new Handler(Looper.myLooper());
-            final AccountManagerCallback accountManagerCallback = new AccountManagerCallback() {
-                @Override
-                public void run(AccountManagerFuture future) {
-                    finish();
-                    startActivity(new Intent(HomeActivity.this, InitActivity.class));
-                }
-            };
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                accountManager.removeAccount(LaAccount.get(), this, accountManagerCallback, handler);
-            } else {
-                accountManager.removeAccount(LaAccount.get(), accountManagerCallback, handler);
-            }
-            return;
-        }
+//        if (isFinishing) {
+//            isFinishing = false;
+//            final AccountManager accountManager = AccountManager.get(this);
+//            final Handler handler = new Handler(Looper.myLooper());
+//            final AccountManagerCallback accountManagerCallback = new AccountManagerCallback() {
+//                @Override
+//                public void run(AccountManagerFuture future) {
+//                    finish();
+//                    startActivity(new Intent(HomeActivity.this, InitActivity.class));
+//                }
+//            };
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+//                accountManager.removeAccount(LaAccount.get(), this, accountManagerCallback, handler);
+//            } else {
+//                accountManager.removeAccount(LaAccount.get(), accountManagerCallback, handler);
+//            }
+//            return;
+//        }
         int itemTitleRes = isAvailable ? R.string.status_available : R.string.status_unavailable;
         int itemIconRes = isAvailable ? R.drawable.ic_status_available : R.drawable.ic_status_unavailable;
         MenuItem item = actionItems.findItem(statusIdentifier);
@@ -179,7 +173,5 @@ public class HomeActivity extends AppCompatActivity implements AvailabilityCallb
     }
 
     @Override
-    public void onDepartmentList(List<DepartmentStatusItem> list, Exception e) {
-        // no need here
-    }
+    public void onDepartmentList(List<DepartmentStatusItem> list, Exception e) {}
 }

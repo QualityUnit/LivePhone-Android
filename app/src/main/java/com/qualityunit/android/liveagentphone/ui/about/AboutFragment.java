@@ -1,11 +1,7 @@
 package com.qualityunit.android.liveagentphone.ui.about;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -35,7 +31,7 @@ public class AboutFragment extends BaseFragment<AboutActivity> {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_about, container, false);
+        return inflater.inflate(R.layout.about_fragment, container, false);
     }
 
     @Override
@@ -47,7 +43,7 @@ public class AboutFragment extends BaseFragment<AboutActivity> {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.about_context_menu, menu);
+        inflater.inflate(R.menu.about_menu, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.AccountAuthenticatorActivity;
@@ -37,7 +36,7 @@ public class AuthActivity extends AccountAuthenticatorActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.auth_context_menu, menu);
+        getMenuInflater().inflate(R.menu.auth_menu, menu);
         return true;
     }
 

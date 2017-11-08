@@ -1,9 +1,7 @@
 package com.qualityunit.android.liveagentphone.ui.about;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +21,7 @@ public class LicensesFragment extends BaseFragment<AboutActivity> {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_licenses, container, false);
+        return inflater.inflate(R.layout.licenses_fragment, container, false);
     }
 
     @Override

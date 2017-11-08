@@ -99,6 +99,6 @@ public abstract class ToolbarActivity extends AppCompatActivity implements Fragm
     // METHODS TO OVERRIDE
 
     protected int getContentViewRes() {
-        return R.layout._activity_toolbar;
+        return R.layout._toolbar_activity;
     }
 }

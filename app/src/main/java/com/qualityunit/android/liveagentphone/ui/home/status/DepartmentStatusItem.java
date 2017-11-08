@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.availability;
+package com.qualityunit.android.liveagentphone.ui.home.status;
 
 /**
  * Created by rasto on 2.11.17.

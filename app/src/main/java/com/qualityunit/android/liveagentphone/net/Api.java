@@ -14,7 +14,7 @@ import android.os.Looper;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.rest.ApiException;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
-import com.qualityunit.android.liveagentphone.ui.home.availability.DepartmentStatusItem;
+import com.qualityunit.android.liveagentphone.ui.home.status.DepartmentStatusItem;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 

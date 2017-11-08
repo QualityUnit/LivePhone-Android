@@ -30,7 +30,6 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,7 +57,7 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_dialer, container, false);
+        return inflater.inflate(R.layout.dialer_fragment, container, false);
     }
 
     @Override

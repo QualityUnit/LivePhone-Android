@@ -17,7 +17,7 @@ public class DialerActivity extends ToolbarActivity {
 
     @Override
     protected int getContentViewRes() {
-        return R.layout.activity_dialer;
+        return R.layout.dialer_activity;
     }
 
     @Override

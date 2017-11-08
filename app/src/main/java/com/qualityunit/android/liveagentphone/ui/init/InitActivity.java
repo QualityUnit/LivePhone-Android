@@ -76,7 +76,7 @@ public class InitActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_init);
+        setContentView(R.layout.init_activity);
         llButtons = findViewById(R.id.ll_buttons);
         tvLoading = (TextView) findViewById(R.id.tv_loading_status);
         pbLoading = (LinearLayout) findViewById(R.id.pb_loading);

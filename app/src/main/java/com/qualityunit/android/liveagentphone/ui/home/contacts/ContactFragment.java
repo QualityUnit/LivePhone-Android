@@ -93,7 +93,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_contacts, container, false);
+        return inflater.inflate(R.layout.contacts_fragment, container, false);
     }
 
     @Override
@@ -191,7 +191,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_contacts, menu);
+        inflater.inflate(R.menu.contacts_menu, menu);
         final LinearLayout searchPanel = (LinearLayout) menu.findItem(R.id.action_search).getActionView();
         etSearch = (EditText) searchPanel.findViewById(R.id.et_search);
         etSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {

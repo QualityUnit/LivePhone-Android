@@ -1,14 +1,13 @@
-package com.qualityunit.android.liveagentphone.ui.home.availability;
+package com.qualityunit.android.liveagentphone.ui.home.status;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.Api;
-import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
-import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
 import org.json.JSONArray;
@@ -24,13 +23,27 @@ import java.util.Set;
  * Created by rasto on 31.10.17.
  */
 
-public class AvailabilityStore extends BaseFragment<HomeActivity> {
+public class StatusStore extends Fragment {
 
-    public static final String TAG = AvailabilityStore.class.getSimpleName();
+    public static final String TAG = StatusStore.class.getSimpleName();
     private Integer deviceId;
     private String phoneId;
     private String agentId;
-    private Set<AvailabilityCallbacks> callbacksSet = new HashSet<>();
+    private Boolean isAvailable;
+    private final Set<StatusCallbacks> callbacksSet = new HashSet<>();
+    private final Api.DeviceCallback deviceCallbacks = new Api.DeviceCallback() {
+
+        @Override
+        public void onResponse(Boolean isAvailable, Integer deviceId, String agentId, Exception e) {
+            StatusStore.this.isAvailable = isAvailable;
+            StatusStore.this.agentId = agentId;
+            StatusStore.this.deviceId = deviceId;
+            for (StatusCallbacks item : callbacksSet) {
+                item.onDevice(isAvailable, e);
+            }
+        }
+
+    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,7 +55,7 @@ public class AvailabilityStore extends BaseFragment<HomeActivity> {
      * Set callbacks for retrieving device phone status and phone statuses for every department
      * @param callBacks
      */
-    public void addCallBacks(AvailabilityCallbacks callBacks) {
+    public void addCallBacks(StatusCallbacks callBacks) {
         this.callbacksSet.add(callBacks);
     }
 
@@ -50,7 +63,7 @@ public class AvailabilityStore extends BaseFragment<HomeActivity> {
      * Remove callbacks for retrieving device phone status and phone statuses for every department
      * @param callBacks
      */
-    public void removeCallBacks(AvailabilityCallbacks callBacks) {
+    public void removeCallBacks(StatusCallbacks callBacks) {
         this.callbacksSet.remove(callBacks);
     }
 
@@ -58,21 +71,16 @@ public class AvailabilityStore extends BaseFragment<HomeActivity> {
      * Get current device phone status using phoneId from SharedPreferences
      */
     public void getDevice() {
-        final Account account = LaAccount.get();
-        final AccountManager accountManager = AccountManager.get(getActivity());
-        phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
-        Api.getDevicePhoneStatus(getActivity(), phoneId, new Api.DeviceCallback() {
-
-            @Override
-            public void onResponse(Boolean isAvailable, Integer deviceId, String agentId, Exception e) {
-                AvailabilityStore.this.agentId = agentId;
-                AvailabilityStore.this.deviceId = deviceId;
-                for (AvailabilityCallbacks item : callbacksSet) {
-                    item.onDevice(isAvailable, e);
-                }
+        if (isAvailable == null) {
+            final Account account = LaAccount.get();
+            final AccountManager accountManager = AccountManager.get(getActivity());
+            phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
+            Api.getDevicePhoneStatus(getActivity(), phoneId, deviceCallbacks);
+        } else {
+            for (StatusCallbacks item : callbacksSet) {
+                item.onDevice(isAvailable, null);
             }
-
-        });
+        }
     }
 
     /**
@@ -80,17 +88,7 @@ public class AvailabilityStore extends BaseFragment<HomeActivity> {
      * @param requestedStatus is requested new status
      */
     public void updateDevice(boolean requestedStatus) {
-        Api.updateDevicePhoneStatus(getActivity(), deviceId, agentId, requestedStatus, new Api.DeviceCallback() {
-            @Override
-            public void onResponse(Boolean status, Integer deviceId, String agentId, Exception e) {
-                if (e != null) {
-                    e.printStackTrace();
-                }
-                for (AvailabilityCallbacks item : callbacksSet) {
-                    item.onDevice(status, e);
-                }
-            }
-        });
+        Api.updateDevicePhoneStatus(getActivity(), deviceId, agentId, requestedStatus, deviceCallbacks);
     }
 
     /**
@@ -99,7 +97,7 @@ public class AvailabilityStore extends BaseFragment<HomeActivity> {
     public void getDepartments() {
         if (deviceId == null) {
             String errMsg = "Cannot call 'getDepartments() before calling 'getDevice()'";
-            for (AvailabilityCallbacks item : callbacksSet) {
+            for (StatusCallbacks item : callbacksSet) {
                 item.onDepartmentList(null, new Exception(errMsg));
             }
             Logger.e(TAG, errMsg);
@@ -131,7 +129,7 @@ public class AvailabilityStore extends BaseFragment<HomeActivity> {
                         }
                     }
                 }
-                for (AvailabilityCallbacks item : callbacksSet) {
+                for (StatusCallbacks item : callbacksSet) {
                     item.onDepartmentList(list, e);
                 }
             }

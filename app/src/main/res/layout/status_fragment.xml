@@ -11,7 +11,7 @@
         android:background="@color/background"
         android:clipToPadding="false"
         android:elevation="3dp">
-        <include android:id="@+id/ll_mainSwitch" layout="@layout/availability_item" />
+        <include android:id="@+id/ll_mainSwitch" layout="@layout/status_list_item" />
     </FrameLayout>
 
     <ListView

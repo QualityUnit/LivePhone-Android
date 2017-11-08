@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.availability;
+package com.qualityunit.android.liveagentphone.ui.home.status;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -22,17 +22,17 @@ import java.util.List;
  * Created by rasto on 31.10.17.
  */
 
-public class AvailabilityFragment extends BaseFragment<HomeActivity> implements AvailabilityCallbacks {
+public class StatusFragment extends BaseFragment<HomeActivity> implements StatusCallbacks {
 
-    public static String TAG = AvailabilityFragment.class.getSimpleName();
-    private AvailabilityStore store;
+    public static String TAG = StatusFragment.class.getSimpleName();
+    private StatusStore store;
     private Switch availabilitySwitch;
     private ListView listView;
     private View availabilitySwitchPane;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_availability, container, false);
+        return inflater.inflate(R.layout.status_fragment, container, false);
     }
 
     @Override
@@ -53,7 +53,6 @@ public class AvailabilityFragment extends BaseFragment<HomeActivity> implements 
         return new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                availabilitySwitch.setOnCheckedChangeListener(null);
                 store.updateDevice(isChecked);
             }
         };
@@ -69,10 +68,10 @@ public class AvailabilityFragment extends BaseFragment<HomeActivity> implements 
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         FragmentManager fragmentManager = activity.getSupportFragmentManager();
-        store = (AvailabilityStore) fragmentManager.findFragmentByTag(AvailabilityStore.TAG);
+        store = (StatusStore) fragmentManager.findFragmentByTag(StatusStore.TAG);
         if (store == null) {
-            store = new AvailabilityStore();
-            fragmentManager.beginTransaction().add(store, AvailabilityStore.TAG).commit();
+            store = new StatusStore();
+            fragmentManager.beginTransaction().add(store, StatusStore.TAG).commit();
         }
         store.addCallBacks(this);
         store.getDevice();
@@ -88,12 +87,14 @@ public class AvailabilityFragment extends BaseFragment<HomeActivity> implements 
             Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
             return;
         }
-        store.getDepartments();
+        if (listView.getAdapter() == null) {
+            store.getDepartments();
+        }
     }
 
     @Override
     public void onDepartmentList(List<DepartmentStatusItem> list, Exception e) {
-        AvailabilityListAdapter adapter = new AvailabilityListAdapter(getActivity(), list);
+        StatusListAdapter adapter = new StatusListAdapter(getActivity(), list);
         listView.setAdapter(adapter);
     }
 
