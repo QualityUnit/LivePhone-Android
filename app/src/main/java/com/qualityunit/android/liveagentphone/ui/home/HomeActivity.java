@@ -69,6 +69,12 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks, 
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        store.getDevice();
+    }
+
+    @Override
     protected void onDestroy() {
         store.removeCallBacks(this);
         super.onDestroy();
@@ -78,7 +84,6 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks, 
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.home_menu, menu);
         actionItems = menu;
-        store.getDevice();
         return true;
     }
 

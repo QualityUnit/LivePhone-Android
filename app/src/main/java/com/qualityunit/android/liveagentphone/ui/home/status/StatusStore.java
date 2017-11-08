@@ -1,6 +1,5 @@
 package com.qualityunit.android.liveagentphone.ui.home.status;
 
-import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -29,17 +28,22 @@ public class StatusStore extends Fragment {
     private Integer deviceId;
     private String phoneId;
     private String agentId;
-    private Boolean isAvailable;
+    private boolean isGettingAll;
     private final Set<StatusCallbacks> callbacksSet = new HashSet<>();
     private final Api.DeviceCallback deviceCallbacks = new Api.DeviceCallback() {
 
         @Override
         public void onResponse(Boolean isAvailable, Integer deviceId, String agentId, Exception e) {
-            StatusStore.this.isAvailable = isAvailable;
             StatusStore.this.agentId = agentId;
             StatusStore.this.deviceId = deviceId;
             for (StatusCallbacks item : callbacksSet) {
                 item.onDevice(isAvailable, e);
+            }
+            if (isGettingAll) {
+                isGettingAll = false;
+                if (e == null) {
+                    getDepartments();
+                }
             }
         }
 
@@ -49,6 +53,7 @@ public class StatusStore extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        phoneId = AccountManager.get(getActivity()).getUserData(LaAccount.get(), LaAccount.USERDATA_PHONE_ID);
     }
 
     /**
@@ -68,19 +73,18 @@ public class StatusStore extends Fragment {
     }
 
     /**
-     * Get current device phone status using phoneId from SharedPreferences
+     * Fetch fresh status and department list
+     */
+    public void getAll() {
+        isGettingAll = true;
+        getDevice();
+    }
+
+    /**
+     * Fetch current device phone status using phoneId from current account
      */
     public void getDevice() {
-        if (isAvailable == null) {
-            final Account account = LaAccount.get();
-            final AccountManager accountManager = AccountManager.get(getActivity());
-            phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
-            Api.getDevicePhoneStatus(getActivity(), phoneId, deviceCallbacks);
-        } else {
-            for (StatusCallbacks item : callbacksSet) {
-                item.onDevice(isAvailable, null);
-            }
-        }
+        Api.getDevicePhoneStatus(getActivity(), phoneId, deviceCallbacks);
     }
 
     /**

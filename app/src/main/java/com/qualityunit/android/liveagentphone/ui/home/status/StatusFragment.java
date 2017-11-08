@@ -74,7 +74,7 @@ public class StatusFragment extends BaseFragment<HomeActivity> implements Status
             fragmentManager.beginTransaction().add(store, StatusStore.TAG).commit();
         }
         store.addCallBacks(this);
-        store.getDevice();
+        store.getAll();
     }
 
     @Override
@@ -84,11 +84,8 @@ public class StatusFragment extends BaseFragment<HomeActivity> implements Status
         availabilitySwitch.setOnCheckedChangeListener(createOnCheckedAvailabilitySwitch());
         availabilitySwitchPane.setVisibility(View.VISIBLE);
         if (e != null) {
-            Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_SHORT).show();
             return;
-        }
-        if (listView.getAdapter() == null) {
-            store.getDepartments();
         }
     }
 
