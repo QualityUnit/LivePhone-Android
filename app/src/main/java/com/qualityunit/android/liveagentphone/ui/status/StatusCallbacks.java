@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.status;
+package com.qualityunit.android.liveagentphone.ui.status;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.status;
+package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.app.Activity;
 import android.view.LayoutInflater;

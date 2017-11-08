@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.contacts;
+package com.qualityunit.android.liveagentphone.ui.home;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import java.util.List;
  * Created by rasto on 6.10.16.
  */
 
-public class ContactItem {
+public class ContactsItem {
 
     public String id;
     public String firstname;
@@ -17,7 +17,7 @@ public class ContactItem {
     public List<String> emails;
     public List<String> phones;
 
-    public ContactItem(String id, String firstname, String lastname, String system_name, String avatar_url, String type) {
+    public ContactsItem(String id, String firstname, String lastname, String system_name, String avatar_url, String type) {
         this.id = id;
         this.firstname = firstname;
         this.lastname = lastname;
@@ -28,7 +28,7 @@ public class ContactItem {
 
     @Override
     public String toString() {
-        return "ContactItem{" +
+        return "ContactsItem{" +
                 "id='" + id + '\'' +
                 ", firstname='" + firstname + '\'' +
                 ", lastname='" + lastname + '\'' +

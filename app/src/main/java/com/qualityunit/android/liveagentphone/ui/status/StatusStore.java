@@ -1,6 +1,8 @@
-package com.qualityunit.android.liveagentphone.ui.home.status;
+package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.accounts.AccountManager;
+import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -25,15 +27,18 @@ import java.util.Set;
 public class StatusStore extends Fragment {
 
     public static final String TAG = StatusStore.class.getSimpleName();
+    private Activity activity;
     private Integer deviceId;
     private String phoneId;
     private String agentId;
+    private Boolean isAvailable;
     private boolean isGettingAll;
     private final Set<StatusCallbacks> callbacksSet = new HashSet<>();
     private final Api.DeviceCallback deviceCallbacks = new Api.DeviceCallback() {
 
         @Override
         public void onResponse(Boolean isAvailable, Integer deviceId, String agentId, Exception e) {
+            StatusStore.this.isAvailable = isAvailable;
             StatusStore.this.agentId = agentId;
             StatusStore.this.deviceId = deviceId;
             for (StatusCallbacks item : callbacksSet) {
@@ -50,10 +55,16 @@ public class StatusStore extends Fragment {
     };
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        activity = (Activity) context;
+    }
+
+    @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        phoneId = AccountManager.get(getActivity()).getUserData(LaAccount.get(), LaAccount.USERDATA_PHONE_ID);
+        phoneId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_PHONE_ID);
     }
 
     /**
@@ -77,14 +88,20 @@ public class StatusStore extends Fragment {
      */
     public void getAll() {
         isGettingAll = true;
-        getDevice();
+        getDevice(true);
     }
 
     /**
      * Fetch current device phone status using phoneId from current account
      */
-    public void getDevice() {
-        Api.getDevicePhoneStatus(getActivity(), phoneId, deviceCallbacks);
+    public void getDevice(boolean forceFetch) {
+        if (isAvailable == null || forceFetch) {
+            Api.getDevicePhoneStatus(activity, phoneId, deviceCallbacks);
+        } else {
+            for (StatusCallbacks item : callbacksSet) {
+                item.onDevice(isAvailable, null);
+            }
+        }
     }
 
     /**
@@ -92,7 +109,7 @@ public class StatusStore extends Fragment {
      * @param requestedStatus is requested new status
      */
     public void updateDevice(boolean requestedStatus) {
-        Api.updateDevicePhoneStatus(getActivity(), deviceId, agentId, requestedStatus, deviceCallbacks);
+        Api.updateDevicePhoneStatus(activity, deviceId, agentId, requestedStatus, deviceCallbacks);
     }
 
     /**
@@ -107,7 +124,7 @@ public class StatusStore extends Fragment {
             Logger.e(TAG, errMsg);
             return;
         }
-        Api.getDepartmentStatusList(getActivity(), deviceId, new Api.DepartmentStatusListCallback() {
+        Api.getDepartmentStatusList(activity, deviceId, new Api.DepartmentStatusListCallback() {
 
             @Override
             public void onResponse(JSONArray array, Exception e) {

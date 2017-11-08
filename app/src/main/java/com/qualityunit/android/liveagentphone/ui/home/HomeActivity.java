@@ -5,8 +5,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -17,19 +15,19 @@ import android.widget.Toast;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.ui.about.AboutActivity;
 import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
-import com.qualityunit.android.liveagentphone.ui.home.contacts.ContactFragment;
-import com.qualityunit.android.liveagentphone.ui.home.status.DepartmentStatusItem;
-import com.qualityunit.android.liveagentphone.ui.home.status.StatusCallbacks;
-import com.qualityunit.android.liveagentphone.ui.home.status.StatusFragment;
-import com.qualityunit.android.liveagentphone.ui.home.status.StatusStore;
+import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
+import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
+import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
+import com.qualityunit.android.liveagentphone.ui.status.StatusStore;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.List;
 
 
-public class HomeActivity extends AppCompatActivity implements StatusCallbacks, FragmentManager.OnBackStackChangedListener {
+public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
 
     private static final String TAG = HomeActivity.class.getSimpleName();
+    private static final int STATUS_REQUEST_CODE = 1;
     private final int statusIdentifier = 1000000;
     private Menu actionItems;
     private StatusStore store;
@@ -39,16 +37,12 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home_activity);
-        setTitle(getString(R.string.title_contacts));
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.addOnBackStackChangedListener(this);
-        onBackStackChanged();
         if (savedInstanceState == null) {
-            Fragment fragment = fragmentManager.findFragmentByTag(ContactFragment.TAG);
+            Fragment fragment = fragmentManager.findFragmentByTag(ContactsFragment.TAG);
             fragmentManager.beginTransaction()
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                    .add(R.id.container, fragment != null ? fragment : new ContactFragment(), ContactFragment.TAG)
+                    .add(R.id.container, fragment != null ? fragment : new ContactsFragment(), ContactsFragment.TAG)
                     .commit();
         }
         store = (StatusStore) fragmentManager.findFragmentByTag(StatusStore.TAG);
@@ -71,7 +65,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks, 
     @Override
     protected void onResume() {
         super.onResume();
-        store.getDevice();
+        store.getDevice(true);
     }
 
     @Override
@@ -98,45 +92,17 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks, 
 //                store.updateDevice(false);
 //                return true;
             case statusIdentifier:
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                StatusFragment availabilityFragment = (StatusFragment) fragmentManager.findFragmentByTag(StatusFragment.TAG);
-                if (availabilityFragment == null) {
-                    availabilityFragment = new StatusFragment();
-                }
-                fragmentManager.beginTransaction()
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                        .replace(R.id.container, availabilityFragment)
-                        .addToBackStack(StatusFragment.TAG)
-                        .commit();
+                startActivityForResult(new Intent(this, StatusActivity.class), STATUS_REQUEST_CODE);
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
-    public void onBackStackChanged() {
-        final ActionBar actionBar = getSupportActionBar();
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        try {
-            if (toolbar == null) {
-                throw new NullPointerException("Home toolbar is null");
-            }
-            if (actionBar == null) {
-                throw new NullPointerException("Home actionBar is null");
-            }
-            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                actionBar.setDisplayHomeAsUpEnabled(true);
-                toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onBackPressed();
-                    }
-                });
-            } else {
-                actionBar.setDisplayHomeAsUpEnabled(false);
-            }
-        } catch (Exception e) {
-            Logger.e(TAG, e);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == STATUS_REQUEST_CODE) {
+            store.getDevice(false);
         }
     }
 
@@ -164,6 +130,10 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks, 
 //            }
 //            return;
 //        }
+        if (actionItems == null) {
+            Logger.e(TAG, "actionItems cannot be null");
+            return;
+        }
         int itemTitleRes = isAvailable ? R.string.status_available : R.string.status_unavailable;
         int itemIconRes = isAvailable ? R.drawable.ic_status_available : R.drawable.ic_status_unavailable;
         MenuItem item = actionItems.findItem(statusIdentifier);
@@ -178,5 +148,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks, 
     }
 
     @Override
-    public void onDepartmentList(List<DepartmentStatusItem> list, Exception e) {}
+    public void onDepartmentList(List<DepartmentStatusItem> list, Exception e) {
+        // do nothing here
+    }
 }

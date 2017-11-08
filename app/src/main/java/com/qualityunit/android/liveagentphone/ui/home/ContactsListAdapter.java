@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.contacts;
+package com.qualityunit.android.liveagentphone.ui.home;
 
 import android.accounts.AccountManager;
 import android.content.Context;
@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Created by rasto on 15.12.15.
  */
-public class ContactsListAdapter extends ArrayAdapter<ContactItem> {
+public class ContactsListAdapter extends ArrayAdapter<ContactsItem> {
 
     private static final String TAG = ContactsListAdapter.class.getSimpleName();
     private static final int layout = R.layout.contacts_list_item;
@@ -33,7 +33,7 @@ public class ContactsListAdapter extends ArrayAdapter<ContactItem> {
     private final Drawable defaultAvatar;
     private Context context;
 
-    public ContactsListAdapter(Context context, List<ContactItem> list) {
+    public ContactsListAdapter(Context context, List<ContactsItem> list) {
         super(context, layout, list);
         this.context = context;
         AccountManager accountManager = AccountManager.get(context);
@@ -55,7 +55,7 @@ public class ContactsListAdapter extends ArrayAdapter<ContactItem> {
         else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        final ContactItem item = getItem(position);
+        final ContactsItem item = getItem(position);
         if(item != null) {
             StringBuilder sb = new StringBuilder();
             if (!TextUtils.isEmpty(item.firstname)) {
@@ -90,7 +90,7 @@ public class ContactsListAdapter extends ArrayAdapter<ContactItem> {
         return convertView;
     }
 
-    private void loadServerAvatar(String baseUrl, ContactItem item, ViewHolder viewHolder) {
+    private void loadServerAvatar(String baseUrl, ContactsItem item, ViewHolder viewHolder) {
         String url;
         if (item.avatar_url.contains("__BASE_URL__")) {
             url = baseUrl + item.avatar_url.replace("__BASE_URL__", "/");

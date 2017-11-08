@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home.contacts;
+package com.qualityunit.android.liveagentphone.ui.home;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -44,7 +44,6 @@ import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
 import com.qualityunit.android.liveagentphone.ui.common.PaginationScrollListener;
 import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
-import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 import java.io.IOException;
@@ -54,11 +53,11 @@ import java.util.List;
 /**
  * Created by rasto on 23.08.16.
  */
-public class ContactFragment extends ListFragment implements AdapterView.OnItemClickListener,
-        SwipeRefreshLayout.OnRefreshListener, PaginationList.CallbackListener<ContactItem>,
+public class ContactsFragment extends ListFragment implements AdapterView.OnItemClickListener,
+        SwipeRefreshLayout.OnRefreshListener, PaginationList.CallbackListener<ContactsItem>,
         PaginationScrollListener.OnNextPageListener {
 
-    public static final String TAG = ContactFragment.class.getSimpleName();
+    public static final String TAG = ContactsFragment.class.getSimpleName();
     public static final int FIRST_PAGE = 1;
     public static final int ITEMS_PER_PAGE = 100;
     public static final String SORT_DIRECTION = Const.SortDir.ASCENDING;
@@ -169,7 +168,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        final ContactItem item = getAdapter().getItem(position);
+        final ContactsItem item = getAdapter().getItem(position);
         if (item == null || item.phones == null || item.phones.size() == 0) {
             Toast.makeText(activity, getString(R.string.no_number_in_contact), Toast.LENGTH_SHORT).show();
         } else if (item.phones.size() == 1){
@@ -253,7 +252,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
     }
 
     @Override
-    public void onGetList (final List<ContactItem> list, final PaginationList.ListState listState) {
+    public void onGetList (final List<ContactsItem> list, final PaginationList.ListState listState) {
         isLastPage = listState.isLastPage();
         tvEmpty.setVisibility(listState.isEmpty() ? View.VISIBLE : View.GONE);
         swipeRefreshLayout.setRefreshing(listState.isRefreshing());
@@ -299,7 +298,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
                     Bundle result = future.getResult();
                     String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
                     String token = result.getString(AccountManager.KEY_AUTHTOKEN);
-                    contactsRetainFragment.init(ContactFragment.this, basePath, token, reinit);
+                    contactsRetainFragment.init(ContactsFragment.this, basePath, token, reinit);
                 } catch (AuthenticatorException | OperationCanceledException | IOException e) {
                     Log.e(TAG, "", e);
                     Toast.makeText(activity, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -315,7 +314,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
      */
     private ContactsListAdapter getAdapter() {
         if (adapter == null) {
-            adapter = new ContactsListAdapter(getContext(), new ArrayList<ContactItem>());
+            adapter = new ContactsListAdapter(getContext(), new ArrayList<ContactsItem>());
         }
         return adapter;
     }
@@ -324,7 +323,7 @@ public class ContactFragment extends ListFragment implements AdapterView.OnItemC
      * Refill list with new values
      * @param list
      */
-    private void refillList(List<ContactItem> list) {
+    private void refillList(List<ContactsItem> list) {
         if (list != null) {
             getAdapter().setNotifyOnChange(false);
             getAdapter().clear();
