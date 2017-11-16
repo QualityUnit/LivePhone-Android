@@ -14,6 +14,8 @@ import com.qualityunit.android.liveagentphone.R;
 
 public class RecentFragment extends Fragment {
 
+    public static final String TAG = RecentFragment.class.getSimpleName();
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,7 +24,7 @@ public class RecentFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.contacts_fragment, container, false);
+        return inflater.inflate(R.layout.recent_fragment, container, false);
     }
 
 }

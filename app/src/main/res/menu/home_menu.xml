@@ -4,6 +4,20 @@
       tools:context=".ui.home.HomeActivity">
 
     <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_toolbar_search"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        android:title="@string/search"/>
+
+    <item
+        android:id="@+id/action_status"
+        android:orderInCategory="100"
+        android:icon="@drawable/ic_status_unavailable"
+        android:title="@string/action_availability"
+        app:showAsAction="ifRoom"/>
+
+    <item
         android:id="@+id/action_about"
         android:orderInCategory="101"
         android:title="@string/action_about"

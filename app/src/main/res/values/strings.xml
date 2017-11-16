@@ -62,4 +62,5 @@
     <string name="status_available">Available</string>
     <string name="status_unavailable">Unavailable</string>
     <string name="action_availability">Availability</string>
+    <string name="search_hint">Search contacts</string>
 </resources>

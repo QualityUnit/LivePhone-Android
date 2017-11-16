@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
+import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
 import com.qualityunit.android.liveagentphone.net.rest.ApiException;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
@@ -28,6 +29,12 @@ import java.util.List;
  */
 public class ContactsRetainFragment extends BaseFragment<HomeActivity> {
 
+
+    public static final int FIRST_PAGE = 1;
+    public static final int ITEMS_PER_PAGE = 100;
+    public static final String SORT_DIRECTION = Const.SortDir.ASCENDING;
+    public static final String SORT_FIELD = "lastname";
+    public static final int VISIBLE_THRESHOLD = 30;
     public static String TAG = ContactsRetainFragment.class.getSimpleName();
     private ContactPaginationList cpl = new ContactPaginationList();
     private String basePath;
@@ -41,11 +48,10 @@ public class ContactsRetainFragment extends BaseFragment<HomeActivity> {
 
     // ******** CPL API ************
 
-    public void init (PaginationList.CallbackListener<ContactsItem> callbackListener, String basePath, String token, boolean reinit) {
+    public void init (PaginationList.CallbackListener<ContactsItem> callbackListener, String basePath, String token) {
         this.basePath = basePath;
         this.token = token;
         cpl.setListener(callbackListener);
-        cpl.init(createArgs(null), reinit);
     }
 
     /**
@@ -80,8 +86,8 @@ public class ContactsRetainFragment extends BaseFragment<HomeActivity> {
         }
         bundle.putString("basePath", basePath);
         bundle.putString("token", token);
-        bundle.putString("sortDirection", ContactsFragment.SORT_DIRECTION);
-        bundle.putString("sortField", ContactsFragment.SORT_FIELD);
+        bundle.putString("sortDirection", SORT_DIRECTION);
+        bundle.putString("sortField", SORT_FIELD);
         return bundle;
     }
 
@@ -92,7 +98,7 @@ public class ContactsRetainFragment extends BaseFragment<HomeActivity> {
         private final String TAG = ContactPaginationList.class.getSimpleName();
 
         public ContactPaginationList() {
-            super(ContactsFragment.FIRST_PAGE, ContactsFragment.ITEMS_PER_PAGE);
+            super(FIRST_PAGE, ITEMS_PER_PAGE);
         }
 
         @Override
@@ -108,7 +114,7 @@ public class ContactsRetainFragment extends BaseFragment<HomeActivity> {
             String token = stringFromArg(args, "token");
             String sortDirection = stringFromArg(args, "sortDirection");
             String sortField = stringFromArg(args, "sortField");
-            return getContactsList(basePath, token, sortDirection, sortField, filtersEncoded, pageToLoad, ContactsFragment.ITEMS_PER_PAGE);
+            return getContactsList(basePath, token, sortDirection, sortField, filtersEncoded, pageToLoad, ITEMS_PER_PAGE);
         }
 
         private String stringFromArg(Bundle args, String string) throws Exception {
@@ -136,7 +142,6 @@ public class ContactsRetainFragment extends BaseFragment<HomeActivity> {
                 }
                 try {
                     JSONArray array = new JSONArray(response.body().string());
-//                    JSONArray array = new JSONArray("dsadasdasdasds");
                     for (int i = 0; i < array.length(); i++) {
                         JSONObject jsonItem = array.getJSONObject(i);
                         ContactsItem contactsItem = new ContactsItem(

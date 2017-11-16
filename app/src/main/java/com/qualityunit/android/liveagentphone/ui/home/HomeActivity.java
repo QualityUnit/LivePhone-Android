@@ -1,15 +1,20 @@
 package com.qualityunit.android.liveagentphone.ui.home;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
@@ -19,7 +24,6 @@ import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
 import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
 import com.qualityunit.android.liveagentphone.ui.status.StatusStore;
-import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.List;
 
@@ -31,6 +35,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     private final int statusIdentifier = 1000000;
     private Menu actionItems;
     private StatusStore store;
+    private EditText etSearch;
 //    private boolean isFinishing;
 
     @Override
@@ -40,9 +45,9 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         FragmentManager fragmentManager = getSupportFragmentManager();
         if (savedInstanceState == null) {
-            Fragment fragment = fragmentManager.findFragmentByTag(ContactsFragment.TAG);
+            Fragment fragment = fragmentManager.findFragmentByTag(RecentFragment.TAG);
             fragmentManager.beginTransaction()
-                    .add(R.id.container, fragment != null ? fragment : new ContactsFragment(), ContactsFragment.TAG)
+                    .add(R.id.container, fragment != null ? fragment : new RecentFragment(), RecentFragment.TAG)
                     .commit();
         }
         store = (StatusStore) fragmentManager.findFragmentByTag(StatusStore.TAG);
@@ -60,6 +65,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
                 }
             });
         }
+
     }
 
     @Override
@@ -77,9 +83,26 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.home_menu, menu);
-        actionItems = menu;
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setIconifiedByDefault(true);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                MenuItemCompat.collapseActionView(searchItem);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -93,6 +116,10 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
 //                return true;
             case statusIdentifier:
                 startActivityForResult(new Intent(this, StatusActivity.class), STATUS_REQUEST_CODE);
+                return true;
+            case R.id.action_search:
+                // show search dialog
+
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -130,21 +157,23 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
 //            }
 //            return;
 //        }
-        if (actionItems == null) {
-            Logger.e(TAG, "actionItems cannot be null");
-            return;
-        }
-        int itemTitleRes = isAvailable ? R.string.status_available : R.string.status_unavailable;
-        int itemIconRes = isAvailable ? R.drawable.ic_status_available : R.drawable.ic_status_unavailable;
-        MenuItem item = actionItems.findItem(statusIdentifier);
-        if (item == null) {
-            actionItems.add(Menu.NONE, statusIdentifier, 100, itemTitleRes)
-                    .setIcon(itemIconRes)
-                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-        } else {
-            item.setIcon(itemIconRes);
-            item.setTitle(itemTitleRes);
-        }
+
+
+//        if (actionItems == null) {
+//            Logger.e(TAG, "actionItems cannot be null");
+//            return;
+//        }
+//        int itemTitleRes = isAvailable ? R.string.status_available : R.string.status_unavailable;
+//        int itemIconRes = isAvailable ? R.drawable.ic_status_available : R.drawable.ic_status_unavailable;
+//        MenuItem item = actionItems.findItem(statusIdentifier);
+//        if (item == null) {
+//            actionItems.add(Menu.NONE, statusIdentifier, 100, itemTitleRes)
+//                    .setIcon(itemIconRes)
+//                    .setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+//        } else {
+//            item.setIcon(itemIconRes);
+//            item.setTitle(itemTitleRes);
+//        }
     }
 
     @Override

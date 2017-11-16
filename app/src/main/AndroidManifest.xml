@@ -24,8 +24,10 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:process="com.qualityunit.android.liveagentphone.main"
         android:theme="@style/AppTheme">
+
+        <meta-data android:name="android.app.default_searchable"
+                   android:value=".ui.home.SearchActivity" />
 
         <meta-data
             android:name="io.fabric.ApiKey"
@@ -72,7 +74,6 @@
 
         <service
             android:name=".service.CallingService"
-            android:process="com.qualityunit.android.liveagentphone.call"
             android:exported="false"
             >
         </service>
@@ -104,7 +105,6 @@
 
         <activity
             android:name=".ui.home.HomeActivity"
-            android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -129,7 +129,6 @@
 
         <activity
             android:name=".ui.call.CallingActivity"
-            android:process="com.qualityunit.android.liveagentphone.call"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
@@ -157,7 +156,6 @@
 
         <activity
             android:name=".ui.status.StatusActivity"
-            android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -165,6 +163,18 @@
 
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.home.SearchActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data android:name="android.app.searchable"
+                       android:resource="@xml/searchable"/>
         </activity>
 
     </application>
