@@ -10,16 +10,25 @@
     tools:context=".ui.common.ToolbarActivity">
 
     <android.support.design.widget.AppBarLayout
-        android:layout_height="wrap_content"
+        android:layout_height="64dp"
         android:layout_width="match_parent"
+        android:background="?attr/colorPrimary"
         android:theme="@style/AppTheme.AppBarOverlay">
 
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+        <android.support.v7.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay"/>
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="@color/background"
+            android:layout_margin="8dp">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:popupTheme="@style/AppTheme.PopupOverlay"
+                android:theme="@style/AppTheme.ActionBar"/>
+
+        </android.support.v7.widget.CardView>
 
     </android.support.design.widget.AppBarLayout>
 

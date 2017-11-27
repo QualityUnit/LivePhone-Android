@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.qualityunit.android.liveagentphone.R;
 
@@ -25,6 +26,17 @@ public class RecentFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.recent_fragment, container, false);
+    }
+
+    public void setWaterSymbol(int resId) {
+        View view = getView();
+        if (view != null) {
+            ImageView ivWaterSymbol = (ImageView) view.findViewById(R.id.iv_waterSymbol);
+            if (ivWaterSymbol != null) {
+                ivWaterSymbol.setImageResource(resId);
+                ivWaterSymbol.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
 }

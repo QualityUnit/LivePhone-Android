@@ -75,7 +75,7 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     @Override
     public void onDevice(Boolean isAvailable, Exception e) {
         availabilitySwitch.setOnCheckedChangeListener(null);
-        availabilitySwitch.setChecked(isAvailable);
+        availabilitySwitch.setChecked(isAvailable != null && isAvailable);
         availabilitySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

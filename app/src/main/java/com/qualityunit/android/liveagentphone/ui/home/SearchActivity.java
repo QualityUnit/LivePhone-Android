@@ -25,6 +25,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -32,7 +33,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
@@ -54,22 +54,17 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         PaginationScrollListener.OnNextPageListener {
 
     private static final String TAG = SearchActivity.class.getSimpleName();
-    public static final int FIRST_PAGE = 1;
-    public static final int ITEMS_PER_PAGE = 100;
-    public static final String SORT_DIRECTION = Const.SortDir.ASCENDING;
-    public static final String SORT_FIELD = "lastname";
     public static final int VISIBLE_THRESHOLD = 30;
 
     private ListView listView;
     private ContactsListAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar pbLoading;
-    private ContactsRetainFragment contactsRetainFragment;
+    private ContactsRetainFragment store;
     private TextView tvEmpty;
     // instance variables
     private int scrollIndex;
     private int scrollTop;
-    private boolean isSearchMode;
     private String searchTerm;
     private boolean isLastPage;
 
@@ -77,15 +72,8 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.search_activity);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onBackPressed();
-            }
-        });
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
         tvEmpty = (TextView) findViewById(R.id.tv_empty);
         tvEmpty.setVisibility(GONE);
         pbLoading = (ProgressBar) findViewById(R.id.pb_loading);
@@ -99,7 +87,6 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         if (savedInstanceState != null) {
             scrollIndex = savedInstanceState.getInt("scrollIndex", 0);
             scrollTop = savedInstanceState.getInt("scrollTop", 0);
-            isSearchMode = savedInstanceState.getBoolean("isSearchMode", false);
             searchTerm = savedInstanceState.getString("searchTerm", "");
             isLastPage = savedInstanceState.getBoolean("isLastPage", false);
         }
@@ -109,6 +96,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        setIntent(intent);
         init();
     }
 
@@ -116,10 +104,9 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             if (!TextUtils.isEmpty(query)) {
-                Toast.makeText(this, "SEARCH: " + query, Toast.LENGTH_SHORT).show();
                 searchTerm = query;
-                if (contactsRetainFragment != null) {
-                    contactsRetainFragment.search(query);
+                if (store != null) {
+                    store.search(query);
                 }
             }
         }
@@ -129,16 +116,21 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt("scrollIndex", scrollIndex);
         outState.putInt("scrollTop", scrollTop);
-        outState.putBoolean("isSearchMode", isSearchMode);
         outState.putString("searchTerm", searchTerm);
         outState.putBoolean("isLastPage", isLastPage);
         super.onSaveInstanceState(outState);
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        overridePendingTransition(0, R.anim.fade_out);
+    }
+
+    @Override
     protected void onDestroy() {
-        if (contactsRetainFragment != null) {
-            contactsRetainFragment.stop();
+        if (store != null) {
+            store.stop();
         }
         scrollIndex = listView.getFirstVisiblePosition();
         View v = listView.getChildAt(0);
@@ -151,16 +143,15 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         getMenuInflater().inflate(R.menu.search_menu, menu);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) searchItem.getActionView();
+        final SearchView searchView = (SearchView) searchItem.getActionView();
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setIconifiedByDefault(true);
-        if (!TextUtils.isEmpty(searchTerm)) {
-            MenuItemCompat.expandActionView(searchItem);
-            searchView.setQuery(searchTerm, false);
-        }
+        searchView.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
+        View v = searchView.findViewById(android.support.v7.appcompat.R.id.search_plate);
+        v.setBackgroundResource(R.color.background);
         MenuItemCompat.setOnActionExpandListener(searchItem, new MenuItemCompat.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem item) {
+                searchView.setQuery(searchTerm, false);
                 return true;
             }
 
@@ -171,17 +162,18 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
             }
 
         });
+        MenuItemCompat.expandActionView(searchItem);
         return true;
     }
 
     private void init () {
-        if (contactsRetainFragment == null) {
+        if (store == null) {
             FragmentManager fragmentManager = getSupportFragmentManager();
-            contactsRetainFragment = (ContactsRetainFragment) fragmentManager.findFragmentByTag(ContactsRetainFragment.TAG);
-            if (contactsRetainFragment == null) {
-                contactsRetainFragment = new ContactsRetainFragment();
+            store = (ContactsRetainFragment) fragmentManager.findFragmentByTag(ContactsRetainFragment.TAG);
+            if (store == null) {
+                store = new ContactsRetainFragment();
             }
-            fragmentManager.beginTransaction().add(contactsRetainFragment, ContactsRetainFragment.TAG).commit();
+            fragmentManager.beginTransaction().add(store, ContactsRetainFragment.TAG).commit();
             final AccountManager accountManager = AccountManager.get(this);
             final Account account = LaAccount.get();
             final Handler handler = new Handler(Looper.myLooper());
@@ -192,7 +184,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
                     try {
                         String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
                         String token = future.getResult().getString(AccountManager.KEY_AUTHTOKEN);
-                        contactsRetainFragment.init(SearchActivity.this, basePath, token);
+                        store.init(SearchActivity.this, basePath, token);
                         handleIntent(SearchActivity.this.getIntent());
                     } catch (AuthenticatorException | OperationCanceledException | IOException e) {
                         Log.e(TAG, "", e);
@@ -231,8 +223,8 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         pbLoading.setVisibility(View.GONE);
-        if (contactsRetainFragment != null) {
-            contactsRetainFragment.refresh();
+        if (store != null) {
+            store.refresh();
         }
     }
 
@@ -265,8 +257,8 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         }
         swipeRefreshLayout.setRefreshing(true);
         pbLoading.setVisibility(View.GONE);
-        if (contactsRetainFragment != null) {
-            contactsRetainFragment.nextPage();
+        if (store != null) {
+            store.nextPage();
         }
     }
 

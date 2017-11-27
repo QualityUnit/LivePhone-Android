@@ -12,4 +12,6 @@
     <color name="textSecondaryOnDark">#88FFFFFF</color>
     <color name="textPrimaryOnWhite">#888888</color>
     <color name="textSecondaryOnWhite">#888888</color>
+    <color name="tintOnWhite">#757575</color>
+    <color name="waterSymbolOnWhite">#DDDDDD</color>
 </resources>

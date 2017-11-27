@@ -24,10 +24,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:process="com.qualityunit.android.liveagentphone.main"
         android:theme="@style/AppTheme">
-
-        <meta-data android:name="android.app.default_searchable"
-                   android:value=".ui.home.SearchActivity" />
 
         <meta-data
             android:name="io.fabric.ApiKey"
@@ -61,8 +59,7 @@
 
         <service
             android:name=".gcm.PushRegistrationIntentService"
-            android:exported="false">
-        </service>
+            android:exported="false" />
 
         <service android:name=".acc.LaAuthenticatorService">
             <intent-filter>
@@ -74,14 +71,14 @@
 
         <service
             android:name=".service.CallingService"
-            android:exported="false"
-            >
-        </service>
+            android:process="com.qualityunit.android.liveagentphone.call"
+            android:exported="false" />
 
         <activity
             android:name=".ui.init.InitActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
+            android:process="com.qualityunit.android.liveagentphone.call"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -170,6 +167,8 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
+            <meta-data android:name="android.app.default_searchable"
+                       android:value=".ui.home.SearchActivity" />
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>

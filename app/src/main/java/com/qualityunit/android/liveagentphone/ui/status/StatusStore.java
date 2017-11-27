@@ -109,7 +109,9 @@ public class StatusStore extends Fragment {
      * @param requestedStatus is requested new status
      */
     public void updateDevice(boolean requestedStatus) {
-        Api.updateDevicePhoneStatus(activity, deviceId, agentId, requestedStatus, deviceCallbacks);
+        if (deviceId != null) {
+            Api.updateDevicePhoneStatus(activity, deviceId, agentId, requestedStatus, deviceCallbacks);
+        }
     }
 
     /**
