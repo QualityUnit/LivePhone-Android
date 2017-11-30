@@ -1,5 +1,7 @@
 package com.qualityunit.android.liveagentphone.ui.home;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
+import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.about.AboutActivity;
 import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
 import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
@@ -76,6 +79,11 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     @Override
     protected void onResume() {
         super.onResume();
+        final Account[] accounts = AccountManager.get(this).getAccountsByType(LaAccount.ACCOUNT_TYPE);
+        if (accounts.length == 0) {
+            finish();
+            return;
+        }
         store.getDevice(true);
     }
 
