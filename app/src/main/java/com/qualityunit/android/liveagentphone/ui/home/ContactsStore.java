@@ -8,7 +8,6 @@ import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
 import com.qualityunit.android.liveagentphone.net.rest.ApiException;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
-import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.okhttp.Request;
@@ -27,26 +26,30 @@ import java.util.List;
  * Retained fragment for handling contact list
  * Created by rasto on 28.11.16.
  */
-public class ContactsRetainFragment extends BaseFragment<HomeActivity> {
-
+public class ContactsStore {
 
     public static final int FIRST_PAGE = 1;
     public static final int ITEMS_PER_PAGE = 100;
     public static final String SORT_DIRECTION = Const.SortDir.ASCENDING;
     public static final String SORT_FIELD = "lastname";
     public static final int VISIBLE_THRESHOLD = 30;
-    public static String TAG = ContactsRetainFragment.class.getSimpleName();
+    public static String TAG = ContactsStore.class.getSimpleName();
+    private static ContactsStore instance;
     private ContactPaginationList cpl = new ContactPaginationList();
     private String basePath;
     private String token;
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+    public static ContactsStore getInstance() {
+        if (instance == null) {
+            instance = new ContactsStore();
+        }
+        return instance;
     }
 
-    // ******** CPL API ************
+    private ContactsStore() {
+    }
+
+    // ******** API ************
 
     public void init (PaginationList.CallbackListener<ContactsItem> callbackListener, String basePath, String token) {
         this.basePath = basePath;

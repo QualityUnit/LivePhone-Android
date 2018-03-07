@@ -2,10 +2,6 @@ package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
-import android.content.Context;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.Api;
@@ -24,9 +20,10 @@ import java.util.Set;
  * Created by rasto on 31.10.17.
  */
 
-public class StatusStore extends Fragment {
+public class StatusStore {
 
     public static final String TAG = StatusStore.class.getSimpleName();
+    private static StatusStore instance;
     private Activity activity;
     private Integer deviceId;
     private String phoneId;
@@ -54,16 +51,15 @@ public class StatusStore extends Fragment {
 
     };
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        activity = (Activity) context;
+    public static StatusStore getInstance(Activity activity) {
+        if (instance == null) {
+            instance = new StatusStore(activity);
+        }
+        return instance;
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setRetainInstance(true);
+    private StatusStore(Activity activity) {
+        this.activity = activity;
         phoneId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_PHONE_ID);
     }
 

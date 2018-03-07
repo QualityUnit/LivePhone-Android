@@ -58,11 +58,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
                     .add(R.id.container, fragmentRecents, RecentFragment.TAG)
                     .commit();
         }
-        store = (StatusStore) fragmentManager.findFragmentByTag(StatusStore.TAG);
-        if (store == null) {
-            store = new StatusStore();
-            fragmentManager.beginTransaction().add(store, StatusStore.TAG).commit();
-        }
+        store = StatusStore.getInstance(this);
         store.addCallBacks(this);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_dialpad);
         if (fab != null) {

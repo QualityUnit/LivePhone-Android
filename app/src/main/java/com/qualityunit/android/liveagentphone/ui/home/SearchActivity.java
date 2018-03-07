@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
@@ -60,7 +59,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     private ContactsListAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar pbLoading;
-    private ContactsRetainFragment store;
+    private ContactsStore store;
     private TextView tvEmpty;
     // instance variables
     private int scrollIndex;
@@ -168,12 +167,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
 
     private void init () {
         if (store == null) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            store = (ContactsRetainFragment) fragmentManager.findFragmentByTag(ContactsRetainFragment.TAG);
-            if (store == null) {
-                store = new ContactsRetainFragment();
-            }
-            fragmentManager.beginTransaction().add(store, ContactsRetainFragment.TAG).commit();
+            store = ContactsStore.getInstance();
             final AccountManager accountManager = AccountManager.get(this);
             final Account account = LaAccount.get();
             final Handler handler = new Handler(Looper.myLooper());

@@ -52,11 +52,7 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
         // department list
         listView = (ListView) findViewById(R.id.lv_list);
         FragmentManager fragmentManager = getSupportFragmentManager();
-        store = (StatusStore) fragmentManager.findFragmentByTag(StatusStore.TAG);
-        if (store == null) {
-            store = new StatusStore();
-            fragmentManager.beginTransaction().add(store, StatusStore.TAG).commit();
-        }
+        store = StatusStore.getInstance(this);
         store.addCallBacks(this);
     }
 
