@@ -11,7 +11,7 @@ import com.qualityunit.android.restful.method.RestPutBuilder;
 public class Client extends RestClient {
 
     public static final boolean VERIFY_SSL_CERTIFICATES = true;
-    public static final int CONNECTION_TIMEOUT_SEC = 3;
+    public static final int CONNECTION_TIMEOUT_SEC = 5;
     public static final int READ_WRITE_TIMEOUT_SEC = 20;
     private static Client instance;
 

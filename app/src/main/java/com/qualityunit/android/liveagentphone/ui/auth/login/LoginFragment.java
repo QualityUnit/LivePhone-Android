@@ -22,7 +22,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -54,7 +53,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
 
     public static final String TAG = LoginFragment.class.getSimpleName();
     private UrlEditText etUrl;
-    private AutoCompleteTextView etEmail;
+    private EditText etEmail;
     private EditText etPassword;
     private View vProgress;
     private View rlForm;
@@ -94,7 +93,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         super.onViewCreated(view, savedInstanceState);
         ((TextView)view.findViewById(R.id.tv_version)).setText(Tools.getVersionName());
         etUrl = (UrlEditText) view.findViewById(R.id.url);
-        etUrl.setThreshold(1);
         etUrl.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -115,13 +113,14 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
             }
         });
         etUrl.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 urlTester.test(etUrl.getText().toString().trim());
             }
+
         });
-        etEmail = (AutoCompleteTextView) view.findViewById(R.id.email);
-        etEmail.setThreshold(1);
+        etEmail = (EditText) view.findViewById(R.id.email);
         etEmail.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {

@@ -2,6 +2,7 @@ package com.qualityunit.android.liveagentphone.ui.auth.login;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -11,7 +12,7 @@ import android.util.AttributeSet;
  * Created by rasto on 7.3.18.
  */
 
-public class UrlEditText extends android.support.v7.widget.AppCompatAutoCompleteTextView implements TextWatcher {
+public class UrlEditText extends AppCompatEditText implements TextWatcher {
 
     private static String PREFIX = "https://";
 
