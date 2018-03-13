@@ -20,6 +20,7 @@ import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
 import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
 import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
+import com.qualityunit.android.liveagentphone.ui.status.StatusStore;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final int STATUS_REQUEST_CODE = 1;
     private MenuItem statusItem;
-//    private StatusStore store;
+    private StatusStore store;
     private RecentFragment fragmentRecents;
 
     @Override
@@ -57,8 +58,8 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
                     .add(R.id.container, fragmentRecents, RecentFragment.TAG)
                     .commit();
         }
-//        store = StatusStore.getInstance(this);
-//        store.addCallBacks(this);
+        store = StatusStore.getInstance(this);
+        store.addCallBacks(this);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_dialpad);
         if (fab != null) {
             fab.setOnClickListener(new View.OnClickListener() {
@@ -79,12 +80,12 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             finish();
             return;
         }
-//        store.getDevice(true);
+        store.getDevice(true);
     }
 
     @Override
     protected void onDestroy() {
-//        store.removeCallBacks(this);
+        store.removeCallBacks(this);
         super.onDestroy();
     }
 
@@ -117,7 +118,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == STATUS_REQUEST_CODE) {
-//            store.getDevice(false);
+            store.getDevice(false);
         }
     }
 

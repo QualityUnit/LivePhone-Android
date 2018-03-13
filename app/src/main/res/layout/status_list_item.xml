@@ -9,6 +9,8 @@
         android:id="@+id/tv_name"
         android:layout_width="0dp"
         android:layout_weight="1.0"
+        android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+        android:textColor="@color/textPrimaryOnWhite"
         android:layout_height="wrap_content"
         android:padding="16dp"/>
 
