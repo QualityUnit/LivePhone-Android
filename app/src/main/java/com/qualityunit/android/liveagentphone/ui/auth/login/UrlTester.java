@@ -101,6 +101,10 @@ public abstract class UrlTester implements Handler.Callback {
                 post(CODE.NO_CONNECTION, typedUrl, 0, "No connection");
                 return;
             }
+            if (TextUtils.isEmpty(typedUrl) || typedUrl.equals("https://")) {
+                post(CODE.URL_BLANK, typedUrl, 0, null);
+                return;
+            }
             String fixedUrl = typedUrl;
             if (fixedUrl.endsWith("/")) {
                 fixedUrl = fixedUrl.substring(0, typedUrl.length() - 1);
@@ -108,13 +112,10 @@ public abstract class UrlTester implements Handler.Callback {
             if (!fixedUrl.endsWith(Const.Api.API_POSTFIX)) {
                 fixedUrl = fixedUrl + Const.Api.API_POSTFIX;
             }
-            if (fixedUrl.startsWith("https://")) {
-                startChecking(fixedUrl);
-            } else if (fixedUrl.startsWith("http://")) {
-                startChecking(fixedUrl.replace("http://", "https://"));
-            } else {
-                startChecking("https://" + fixedUrl);
+            if (!fixedUrl.startsWith("https://")) {
+                post(CODE.API_ERROR, fixedUrl, ERROR_DELAY_MILLIS, "URL does not start with 'https://'");
             }
+            startChecking(fixedUrl);
         }
 
         private void startChecking(String url) {
@@ -132,24 +133,15 @@ public abstract class UrlTester implements Handler.Callback {
                         .build();
                 Call call = client.newCall(request);
                 Response resp = call.execute();
-                if (resp.isSuccessful()) {
+                if (resp.isSuccessful() && "{}".equals(resp.body().string())) {
                     post(CODE.URL_OK, url, 0, "OK");
-                }
-                else {
-                    if (url.startsWith("https://")) {
-                        startChecking(url.replace("https://", "http://"));
-                    } else {
-                        post(CODE.API_ERROR, url, ERROR_DELAY_MILLIS, resp.message());
-                    }
+                } else {
+                    post(CODE.API_ERROR, url, ERROR_DELAY_MILLIS, resp.message());
                 }
             } catch (MalformedURLException e) {
                 post(CODE.URL_NOT_VALID, url, ERROR_DELAY_MILLIS, e.getMessage());
             } catch (IOException e) {
-                if (url.startsWith("https://")) {
-                    startChecking(url.replace("https://", "http://"));
-                } else {
-                    post(CODE.COULD_NOT_REACH_HOST, url, ERROR_DELAY_MILLIS, e.getMessage());
-                }
+                post(CODE.COULD_NOT_REACH_HOST, url, ERROR_DELAY_MILLIS, e.getMessage());
             }
 
         }

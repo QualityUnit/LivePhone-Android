@@ -22,11 +22,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Filter;
 import android.widget.TextView;
 
 import com.qualityunit.android.liveagentphone.App;
@@ -48,9 +46,6 @@ import com.squareup.okhttp.Response;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 
 /**
  * Created by rasto on 19.12.15.
@@ -58,7 +53,7 @@ import java.util.List;
 public class LoginFragment extends BaseFragment<AuthActivity> {
 
     public static final String TAG = LoginFragment.class.getSimpleName();
-    private AutoCompleteTextView etUrl;
+    private UrlEditText etUrl;
     private AutoCompleteTextView etEmail;
     private EditText etPassword;
     private View vProgress;
@@ -72,8 +67,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
     // instance variables
     private String apiUrl;
     private String urlError;
-    private ArrayList<String> urlList;
-    private ArrayList<String> emailList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -81,13 +74,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         if (savedInstanceState != null) {
             apiUrl = savedInstanceState.getString("apiUrl");
             urlError = savedInstanceState.getString("urlError");
-            urlList = savedInstanceState.getStringArrayList("urlList");
-            emailList = savedInstanceState.getStringArrayList("emailList");
-        }
-        else {
-            // first time run
-            urlList = new ArrayList<>(App.getSharedPreferences().getStringSet(Const.MemoryKeys.LOGIN_URL_LIST, new HashSet<String>()));
-            emailList = new ArrayList<>(App.getSharedPreferences().getStringSet(Const.MemoryKeys.LOGIN_EMAIL_LIST, new HashSet<String>()));
         }
     }
 
@@ -95,8 +81,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
     public void onSaveInstanceState(Bundle outState) {
         outState.putString("apiUrl", apiUrl);
         outState.putString("urlError", urlError);
-        outState.putStringArrayList("urlList", urlList);
-        outState.putStringArrayList("emailList", emailList);
         super.onSaveInstanceState(outState);
     }
 
@@ -109,7 +93,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         ((TextView)view.findViewById(R.id.tv_version)).setText(Tools.getVersionName());
-        etUrl = (AutoCompleteTextView) view.findViewById(R.id.url);
+        etUrl = (UrlEditText) view.findViewById(R.id.url);
         etUrl.setThreshold(1);
         etUrl.addTextChangedListener(new TextWatcher() {
             @Override
@@ -130,6 +114,14 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
             public void afterTextChanged(Editable s) {
             }
         });
+        etUrl.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    urlTester.test(etUrl.getText().toString().trim());
+                }
+            }
+        });
         etEmail = (AutoCompleteTextView) view.findViewById(R.id.email);
         etEmail.setThreshold(1);
         etEmail.addTextChangedListener(new TextWatcher() {
@@ -147,7 +139,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
             }
         });
         etPassword = (EditText) view.findViewById(R.id.password);
-//        etPassword.setTypeface(Typeface.DEFAULT);
         etPassword.setTransformationMethod(new PasswordTransformationMethod());
         etPassword.addTextChangedListener(new TextWatcher() {
             @Override
@@ -255,27 +246,11 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         if (TextUtils.isEmpty(etEmail.getText().toString())) {
             etEmail.setText(App.getSharedPreferences().getString(Const.MemoryKeys.LOGIN_ET_EMAIL, ""));
         }
-        populateUrlAutoComplete();
-        populateEmailAutoComplete();
     }
 
     private void saveFilledFields() {
         App.getSharedPreferences().edit().putString(Const.MemoryKeys.LOGIN_ET_URL, etUrl.getText().toString()).apply();
         App.getSharedPreferences().edit().putString(Const.MemoryKeys.LOGIN_ET_EMAIL, etEmail.getText().toString()).apply();
-        App.getSharedPreferences().edit().putStringSet(Const.MemoryKeys.LOGIN_URL_LIST, new HashSet<>(urlList)).apply();
-        App.getSharedPreferences().edit().putStringSet(Const.MemoryKeys.LOGIN_EMAIL_LIST, new HashSet<>(emailList)).apply();
-    }
-
-    private void populateUrlAutoComplete() {
-        if (etUrl.getAdapter() == null && urlList != null) {
-            etUrl.setAdapter(new DropdownAdapter(urlList));
-        }
-    }
-
-    private void populateEmailAutoComplete() {
-        if (etEmail.getAdapter() == null && emailList != null) {
-            etEmail.setAdapter(new DropdownAdapter(emailList));
-        }
     }
 
     private void attemptLogin() {
@@ -369,12 +344,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         accountManager.setUserData(account, LaAccount.USERDATA_URL_API, intent.getStringExtra(LaAccount.USERDATA_URL_API));
         String typedUrl = intent.getStringExtra(LaAccount.USERDATA_URL_TYPED);
         accountManager.setUserData(account, LaAccount.USERDATA_URL_TYPED, typedUrl);
-        if (!urlList.contains(typedUrl)) {
-            urlList.add(typedUrl);
-        }
-        if (!emailList.contains(typedEmail)) {
-            emailList.add(typedEmail);
-        }
         activity.setAccountAuthenticatorResult(intent.getExtras());
         activity.setResult(Activity.RESULT_OK, intent);
         activity.finish();
@@ -411,7 +380,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                     break;
                 case CODE.URL_OK:
                     LoginFragment.this.apiUrl = apiUrl;
-                    etUrl.getBackground().setColorFilter(ContextCompat.getColor(getContext(), R.color.ok), PorterDuff.Mode.SRC_IN);
+                    etUrl.getBackground().mutate().setColorFilter(ContextCompat.getColor(getContext(), R.color.ok), PorterDuff.Mode.SRC_IN);
                     break;
                 case CODE.URL_NOT_VALID:
                     setErrorUrl(getString(R.string.url_not_valid));
@@ -428,55 +397,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                 default:
                     Logger.e(TAG, "Unknown URL tester code: " + code);
             }
-        }
-    }
-
-    private class DropdownAdapter extends ArrayAdapter<String> {
-
-        private List<String> list;
-        private Filter filter;
-
-        public DropdownAdapter(List<String> list) {
-            super(LoginFragment.this.getContext(), android.R.layout.simple_dropdown_item_1line, list);
-            this.list = new ArrayList<>(list); // create a copy of list
-        }
-
-        @Override
-        public Filter getFilter() {
-            if (filter == null) {
-                filter = new Filter() {
-                    @Override
-                    protected FilterResults performFiltering(CharSequence constraint) {
-                        final FilterResults results = new FilterResults();
-                        if (TextUtils.isEmpty(constraint)) {
-                            results.values = list;
-                            results.count = list.size();
-                        } else {
-                            final List<String> resultList = new ArrayList<>();
-                            for (String item : list) {
-                                if (item.contains(constraint)) {
-                                    resultList.add(item);
-                                }
-                            }
-                            results.values = resultList;
-                            results.count = resultList.size();
-                        }
-                        return results;
-                    }
-
-                    @Override
-                    protected void publishResults(CharSequence constraint, FilterResults results) {
-                        if (results.count == 0)
-                            DropdownAdapter.this.notifyDataSetInvalidated();
-                        else {
-                            DropdownAdapter.this.clear();
-                            DropdownAdapter.this.addAll((List<String>) results.values);
-                            DropdownAdapter.this.notifyDataSetChanged();
-                        }
-                    }
-                };
-            }
-            return filter;
         }
     }
 
