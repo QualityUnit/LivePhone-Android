@@ -54,7 +54,15 @@
                  android:layout_alignParentTop="true"
                  android:layout_alignParentBottom="true"
                  android:layout_alignParentStart="true"
-                 android:layout_alignParentEnd="true" />
+                 android:layout_alignParentEnd="true" >
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_phone_icon"
+            android:tint="@color/waterSymbolOnWhite"/>
+
+    </FrameLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_dialpad"
