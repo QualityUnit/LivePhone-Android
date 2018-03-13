@@ -287,7 +287,7 @@ public class InitActivity extends AppCompatActivity {
     }
 
     /**
-     * Try to start main activity of the app. All you need is to be ready - that means everything included in IF condition should be loaded or executed
+     * Try to loop main activity of the app. All you need is to be ready - that means everything included in IF condition should be loaded or executed
      */
     private void go() {
         if (countDownMillisLeft == 0

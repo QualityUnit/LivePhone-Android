@@ -2,7 +2,9 @@ package com.qualityunit.android.restful;
 
 import com.qualityunit.common.android.restful.BuildConfig;
 import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Protocol;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -23,6 +25,7 @@ public class RestClient extends OkHttpClient {
         this.setWriteTimeout(readWriteTimeoutSecond, TimeUnit.SECONDS);
         this.setFollowRedirects(true);
         this.setFollowSslRedirects(true);
+        this.setProtocols(Arrays.asList(Protocol.HTTP_1_1));
     }
 
 }

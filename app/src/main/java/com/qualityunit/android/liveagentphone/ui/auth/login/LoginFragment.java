@@ -117,9 +117,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         etUrl.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if (hasFocus) {
-                    urlTester.test(etUrl.getText().toString().trim());
-                }
+                urlTester.test(etUrl.getText().toString().trim());
             }
         });
         etEmail = (AutoCompleteTextView) view.findViewById(R.id.email);
@@ -397,6 +395,11 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                 default:
                     Logger.e(TAG, "Unknown URL tester code: " + code);
             }
+        }
+
+        @Override
+        protected String onGetTypedUrl() {
+            return etUrl.getText().toString().trim();
         }
     }
 

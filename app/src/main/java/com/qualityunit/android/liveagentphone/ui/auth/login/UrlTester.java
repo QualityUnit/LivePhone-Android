@@ -15,6 +15,8 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by rasto on 11.11.16.
@@ -25,7 +27,8 @@ public abstract class UrlTester implements Handler.Callback {
     private static final long LOOP_DELAY_MILLIS = 5000;
     private static final long ERROR_DELAY_MILLIS = 1500;
     private boolean isStopped;
-    private String typedUrl;
+    private Timer timer = new Timer("urlLoop");
+    private TimerTask timerTask;
 
     public static final class CODE {
         public static final int URL_OK = 0;
@@ -39,7 +42,7 @@ public abstract class UrlTester implements Handler.Callback {
     private UrlThread currentThread;
 
     public void test(final String typedUrl) {
-        this.typedUrl = typedUrl;
+        cancelTimerTask();
         isStopped = false;
         handler.removeCallbacksAndMessages(null);
         if (currentThread != null) {
@@ -55,7 +58,26 @@ public abstract class UrlTester implements Handler.Callback {
         currentThread.start();
     }
 
+    private void loop() {
+        cancelTimerTask();
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                test(onGetTypedUrl());
+            }
+        };
+        timer.schedule(timerTask, LOOP_DELAY_MILLIS);
+    }
+
+    private void cancelTimerTask () {
+        if (timerTask != null) {
+            timerTask.cancel();
+        }
+        timerTask = null;
+    }
+
     public void stop() {
+        cancelTimerTask();
         handler.removeCallbacksAndMessages(null);
         if (currentThread != null) {
             currentThread.forget();
@@ -69,19 +91,14 @@ public abstract class UrlTester implements Handler.Callback {
             return true;
         }
         final Result result = (Result) msg.obj;
-        if (result.code == CODE.NO_CONNECTION) {
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    test(typedUrl);
-                }
-            }, LOOP_DELAY_MILLIS);
-        }
         onUrlCallback(result.code, result.typedUrl, result.apiUrl, result.message);
+        loop();
         return true;
     }
 
     protected abstract void onUrlCallback(int code, String typedUrl, String apiUrl, String message);
+
+    protected abstract String onGetTypedUrl();
 
     private static class UrlThread extends Thread {
 
@@ -109,11 +126,18 @@ public abstract class UrlTester implements Handler.Callback {
             if (fixedUrl.endsWith("/")) {
                 fixedUrl = fixedUrl.substring(0, typedUrl.length() - 1);
             }
+            if (fixedUrl.endsWith("/index.php")) {
+                fixedUrl = fixedUrl.substring(0, typedUrl.length() - "/index.php".length());
+            }
+            if (fixedUrl.endsWith("/agent")) {
+                fixedUrl = fixedUrl.substring(0, typedUrl.length() - "/agent".length());
+            }
             if (!fixedUrl.endsWith(Const.Api.API_POSTFIX)) {
                 fixedUrl = fixedUrl + Const.Api.API_POSTFIX;
             }
             if (!fixedUrl.startsWith("https://")) {
-                post(CODE.API_ERROR, fixedUrl, ERROR_DELAY_MILLIS, "URL does not start with 'https://'");
+                post(CODE.API_ERROR, fixedUrl, ERROR_DELAY_MILLIS, "URL does not loop with 'https://'");
+                return;
             }
             startChecking(fixedUrl);
         }
@@ -125,7 +149,6 @@ public abstract class UrlTester implements Handler.Callback {
                 if (!Tools.isUrlValid(url)) {
                     throw new MalformedURLException("Url do not match URL pattern");
                 }
-                Log.d(TAG, "URL is valid");
                 // testing ping request
                 final Client client = Client.getInstance();
                 final Request request = new RestGetBuilder(url, "/ping")
