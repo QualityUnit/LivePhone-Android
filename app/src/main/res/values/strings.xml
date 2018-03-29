@@ -32,16 +32,11 @@
     <string name="choose_number">Choose number</string>
     <string name="callee_empty">Phone number field is empty</string>
     <string name="make_call">Make call</string>
-    <string name="incoming_call">Incoming call</string>
-    <string name="outgoing_call">Outgoing call</string>
-    <string name="calling_as">Calling as</string>
-    <string name="calling_to">Calling to</string>
-    <string name="receiving_call_from">Receiving call from</string>
     <string name="duration">Duration</string>
     <string name="only_one_call">Only one call at anytime!</string>
     <string name="ongoing_call">Ongoing Call</string>
     <string name="hangup">Hang up</string>
-    <string name="unknown_number">Unknown number</string>
+    <string name="unknown">Unknown</string>
     <string name="signals">Signals</string>
     <string name="idle">Idle</string>
     <string name="call_state_initializing">Initializing</string>
@@ -52,7 +47,7 @@
     <string name="call_state_established">Call established</string>
     <string name="call_state_call_ended">Call ended</string>
     <string name="no_number_in_contact">There is no any phone number in contact</string>
-    <string name="call_holded">Call holded</string>
+    <string name="call_hold">Call hold</string>
     <string name="call">Call</string>
     <string name="cant_reach_host">Could not reach destination host</string>
     <string name="url_not_valid">URL not valid</string>
@@ -63,4 +58,6 @@
     <string name="status_unavailable">Unavailable</string>
     <string name="action_availability">Availability</string>
     <string name="search_hint">Search contacts</string>
+    <string name="outgoing_call">Outgoing call</string>
+    <string name="incoming_call">Incoming call</string>
 </resources>

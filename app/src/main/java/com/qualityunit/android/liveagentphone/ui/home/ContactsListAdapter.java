@@ -57,17 +57,7 @@ public class ContactsListAdapter extends ArrayAdapter<ContactsItem> {
         }
         final ContactsItem item = getItem(position);
         if(item != null) {
-            StringBuilder sb = new StringBuilder();
-            if (!TextUtils.isEmpty(item.firstname)) {
-                sb.append(item.firstname.trim());
-                sb.append(" ");
-            }
-            if (!TextUtils.isEmpty(item.lastname)) {
-                sb.append(item.lastname.trim());
-            }
-            if (sb.length() == 0) {
-                sb.append(item.system_name);
-            }
+            String contactName = Tools.createContactName(item.firstname, item.lastname, item.system_name);
             viewHolder.avatar.setImageDrawable(defaultAvatar);
             if (!item.emails.isEmpty()) {
                 String gravatarUrl = "https://www.gravatar.com/avatar/" + Tools.MD5Util.md5Hex(item.emails.get(0)) + "?d=404";
@@ -85,7 +75,7 @@ public class ContactsListAdapter extends ArrayAdapter<ContactsItem> {
             } else if (!TextUtils.isEmpty(item.avatar_url)) {
                 loadServerAvatar(baseUrl, item, viewHolder);
             }
-            viewHolder.text.setText(sb.toString().trim());
+            viewHolder.text.setText(contactName);
         }
         return convertView;
     }

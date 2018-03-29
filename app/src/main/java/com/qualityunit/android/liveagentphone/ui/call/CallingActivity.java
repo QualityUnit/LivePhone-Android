@@ -92,7 +92,6 @@ public class CallingActivity extends ToolbarActivity {
         if (isCallEstablished) {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
                 try {
-                    System.out.println("@@@@ decreasing incall volume");
                     CallingCommands.adjustIncallVolume(getApplicationContext(), false);
                     return true;
                 } catch (CallingException e) {
@@ -100,7 +99,6 @@ public class CallingActivity extends ToolbarActivity {
                 }
             } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
                 try {
-                    System.out.println("@@@@ increasing incall volume");
                     CallingCommands.adjustIncallVolume(getApplicationContext(), true);
                     return true;
                 } catch (CallingException e) {

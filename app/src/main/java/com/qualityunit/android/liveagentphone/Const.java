@@ -25,6 +25,8 @@ public class Const {
     public static class Push {
         public static final long MAX_INCOMING_CALL_PUSH_DELAY = 5;
         public static final String PUSH_TYPE_INCOMING_CALL = "I";
+        public static final String PUSH_TYPE_INIT_CALL = "O";
+        public static final String PUSH_TYPE_CANCEL_INIT_CALL = "OC";
     }
 
 

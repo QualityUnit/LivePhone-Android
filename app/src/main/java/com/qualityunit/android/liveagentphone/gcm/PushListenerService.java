@@ -1,5 +1,6 @@
 package com.qualityunit.android.liveagentphone.gcm;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -9,6 +10,7 @@ import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
 import com.qualityunit.android.liveagentphone.service.CallingException;
+import com.qualityunit.android.liveagentphone.ui.call.InitCallActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.Date;
@@ -35,6 +37,28 @@ public class PushListenerService extends GcmListenerService {
         }
         Log.d(TAG, sb.toString());
         try {
+            // check if push is actual
+            String time = data.getString("time");
+            if (TextUtils.isEmpty(time)) {
+                throw new CallingException("Push notification value 'field' is empty");
+            }
+            Date datePush = Iso8601Deserializer.toDate(time);
+            if (datePush == null) {
+                throw new CallingException("Invalid value in time 'field' of push notification: '" + time + "'.");
+            }
+            Date dateSystem = new Date();
+            long delta = (dateSystem.getTime() - datePush.getTime()) / 1000;
+//        Log.d(TAG, "Push has come in " + delta + " seconds");
+            if (delta > Const.Push.MAX_INCOMING_CALL_PUSH_DELAY) {
+                Log.d(TAG, "Late push has come - cancelling SIP registration.");
+                return;
+            }
+
+            // check if user is logged in app
+            if (!LaAccount.isSet()) {
+                throw new CallingException("Push notification received, but account is not set");
+            }
+
             // check type of push notification
             String type = data.getString("type");
             if (type == null) {
@@ -42,7 +66,13 @@ public class PushListenerService extends GcmListenerService {
             }
             switch (type) {
                 case Const.Push.PUSH_TYPE_INCOMING_CALL:
-                    processPushIncomingCall(data);
+                    CallingCommands.incomingCall(getApplicationContext());
+                    break;
+                case Const.Push.PUSH_TYPE_INIT_CALL:
+                case Const.Push.PUSH_TYPE_CANCEL_INIT_CALL:
+                    Intent intent = new Intent(getApplicationContext(), InitCallActivity.class);
+                    intent.putExtras(data);
+                    getApplicationContext().startActivity(intent);
                     break;
                 default:
                     throw new CallingException("Unknown push type: '" + type + "'");
@@ -52,30 +82,4 @@ public class PushListenerService extends GcmListenerService {
         }
     }
 
-    private void processPushIncomingCall(Bundle data) throws CallingException {
-        // check if push is actual
-        String time = data.getString("time");
-        if (TextUtils.isEmpty(time)) {
-            throw new CallingException("Invalid value in time field of 'I' push notification: '" + time + "'.");
-        }
-        Date datePush = Iso8601Deserializer.toDate(time);
-        if (datePush == null) {
-            throw new CallingException("Failed to parse 'time' from calling push notification");
-        }
-        Date dateSystem = new Date();
-        long delta = (dateSystem.getTime() - datePush.getTime()) / 1000;
-        Log.d(TAG, "Push has come in " + delta + " seconds");
-        if (delta > Const.Push.MAX_INCOMING_CALL_PUSH_DELAY) {
-            Log.d(TAG, "Late push has come - cancelling SIP registration.");
-            return;
-        }
-
-        // check if user is logged in app
-        if (!LaAccount.isSet()) {
-            throw new CallingException("Push notification received, but account is not set");
-        }
-
-        // get SIP library ready for incoming call
-        CallingCommands.incomingCall(getApplicationContext());
-    }
 }

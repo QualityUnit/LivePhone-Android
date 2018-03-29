@@ -7,73 +7,15 @@
               android:background="@color/primary">
 
     <TextView
-        android:id="@+id/tv_calling_as_label"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:maxLines="1"
-        android:textStyle="bold"
-        android:text="@string/calling_as"
-        android:textColor="@color/textSecondaryOnDark"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="15dp"
-        android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-    <TextView
-        android:id="@+id/tv_calling_as"
-        android:visibility="gone"
+        android:id="@+id/tv_remote_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/textPrimaryOnDark"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="50dp"
+        android:layout_marginBottom="50dp"
         android:maxLines="1"
         android:textAppearance="?android:attr/textAppearanceLarge"/>
-
-    <TextView
-        android:id="@+id/tv_calling_to_label"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:maxLines="1"
-        android:textStyle="bold"
-        android:text="@string/calling_to"
-        android:textColor="@color/textSecondaryOnDark"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="15dp"
-        android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-    <TextView
-        android:id="@+id/tv_calling_to"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textPrimaryOnDark"
-        android:layout_gravity="center_horizontal"
-        android:maxLines="1"
-        android:textAppearance="?android:attr/textAppearanceLarge"/>
-
-    <TextView
-        android:id="@+id/tv_receiving_call_from_label"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:maxLines="1"
-        android:textStyle="bold"
-        android:text="@string/receiving_call_from"
-        android:textColor="@color/textSecondaryOnDark"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="15dp"
-        android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-    <TextView
-        android:id="@+id/tv_receiving_call_from"
-        android:visibility="gone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/textPrimaryOnDark"
-        android:layout_gravity="center_horizontal"
-        android:maxLines="1"
-        android:textAppearance="?android:attr/textAppearanceMedium"/>
 
     <LinearLayout
         android:layout_width="match_parent"

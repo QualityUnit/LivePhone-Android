@@ -119,7 +119,8 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
             if (outGoingNumber == null) throw new CallingException(getString(R.string.cannot_call) + " " + getString(R.string.no_outgoing_numbers));
             String phoneNumber = etDialInput.getText().toString().trim();
             if (TextUtils.isEmpty(phoneNumber)) throw new CallingException(getString(R.string.callee_empty));
-            CallingCommands.makeCall(activity, phoneNumber, outGoingNumber.dial_out_preffix, outGoingNumber.number, outGoingNumber.name);
+            String contactName = getActivity().getIntent().getStringExtra("contactName");
+            CallingCommands.makeCall(activity, phoneNumber, outGoingNumber.dial_out_preffix, contactName);
         } catch (CallingException e) {
             Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
         }

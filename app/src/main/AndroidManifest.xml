@@ -124,6 +124,20 @@
         </activity>
 
         <activity
+            android:name=".ui.call.InitCallActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:label="@string/make_call"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ui.call.CallingActivity"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTop"

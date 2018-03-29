@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBar;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,24 +40,16 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     private ImageButton ibMute;
     private ImageButton ibDialpad;
     private ImageButton ibHold;
-    private int callDirection = 0;
-    private String callingAsNumber;
-    private String callingAsName;
-    private String calleeNumber;
-    private String callerNumber;
+    private String remoteNumber;
+    private String remoteName;
     private SipBroadcastReceiver sipBroadcastReceiver = new SipBroadcastReceiver();
     private boolean isSipEventsReceiverRegistered;
-    private TextView tvCallingAsLabel;
-    private TextView tvCallingAs;
-    private TextView tvCallingToLabel;
-    private TextView tvCallingTo;
-    private TextView tvReceivingCallFromLabel;
-    private TextView tvReceivingCallFrom;
     private TextView tvState;
     private LinearLayout llCallState;
     private Chronometer chTimer;
     private volatile long startTime = System.currentTimeMillis();
     private GlowPadView glowPad;
+    private TextView tvRemoteName;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -68,32 +60,18 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         Intent intent = getActivity().getIntent();
-        callDirection = intent.getIntExtra(CallingService.KEY_CALL_DIRECTION, 0);
-        callingAsNumber = intent.getStringExtra("callingAsNumber");
-        callingAsName = intent.getStringExtra("callingAsName");
-        calleeNumber = intent.getStringExtra("calleeNumber");
-        callerNumber = intent.getStringExtra("callerNumber");
+        remoteNumber = intent.getStringExtra("remoteNumber");
+        remoteName = intent.getStringExtra("remoteName");
+        String nameToShow = TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName;
+        nameToShow = TextUtils.isEmpty(nameToShow) ? getString(R.string.unknown) : nameToShow;
+        setText(tvRemoteName, nameToShow);
         registerSipEventsReceiver();
-        if (callDirection == CallingService.CALL_DIRECTION.INCOMING) {
-            setUiCallIncoming();
-        }
-        else if (callDirection == CallingService.CALL_DIRECTION.OUTGOING) {
-            setUiCallOutgoing();
-        }
-        else {
-            Toast.makeText(activity, "Error: Unknown callDirection: " + callDirection, Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        tvCallingAsLabel = (TextView) view.findViewById(R.id.tv_calling_as_label);
-        tvCallingAs = (TextView) view.findViewById(R.id.tv_calling_as);
-        tvCallingToLabel = (TextView) view.findViewById(R.id.tv_calling_to_label);
-        tvCallingTo = (TextView) view.findViewById(R.id.tv_calling_to);
-        tvReceivingCallFromLabel = (TextView) view.findViewById(R.id.tv_receiving_call_from_label);
-        tvReceivingCallFrom = (TextView) view.findViewById(R.id.tv_receiving_call_from);
+        tvRemoteName = (TextView) view.findViewById(R.id.tv_remote_name);
         tvState = (TextView) view.findViewById(R.id.tv_state);
         ibSpeaker = (ImageButton) view.findViewById(R.id.ib_speaker);
         ibSpeaker.setOnClickListener(new View.OnClickListener() {
@@ -163,11 +141,13 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                 if (target == 0) {
                     // answer
                     glowPad.setVisibility(View.GONE);
+                    llCallState.setVisibility(View.VISIBLE);
                     activity.getFabHangupCall().setVisibility(View.VISIBLE);
                     activity.receiveCall();
                 } else if (target == 2) {
                     // decline
                     glowPad.setVisibility(View.GONE);
+                    llCallState.setVisibility(View.VISIBLE);
                     activity.declineCall();
                 }
             }
@@ -200,28 +180,6 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         chTimer.stop();
         unregisterSipEventsReceiver();
         super.onStop();
-    }
-
-    private void setUiCallIncoming() {
-        ActionBar actionBar = activity.getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.incoming_call);
-        }
-        tvReceivingCallFromLabel.setVisibility(View.VISIBLE);
-        setText(tvReceivingCallFrom, callerNumber);
-    }
-
-    private void setUiCallOutgoing() {
-        ActionBar actionBar = activity.getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.outgoing_call);
-        }
-        tvCallingAsLabel.setVisibility(View.VISIBLE);
-        tvCallingToLabel.setVisibility(View.VISIBLE);
-        setText(tvCallingAs, callingAsNumber);
-        setText(tvCallingTo, calleeNumber);
-        llCallState.setVisibility(View.VISIBLE);
-        activity.getFabHangupCall().setVisibility(View.VISIBLE);
     }
 
     private void setText(TextView textView, String text) {
@@ -298,7 +256,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     boolean isHolded = intent.getBooleanExtra("isHold", false);
                     toggleImageButton(ibHold, isHolded);
                     if (isHolded) {
-                        setText(tvState, getString(R.string.call_holded));
+                        setText(tvState, getString(R.string.call_hold));
                     } else {
                         setText(tvState, getString(R.string.call_state_established));
                     }

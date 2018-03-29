@@ -37,6 +37,7 @@ import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
 import com.qualityunit.android.liveagentphone.ui.common.PaginationScrollListener;
 import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
+import com.qualityunit.android.liveagentphone.util.Tools;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -225,10 +226,15 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         final ContactsItem item = getAdapter().getItem(position);
-        if (item == null || item.phones == null || item.phones.size() == 0) {
+        final Intent intent = new Intent(this, DialerActivity.class);
+        String contactName = Tools.createContactName(item.firstname, item.lastname, item.system_name);
+        if (!TextUtils.isEmpty(contactName)) {
+            intent.putExtra("contactName", contactName);
+        }
+        if (item.phones == null || item.phones.size() == 0) {
             Toast.makeText(this, getString(R.string.no_number_in_contact), Toast.LENGTH_SHORT).show();
         } else if (item.phones.size() == 1){
-            startActivity(new Intent(this, DialerActivity.class).putExtra("number", item.phones.get(0)));
+            startActivity(intent.putExtra("number", item.phones.get(0)));
         } else {
             ArrayAdapter<String> calleeNumberAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, item.phones);
             AlertDialog.Builder calleeNumberPicker = new AlertDialog.Builder(this);
@@ -237,7 +243,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
             calleeNumberPicker.setAdapter(calleeNumberAdapter, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    startActivity(new Intent(SearchActivity.this, DialerActivity.class).putExtra("number", item.phones.get(which)));
+                    startActivity(intent.putExtra("number", item.phones.get(which)));
                 }
             });
             calleeNumberPicker.create().show();

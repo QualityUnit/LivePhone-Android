@@ -116,15 +116,13 @@ public class CallingService extends Service implements SipAppObserver {
     private volatile boolean hangingUpCall;
     private volatile boolean waitingToCall;
     private volatile boolean finishingService;
-    private String sipHost;
-    private String callingPrefix;
-    private String calleeNumber;
-    private String callerNumber;
     private String sipUser;
+    private String sipHost;
+    private String prefix;
+    private String remoteNumber;
+    private String remoteName;
     private String sipPassword;
     private int callDirection;
-    private String callingAsNumber;
-    private String callingAsName;
     private static PowerManager.WakeLock wakeLock;
     private static PowerManager.WakeLock proximityWakeLock;
     private MediaPlayer ringTone;
@@ -162,17 +160,16 @@ public class CallingService extends Service implements SipAppObserver {
             int command = intent.getIntExtra(KEY_COMMAND, 0);
             switch (command) {
                 case COMMANDS.MAKE_CALL:
-                    callingAsNumber = intent.getStringExtra("callingAsNumber");
-                    callingAsName = intent.getStringExtra("callingAsName");
-                    calleeNumber = intent.getStringExtra("calleeNumber");
-                    callingPrefix = intent.getStringExtra("callingPrefix");
-                    callDirection = intent.getIntExtra(KEY_CALL_DIRECTION, 0);
-                    notificationContentText = calleeNumber;
+                    prefix = intent.getStringExtra("prefix");
+                    remoteNumber = intent.getStringExtra("remoteNumber");
+                    remoteName = intent.getStringExtra("remoteName");
+                    callDirection = CALL_DIRECTION.OUTGOING;
+                    notificationContentText = TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName ;
                     startActivity(createCallingActivityIntent());
                     initAndRegister();
                     break;
                 case COMMANDS.INCOMING_CALL:
-                    callDirection = intent.getIntExtra(KEY_CALL_DIRECTION, 0);
+                    callDirection = CALL_DIRECTION.INCOMING;
                     initAndRegister();
                     break;
                 case COMMANDS.RECEIVE_CALL:
@@ -257,10 +254,8 @@ public class CallingService extends Service implements SipAppObserver {
     private Intent createCallingActivityIntent() {
         return new Intent(CallingService.this, CallingActivity.class)
                 .putExtra(KEY_CALL_DIRECTION, callDirection)
-                .putExtra("callingAsNumber", callingAsNumber)
-                .putExtra("callingAsName", callingAsName)
-                .putExtra("calleeNumber", calleeNumber)
-                .putExtra("callerNumber", callerNumber)
+                .putExtra("remoteNumber", remoteNumber)
+                .putExtra("remoteName", remoteName)
                 .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
@@ -281,7 +276,7 @@ public class CallingService extends Service implements SipAppObserver {
                     }
                 } else if (CALLBACKS.CALL_ESTABLISHED.equals(lastState)) {
                     if (isHold) {
-                        titleText = getString(R.string.call_holded);
+                        titleText = getString(R.string.call_hold);
                         icon = R.drawable.ic_call_paused_24dp;
                     } else {
                         titleText = getString(R.string.ongoing_call);
@@ -386,7 +381,7 @@ public class CallingService extends Service implements SipAppObserver {
                             finishService();
                         }
                     }
-                    // wait for registration callback and continue from listener
+                    // wait for registration callback and continue from listener "notifyRegState"
                 }
             });
         } catch (final Exception e) {
@@ -434,8 +429,8 @@ public class CallingService extends Service implements SipAppObserver {
                 opt.setVideoCount(0);
                 opt.setFlag(0);
                 try {
-                    String cleanCalleeNumber = Tools.Sip.cleanNumber(calleeNumber);
-                    String sipCalleeUri = Tools.Sip.createCalleeUri(callingPrefix, cleanCalleeNumber, sipHost);
+                    String cleanedRemoteNumber = Tools.Sip.cleanNumber(remoteNumber);
+                    String sipCalleeUri = Tools.Sip.createCalleeUri(prefix, cleanedRemoteNumber, sipHost);
                     call.makeCall(sipCalleeUri, prm);
                     sipCurrentCall = call;
                     Log.d(TAG, "#### Call to '" + sipCalleeUri + "' started successfully");
@@ -662,11 +657,11 @@ public class CallingService extends Service implements SipAppObserver {
         });
     }
 
-    private void showMissedCall(String remoteNumber) {
+    private void showMissedCall(String remoteNumber, String remoteName) {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext());
         String missedCallStr = getString(R.string.missed_call);
         notificationBuilder.setContentTitle(missedCallStr);
-        notificationBuilder.setContentText(remoteNumber);
+        notificationBuilder.setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName);
         notificationBuilder.setTicker(missedCallStr);
         notificationBuilder.setSmallIcon(R.drawable.ic_phone_icon);
 //        notificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
@@ -683,6 +678,9 @@ public class CallingService extends Service implements SipAppObserver {
 
         Intent notificationIntent = new Intent(getApplicationContext(), DialerActivity.class);
         notificationIntent.putExtra("number", remoteNumber);
+        if (!TextUtils.isEmpty(remoteName)) {
+            notificationIntent.putExtra("remoteName", remoteName);
+        }
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
         stackBuilder.addParentStack(DialerActivity.class);
@@ -763,17 +761,25 @@ public class CallingService extends Service implements SipAppObserver {
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
                         call.answer(prm);
                         waitingToCall = false;
-                        String callerId = call.getInfo().getRemoteUri();
-                        Pattern pattern = Pattern.compile("\\<sip\\:(.+)\\@.+\\>");
-                        Matcher matcher = pattern.matcher(callerId);
-                        if (!TextUtils.isEmpty(callerId)) {
-                            boolean found = matcher.find();
-                            if (found) {
-                                notificationContentText = callerNumber = matcher.group(1);;
-                                Logger.e(TAG, "#### Caller number found: " + callerNumber);
+                        String remoteUri = call.getInfo().getRemoteUri();
+                        if (!TextUtils.isEmpty(remoteUri)) {
+                            Pattern pattern = Pattern.compile("\\<sip\\:(.+)\\@.+\\>");
+                            Matcher matcher = pattern.matcher(remoteUri);
+                            if (matcher.find()) {
+                                notificationContentText = remoteNumber = matcher.group(1);
+                                Logger.e(TAG, "#### Remote number found: " + remoteNumber);
                             }
                             else {
-                                Logger.e(TAG, "#### Caller number not found.");
+                                Logger.e(TAG, "#### Remote number not found.");
+                            }
+                            pattern = Pattern.compile("\\\"?([^\\\"]*)\\\"?");
+                            matcher = pattern.matcher(remoteUri);
+                            if (matcher.find()) {
+                                notificationContentText = remoteName = matcher.group(1);
+                                Logger.e(TAG, "#### Remote name found: " + remoteName);
+                            }
+                            else {
+                                Logger.e(TAG, "#### Remote name not found.");
                             }
                         }
                         startRingtone();
@@ -858,7 +864,7 @@ public class CallingService extends Service implements SipAppObserver {
                     @Override
                     public void run() {
                         if (isMissedCall) {
-                            showMissedCall(callerNumber);
+                            showMissedCall(remoteNumber, remoteName);
                         }
                     }
                 });

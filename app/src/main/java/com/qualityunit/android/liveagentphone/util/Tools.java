@@ -321,6 +321,21 @@ public abstract class Tools {
         return stringBuilder.toString();
     }
 
+    public static String createContactName(String firstName, String lastName, String systemName) {
+        StringBuilder sb = new StringBuilder();
+        if (!TextUtils.isEmpty(firstName)) {
+            sb.append(firstName.trim());
+            sb.append(" ");
+        }
+        if (!TextUtils.isEmpty(lastName)) {
+            sb.append(lastName.trim());
+        }
+        if (sb.length() == 0) {
+            sb.append(systemName.trim());
+        }
+        return sb.toString().trim();
+    }
+
     public static class MD5Util {
 
         public static String hex(byte[] array) {
