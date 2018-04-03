@@ -6,22 +6,16 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/primary"
     android:fitsSystemWindows="true"
     tools:context=".ui.call.InitCallActivity">
 
-    <android.support.design.widget.AppBarLayout
-        android:layout_height="wrap_content"
+    <TextView
         android:layout_width="match_parent"
-        android:theme="@style/AppTheme.AppBarOverlay">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay"/>
-
-    </android.support.design.widget.AppBarLayout>
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:textColor="@color/textSecondaryOnDark"
+        android:text="@string/make_call"/>
 
     <LinearLayout
         android:id="@+id/container"
@@ -35,30 +29,50 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true" >
 
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_avatar_white_24dp"/>
+
         <TextView
-            android:id="@+id/tv_contact"
+            android:id="@+id/tv_primary"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/textPrimaryOnDark"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"/>
+
+        <TextView
+            android:id="@+id/tv_secondary"
             android:gravity="center"
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textColor="@color/textSecondaryOnDark"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
-
-        <TextView
-            android:id="@+id/tv_number"
-            android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"/>
 
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_cancelCall"
+        android:layout_width="@dimen/fab_action_size"
+        android:layout_height="@dimen/fab_action_size"
+        android:scaleType="center"
+        app:backgroundTint="@color/callButtonRed"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="@dimen/fab_action_margin"
+        android:layout_marginRight="150dp"
+        android:src="@drawable/ic_call_end_24dp"/>
+
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_makeCall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/fab_action_size"
+        android:layout_height="@dimen/fab_action_size"
+        android:scaleType="center"
         app:backgroundTint="@color/callButtonGreen"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_margin="@dimen/fab_margin"
+        android:layout_marginBottom="@dimen/fab_action_margin"
+        android:layout_marginLeft="150dp"
         android:src="@drawable/ic_call_green_24dp"/>
 
 </android.support.design.widget.CoordinatorLayout>

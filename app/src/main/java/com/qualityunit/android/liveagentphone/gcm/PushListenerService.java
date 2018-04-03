@@ -2,6 +2,7 @@ package com.qualityunit.android.liveagentphone.gcm;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -69,10 +70,12 @@ public class PushListenerService extends GcmListenerService {
                     CallingCommands.incomingCall(getApplicationContext());
                     break;
                 case Const.Push.PUSH_TYPE_INIT_CALL:
-                case Const.Push.PUSH_TYPE_CANCEL_INIT_CALL:
                     Intent intent = new Intent(getApplicationContext(), InitCallActivity.class);
                     intent.putExtras(data);
                     getApplicationContext().startActivity(intent);
+                    break;
+                case Const.Push.PUSH_TYPE_CANCEL_INIT_CALL:
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(InitCallActivity.INTENT_FILTER_INIT_CALL).putExtras(data));
                     break;
                 default:
                     throw new CallingException("Unknown push type: '" + type + "'");

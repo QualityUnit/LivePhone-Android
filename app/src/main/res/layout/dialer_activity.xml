@@ -25,8 +25,9 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_makeCall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/fab_size"
+        android:layout_height="@dimen/fab_size"
+        android:scaleType="center"
         app:backgroundTint="@color/callButtonGreen"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_margin="@dimen/fab_margin"

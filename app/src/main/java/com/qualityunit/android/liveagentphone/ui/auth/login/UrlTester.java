@@ -148,8 +148,8 @@ public abstract class UrlTester implements Handler.Callback {
             try {
                 Log.d(TAG, "Testing URL: '" + url + "'");
                 // testing URL validity
-                if (!Tools.isUrlValid(url)) {
-                    throw new MalformedURLException("Url do not match URL pattern");
+                if (!Tools.isUrlValid(url) || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+                    throw new MalformedURLException();
                 }
                 // testing ping request
                 final Client client = Client.getInstance();
