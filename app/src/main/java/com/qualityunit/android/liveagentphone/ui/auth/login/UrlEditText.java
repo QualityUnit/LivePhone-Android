@@ -8,6 +8,8 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 
+import com.qualityunit.android.liveagentphone.BuildConfig;
+
 /**
  * Created by rasto on 7.3.18.
  */
@@ -34,6 +36,9 @@ public class UrlEditText extends AppCompatEditText implements TextWatcher {
 
     @Override
     protected void onSelectionChanged(int selStart, int selEnd) {
+        if (BuildConfig.DEBUG) {
+            return;
+        }
         if (getText().length() >= PREFIX.length() && selStart < PREFIX.length()) {
             setSelection(PREFIX.length(), selEnd);
         }
@@ -42,6 +47,9 @@ public class UrlEditText extends AppCompatEditText implements TextWatcher {
     @Override
     protected void onFocusChanged(boolean focused, int direction, Rect previouslyFocusedRect) {
         super.onFocusChanged(focused, direction, previouslyFocusedRect);
+        if (BuildConfig.DEBUG) {
+            return;
+        }
         if (focused && TextUtils.isEmpty(getText())) {
             setText(PREFIX);
         }
@@ -60,6 +68,9 @@ public class UrlEditText extends AppCompatEditText implements TextWatcher {
 
     @Override
     public void afterTextChanged(Editable s) {
+        if (BuildConfig.DEBUG) {
+            return;
+        }
         if (isFocused()) {
             String text = getText().toString();
             if (text.startsWith(PREFIX)) {

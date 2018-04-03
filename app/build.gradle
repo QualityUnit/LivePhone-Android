@@ -7,8 +7,8 @@ android {
         applicationId "com.qualityunit.android.liveagentphone"
         minSdkVersion 21
         targetSdkVersion 22 // be carefull, keep it less than 23 (http://forum.unity3d.com/threads/systeminfo-deviceuniqueidentifier-android-6-0.367028/)
-        versionCode 9
-        versionName "1.0.8-beta"
+        versionCode 10
+        versionName "1.0.13-beta"
         ndk {
             abiFilters "armeabi", "armeabi-v7a", "x86"
         }

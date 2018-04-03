@@ -5,6 +5,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.qualityunit.android.liveagentphone.BuildConfig;
 import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
 import com.qualityunit.android.liveagentphone.util.Tools;
@@ -123,6 +124,11 @@ public abstract class UrlTester implements Handler.Callback {
                 return;
             }
             String fixedUrl = typedUrl;
+            if (!BuildConfig.DEBUG && !fixedUrl.startsWith("https://")) {
+                post(CODE.API_ERROR, fixedUrl, ERROR_DELAY_MILLIS, "URL does not loop with 'https://'");
+                return;
+            }
+            // do not do this while debug
             if (fixedUrl.endsWith("/")) {
                 fixedUrl = fixedUrl.substring(0, typedUrl.length() - 1);
             }
@@ -134,10 +140,6 @@ public abstract class UrlTester implements Handler.Callback {
             }
             if (!fixedUrl.endsWith(Const.Api.API_POSTFIX)) {
                 fixedUrl = fixedUrl + Const.Api.API_POSTFIX;
-            }
-            if (!fixedUrl.startsWith("https://")) {
-                post(CODE.API_ERROR, fixedUrl, ERROR_DELAY_MILLIS, "URL does not loop with 'https://'");
-                return;
             }
             startChecking(fixedUrl);
         }
