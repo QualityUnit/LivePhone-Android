@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class RestClient extends OkHttpClient {
 
-    public RestClient(long connectTimeoutSeconds, long readWriteTimeoutSecond, boolean verifyingSsl) {
+    public RestClient(long connectTimeoutSeconds, long readWriteTimeoutSecond) {
         super();
         if (BuildConfig.DEBUG) {
             RestfulLoggingInterceptor interceptor = new RestfulLoggingInterceptor();

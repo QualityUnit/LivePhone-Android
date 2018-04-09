@@ -23,8 +23,6 @@ import com.qualityunit.android.liveagentphone.ui.init.InitActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
-import com.squareup.okhttp.internal.http.RealResponseBody;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,7 +43,6 @@ public class ApiCall<T> {
     private String url;
     private PingPong pingPong;
     private boolean reCalledAuthorize;
-    private boolean reCalledFallback;
 
     public ApiCall(Activity activity) {
         this.activity = activity;
@@ -115,20 +112,7 @@ public class ApiCall<T> {
                     makeReCallAuthorized(httpCode, httpMessage, token);
                     break;
                 case ErrorCode.NOT_FOUND:
-                    // fallback
-                    if (reCalledFallback) {
-                        pingPong.onResponse(new LoaderResult(null, httpCode, httpMessage));
-                    }
-                    else {
-                        reCalledFallback = true;
-                        //switch scheme and call again
-                        try {
-                            makeRequest(Tools.switchScheme(url), token);
-                        } catch (Exception ex) {
-                            pingPong.onResponse(new LoaderResult(null, httpCode, httpMessage));
-                        }
-
-                    }
+                    pingPong.onResponse(new LoaderResult(null, httpCode, httpMessage));
                     break;
                 default:
                     showAndLogError(httpCode, httpMessage, null);

@@ -18,15 +18,17 @@ import org.pjsip.pjsua2.pjsua_call_media_status;
 public class SipCall extends Call {
     public VideoWindow vidWin;
     public VideoPreview vidPrev;
+    private SipCore sipCore;
 
-    public SipCall(SipAccount acc, int call_id) {
+    public SipCall(SipAccount acc, int call_id, SipCore sipCore) {
         super(acc, call_id);
+        this.sipCore = sipCore;
         vidWin = null;
     }
 
     @Override
     public void onCallState(OnCallStateParam prm) {
-        SipCore.observer.notifyCallState(this);
+        sipCore.observer.notifyCallState(this);
         try {
             CallInfo ci = getInfo();
             if (ci.getState() == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
@@ -62,8 +64,8 @@ public class SipCall extends Call {
 
                 // connect ports
                 try {
-                    SipCore.ep.audDevManager().getCaptureDevMedia().startTransmit(am);
-                    am.startTransmit(SipCore.ep.audDevManager().getPlaybackDevMedia());
+                    sipCore.ep.audDevManager().getCaptureDevMedia().startTransmit(am);
+                    am.startTransmit(sipCore.ep.audDevManager().getPlaybackDevMedia());
                 } catch (Exception e) {
                     continue;
                 }
@@ -75,6 +77,6 @@ public class SipCall extends Call {
             }
         }
 
-        SipCore.observer.notifyCallMediaState(this);
+        sipCore.observer.notifyCallMediaState(this);
     }
 }

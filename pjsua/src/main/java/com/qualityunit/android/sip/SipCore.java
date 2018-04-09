@@ -29,21 +29,14 @@ import org.pjsip.pjsua2.pjsip_transport_type_e;
 
 
 public class SipCore {
+
     static {
-//        try {
-//            System.loadLibrary("openh264");
-//            System.loadLibrary("yuv");
-//        } catch (UnsatisfiedLinkError e) {
-//            System.out.println("UnsatisfiedLinkError: " + e.getMessage());
-//            System.out.println("This could be safely ignored if you " +
-//                    "don't need video.");
-//        }
         System.loadLibrary("pjsua2");
         System.out.println("Library loaded");
     }
 
-    public static Endpoint ep;
-    public static SipAppObserver observer;
+    public Endpoint ep;
+    public SipAppObserver observer;
 
     private EpConfig epConfig = new EpConfig();
     private TransportConfig sipTpConfig = new TransportConfig();
@@ -56,10 +49,6 @@ public class SipCore {
 
     public SipCore() {
         ep = new Endpoint();
-    }
-
-    public void init(SipAppObserver observer) throws Exception {
-        init(observer, null);
     }
 
     public void init(SipAppObserver observer, String externalThread) throws Exception {
@@ -86,10 +75,6 @@ public class SipCore {
         StringVector stun_servers = new StringVector();
         stun_servers.add("stun.pjsip.org");
         ua_cfg.setStunServer(stun_servers);
-//        if (own_worker_thread) {
-//            ua_cfg.setThreadCnt(0);
-//            ua_cfg.setMainThreadOnly(true);
-//        }
         if (externalThread != null) {
             ep.libRegisterThread(externalThread);
         }

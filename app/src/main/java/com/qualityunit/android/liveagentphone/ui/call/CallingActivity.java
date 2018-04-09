@@ -12,11 +12,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
-import com.qualityunit.android.liveagentphone.service.CallingException;
 import com.qualityunit.android.liveagentphone.service.CallingService;
 import com.qualityunit.android.liveagentphone.ui.common.ToolbarActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
@@ -81,51 +79,31 @@ public class CallingActivity extends ToolbarActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (isRinging && (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP)){
-            try {
-                CallingCommands.silenceRinging(getApplicationContext());
-                isRinging = false;
-                return true;
-            } catch (CallingException e) {
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+            CallingCommands.silenceRinging(getApplicationContext());
+            isRinging = false;
+            return true;
         }
         if (isCallEstablished) {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                try {
-                    CallingCommands.adjustIncallVolume(getApplicationContext(), false);
-                    return true;
-                } catch (CallingException e) {
-                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
+                CallingCommands.adjustIncallVolume(getApplicationContext(), false);
             } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-                try {
-                    CallingCommands.adjustIncallVolume(getApplicationContext(), true);
-                    return true;
-                } catch (CallingException e) {
-                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
+                CallingCommands.adjustIncallVolume(getApplicationContext(), true);
             }
         }
         return super.onKeyDown(keyCode, event);
     }
 
     public void declineCall() {
-        try {
-            if (isCallEnded) {
-                finish();
-            }
-            CallingCommands.hangupCall(CallingActivity.this);
-        } catch (CallingException e) {
-            Toast.makeText(CallingActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        if (isCallEnded) {
+            finish();
+            return;
         }
+        isCallEnded = true;
+        CallingCommands.hangupCall(CallingActivity.this);
     }
 
     public void receiveCall() {
-        try {
-            CallingCommands.receiveCall(CallingActivity.this);
-        } catch (CallingException e) {
-            Toast.makeText(CallingActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        CallingCommands.receiveCall(CallingActivity.this);
     }
 
     public FloatingActionButton getFabHangupCall() {

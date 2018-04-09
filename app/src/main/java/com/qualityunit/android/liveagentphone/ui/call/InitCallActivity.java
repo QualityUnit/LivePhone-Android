@@ -16,12 +16,10 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
-import com.qualityunit.android.liveagentphone.service.CallingException;
 
 /**
  * Created by rasto on 18.10.16.
@@ -73,12 +71,8 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
             fabMakeCall.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    try {
-                        finish();
-                        CallingCommands.makeCall(getApplicationContext(), dialString, "", TextUtils.isEmpty(contactName) ? remoteNumber : contactName);
-                    } catch (CallingException e) {
-                        Toast.makeText(InitCallActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
+                    finish();
+                    CallingCommands.makeCall(getApplicationContext(), dialString, "", TextUtils.isEmpty(contactName) ? remoteNumber : contactName);
                 }
             });
         }

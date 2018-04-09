@@ -277,18 +277,6 @@ public abstract class Tools {
         return Patterns.WEB_URL.matcher(url).matches();
     }
 
-    public static String switchScheme(String url) throws Exception {
-        if (url.contains("http://")) {
-            return url.replace("http://", "https://");
-        }
-        else if (url.contains("https://")) {
-            return url.replace("https://", "http://");
-        }
-        else {
-            throw new Exception("Missing scheme in URL: '" + url + "'");
-        }
-    }
-
     public static String fixDecimalsBefore(int num, int count) {
         if (num < 0) {
             return "";

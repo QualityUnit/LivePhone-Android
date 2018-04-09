@@ -23,6 +23,7 @@ import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
@@ -32,7 +33,6 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.qualityunit.android.sip.SipAccount;
 import com.qualityunit.android.sip.SipAppObserver;
-import com.qualityunit.android.sip.SipBuddy;
 import com.qualityunit.android.sip.SipCall;
 import com.qualityunit.android.sip.SipCore;
 
@@ -60,7 +60,6 @@ public class CallingService extends Service implements SipAppObserver {
     private static final int ONGOING_NOTIFICATION_ID = 1;
     private static final long[] VIBRATOR_PATTERN = {0, 1000, 1000};
     private static final long WAITING_TO_CALL_MILLIS = 5000;
-    private static final long CALL_ENDED_DELAY_MILLIS = 2000;
     public static final String KEY_COMMAND = "KEY_COMMAND";
     public static final String KEY_CALLBACK = "KEY_CALLBACK";
     public static final String KEY_CALL_DIRECTION = "KEY_CALL_DIRECTION";
@@ -70,7 +69,6 @@ public class CallingService extends Service implements SipAppObserver {
         public static final int INCOMING_CALL = 2;
         public static final int RECEIVE_CALL = 3;
         public static final int HANGUP_CALL = 4;
-        public static final int UPDATE_DURATION = 5;
         public static final int UPDATE_STATE = 6;
         public static final int SEND_DTMF = 7;
         public static final int SILENCE_RINGING = 8;
@@ -101,21 +99,18 @@ public class CallingService extends Service implements SipAppObserver {
         public static final int OUTGOING = 1;
         public static final int INCOMING = 2;
     }
-    public static boolean isRunning;
     private boolean isMute;
     private boolean isSpeaker;
     private boolean isHold;
     private boolean isMissedCall;
-    private long startTime = System.currentTimeMillis();
+    private long startTime = -1;
     private String lastState = "";
     private String notificationContentText;
     private long notificationWhen = System.currentTimeMillis();
     private HandlerThread workerThread;
     private Handler workerHandler;
     private final Handler mainHandler = new Handler();
-    private volatile boolean hangingUpCall;
     private volatile boolean waitingToCall;
-    private volatile boolean finishingService;
     private String sipUser;
     private String sipHost;
     private String prefix;
@@ -143,7 +138,6 @@ public class CallingService extends Service implements SipAppObserver {
             proximityWakeLock.acquire();
         }
         wakeLock.acquire();
-        isRunning = true;
         startWorkerThread();
     }
 
@@ -157,11 +151,16 @@ public class CallingService extends Service implements SipAppObserver {
     public int onStartCommand(final Intent intent, int flags, int startId) {
         Log.d(TAG, "#### SERVICE onStartCommand (" + startId + ") with intent (" + (intent != null) + ")");
         try {
+            if (intent == null) {
+                throw new CallingException("Intent is null");
+            }
             int command = intent.getIntExtra(KEY_COMMAND, 0);
             switch (command) {
                 case COMMANDS.MAKE_CALL:
+                    if (sipCurrentCall != null) throw new CallingException(getString(R.string.only_one_call));
                     prefix = intent.getStringExtra("prefix");
                     remoteNumber = intent.getStringExtra("remoteNumber");
+                    if (TextUtils.isEmpty(remoteNumber)) throw new CallingException("Argument 'remoteNumber' is empty");
                     remoteName = intent.getStringExtra("remoteName");
                     callDirection = CALL_DIRECTION.OUTGOING;
                     notificationContentText = TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName ;
@@ -176,7 +175,10 @@ public class CallingService extends Service implements SipAppObserver {
                     receiveCall();
                     break;
                 case COMMANDS.SEND_DTMF:
-                    sendDtfm(intent.getStringExtra("character"));
+                    String character = intent.getStringExtra("character");
+                    if (TextUtils.isEmpty(character)) throw new CallingException("Empty DTMF argument");
+                    if (sipCurrentCall == null) throw new CallingException("Cannot send DTMF signal when calling service is not running");
+                    sendDtfm(character);
                     break;
                 case COMMANDS.HANGUP_CALL:
                     hangupCallAndFinishService();
@@ -211,6 +213,7 @@ public class CallingService extends Service implements SipAppObserver {
             }
             return START_NOT_STICKY;
         } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             setError("#### Error while starting " + TAG, e);
             return START_REDELIVER_INTENT;
         }
@@ -221,7 +224,6 @@ public class CallingService extends Service implements SipAppObserver {
         Log.d(TAG, "#### SERVICE onDestroy");
         stopRingtone();
         stopWorkerThread();
-        isRunning = false;
         super.onDestroy();
         if (proximityWakeLock != null) {
             proximityWakeLock.release();
@@ -324,12 +326,7 @@ public class CallingService extends Service implements SipAppObserver {
 
     private void stopWorkerThread() {
         if (workerThread != null) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                workerThread.quitSafely();
-            }
-            else {
-                workerThread.quit();
-            }
+            workerThread.quitSafely();
             Log.d(TAG, "#### Worker thread and handler stopped");
             workerThread = null;
             workerHandler = null;
@@ -364,16 +361,11 @@ public class CallingService extends Service implements SipAppObserver {
                         }
                     }
 
-                    // register sip user
-                    if (hangingUpCall) {
-                        Log.d(TAG, "#### Calling terminated before registering user");
-                        return;
-                    }
                     if (sipAccount == null) {
                         setCallState(CALLBACKS.REGISTERING_SIP_USER);
                         AccountConfig sipAccountConfig = createAccountConfig();
                         try {
-                            sipAccount = new SipAccount(sipAccountConfig);
+                            sipAccount = new SipAccount(sipAccountConfig, sipCore);
                             sipAccount.create(sipAccountConfig, true);
                             Log.d(TAG, "#### Account registration fired");
                         } catch (final Exception e) {
@@ -413,16 +405,12 @@ public class CallingService extends Service implements SipAppObserver {
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (hangingUpCall) {
-                    Log.d(TAG, "#### Calling terminated before making call");
-                    return;
-                }
                 if (sipCurrentCall != null) {
                     Log.d(TAG, "Only one call at anytime!");
                     return;
                 }
                 setCallState(CALLBACKS.STARTING_CALL);
-                SipCall call = new SipCall(sipAccount, -1);
+                SipCall call = new SipCall(sipAccount, -1, sipCore);
                 CallOpParam prm = new CallOpParam();
                 CallSetting opt = prm.getOpt();
                 opt.setAudioCount(1);
@@ -461,10 +449,6 @@ public class CallingService extends Service implements SipAppObserver {
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (hangingUpCall) {
-                    Log.d(TAG, "#### Calling terminated before making call");
-                    return;
-                }
                 if (sipCurrentCall == null) {
                     Log.d(TAG, "#### No ringing call now");
                     return;
@@ -499,15 +483,10 @@ public class CallingService extends Service implements SipAppObserver {
     }
 
     private void hangupCallAndFinishService() {
-        if (hangingUpCall) {
-            Log.d(TAG, "#### Hanging up already started");
-            return;
-        }
         stopRingtone();
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                hangingUpCall = true;
                 setCallState(CALLBACKS.HANGING_UP_CALL);
                 if (sipCurrentCall != null) {
                     try {
@@ -515,15 +494,15 @@ public class CallingService extends Service implements SipAppObserver {
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
                         sipCurrentCall.hangup(prm);
                         Log.d(TAG, "#### Call successfully hanged up");
+                        // finishing of service is then called from "notifyCallState"
                     } catch (final Exception e) {
                         setError("Error while hanging up call", e);
                         finishService();
                     }
                 } else {
+                    setError("No call to hang up", null);
                     finishService();
                 }
-
-                // finishing of service is called from notifyCallState
             }
         });
     }
@@ -584,34 +563,29 @@ public class CallingService extends Service implements SipAppObserver {
     }
 
     private void finishService() {
-        if (finishingService) {
-            Log.d(TAG, "#### Finnishing already started");
-            return;
-        }
-        workerHandler.post(new Runnable() {
+        mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                finishingService = true;
-                if (sipCore != null) {
-                    Log.d(TAG, "#### Deinitializing library");
-                    sipCore.deinit();
-                }
-                sipCore = null;
-                sipCurrentCall = null;
-                sipAccount = null;
-                stopSelfDelayed();
+                workerHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        sipCurrentCall = null;
+                        if (sipCore != null) {
+                            Log.d(TAG, "#### Deinitializing library");
+                            sipCore.deinit();
+                        }
+                        sipCore = null;
+                        sipAccount = null;
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                stopSelf();
+                            }
+                        });
+                    }
+                });
             }
         });
-    }
-
-    private void stopSelfDelayed() {
-        mainHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "#### Stopping service with delay " + CALL_ENDED_DELAY_MILLIS + " millis");
-                stopSelf();
-            }
-        }, CALL_ENDED_DELAY_MILLIS);
     }
 
     private void startRingtone() {
@@ -663,18 +637,8 @@ public class CallingService extends Service implements SipAppObserver {
         notificationBuilder.setContentTitle(missedCallStr);
         notificationBuilder.setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName);
         notificationBuilder.setTicker(missedCallStr);
-        notificationBuilder.setSmallIcon(R.drawable.ic_phone_icon);
-//        notificationBuilder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+        notificationBuilder.setSmallIcon(R.drawable.ic_call_end_24dp);
         notificationBuilder.setAutoCancel(true);
-
-        // Big view
-//        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
-//        String[] lines = { "line 1","line 2" };
-//        inboxStyle.setBigContentTitle("");
-//        for (String line : lines) {
-//            inboxStyle.addLine(line);
-//        }
-//        notificationBuilder.setStyle(inboxStyle);
 
         Intent notificationIntent = new Intent(getApplicationContext(), DialerActivity.class);
         notificationIntent.putExtra("number", remoteNumber);
@@ -882,11 +846,6 @@ public class CallingService extends Service implements SipAppObserver {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void notifyBuddyState(SipBuddy buddy) {
-        // not in use
     }
 
 }

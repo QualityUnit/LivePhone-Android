@@ -21,7 +21,6 @@ import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
-import com.qualityunit.android.liveagentphone.service.CallingException;
 import com.qualityunit.android.liveagentphone.service.CallingService;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Logger;
@@ -47,7 +46,6 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     private TextView tvState;
     private LinearLayout llCallState;
     private Chronometer chTimer;
-    private volatile long startTime = System.currentTimeMillis();
     private GlowPadView glowPad;
     private TextView tvRemoteName;
 
@@ -77,11 +75,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         ibSpeaker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    CallingCommands.toggleSpeaker(getContext());
-                } catch (CallingException e) {
-                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+                CallingCommands.toggleSpeaker(getContext());
             }
         });
         ((View)ibSpeaker.getParent()).setVisibility(View.VISIBLE);
@@ -89,11 +83,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         ibMute.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    CallingCommands.toggleMute(getContext());
-                } catch (CallingException e) {
-                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+                CallingCommands.toggleMute(getContext());
             }
         });
         ((View)ibMute.getParent()).setVisibility(View.VISIBLE);
@@ -108,11 +98,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         ibHold.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
-                    CallingCommands.toggleHold(getContext());
-                } catch (CallingException e) {
-                    Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+                CallingCommands.toggleHold(getContext());
             }
         });
         chTimer = (Chronometer) view.findViewById(R.id.ch_timer);
@@ -168,11 +154,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     public void onStart() {
         super.onStart();
         registerSipEventsReceiver();
-        try {
-            CallingCommands.updateState(getContext());
-        } catch (CallingException e) {
-            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        CallingCommands.updateState(getContext());
     }
 
     @Override
@@ -235,16 +217,17 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     activity.getFabHangupCall().setVisibility(View.VISIBLE);
                     ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
                     ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
-                    try {
-                        CallingCommands.updateAll(getContext());
-                    } catch (CallingException e) {
-                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                    }
+                    CallingCommands.updateAll(getContext());
                     break;
                 case CallingService.CALLBACKS.UPDATE_DURATION:
-                    chTimer.setBase(intent.getLongExtra("startTime", startTime));
-                    chTimer.start();
-                    chTimer.setVisibility(View.VISIBLE);
+                    long startTime = intent.getLongExtra("startTime", -1);
+                    if (startTime > 0) {
+                        chTimer.setBase(startTime);
+                        chTimer.start();
+                        chTimer.setVisibility(View.VISIBLE);
+                    } else {
+                        chTimer.setVisibility(View.INVISIBLE);
+                    }
                     break;
                 case CallingService.CALLBACKS.UPDATE_MUTE:
                     toggleImageButton(ibMute, intent.getBooleanExtra("isMute", false));
