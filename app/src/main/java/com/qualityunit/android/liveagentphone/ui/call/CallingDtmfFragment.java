@@ -8,11 +8,9 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
-import com.qualityunit.android.liveagentphone.service.CallingException;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
@@ -39,13 +37,7 @@ public class CallingDtmfFragment extends BaseFragment<CallingActivity> implement
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-        try {
-            if (count == 1) {
-                CallingCommands.sendDtmf(getContext(), s.subSequence(start, s.length()).toString());
-            }
-        } catch (CallingException e) {
-            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-        }
+        CallingCommands.sendDtmf(getContext(), s.subSequence(start, s.length()).toString());
     }
 
     @Override

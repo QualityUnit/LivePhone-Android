@@ -14,7 +14,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
-import com.qualityunit.android.liveagentphone.ErrorCode;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
@@ -126,7 +125,7 @@ public class PushRegistrationIntentService extends IntentService {
                             String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
                             String token = result.getString(AccountManager.KEY_AUTHTOKEN);
                             String path = "/phones/" + phoneId + "/_updateParams";
-                            if (makeRequest(basePath, path, token, paramsString, true)) {
+                            if (makeRequest(basePath, path, token, paramsString)) {
                                 sendGcmRegistraionBroadcast(true, null);
                             }
                         } catch (Exception e) {
@@ -147,26 +146,19 @@ public class PushRegistrationIntentService extends IntentService {
      * @param path
      * @param token
      * @param paramsString
-     * @param allowFallback means that if current scheme returns code 404 then request will be fired again with switched scheme
      * @throws Exception
      */
-    private boolean makeRequest(String basePath, String path, String token, String paramsString, boolean allowFallback) throws Exception {
+    private boolean makeRequest(String basePath, String path, String token, String paramsString) throws Exception {
         final Client client = Client.getInstance();
         final Request request = client.PUT(basePath, path, token)
                 .addEncodedParam("params", paramsString)
                 .addHeader("Content-Type", "application/x-www-form-urlencoded")
                 .build();
         Response response = client.newCall(request).execute();
-        if (response.isSuccessful()) {
-            return true;
+        if (!response.isSuccessful()) {
+            throw new Exception(Tools.formatError(response.code(), response.message()));
         }
-        else {
-            if (response.code() == ErrorCode.NOT_FOUND && allowFallback) {
-                return makeRequest(Tools.switchScheme(basePath), path, token, paramsString, false);
-            } else {
-                throw new Exception(Tools.formatError(response.code(), response.message()));
-            }
-        }
+        return true;
     }
 
 }

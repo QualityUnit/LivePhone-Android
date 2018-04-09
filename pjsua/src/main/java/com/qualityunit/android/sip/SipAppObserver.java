@@ -9,5 +9,4 @@ public interface SipAppObserver {
     void notifyIncomingCall(SipCall call);
     void notifyCallState(SipCall call);
     void notifyCallMediaState(SipCall call);
-    void notifyBuddyState(SipBuddy buddy);
 }

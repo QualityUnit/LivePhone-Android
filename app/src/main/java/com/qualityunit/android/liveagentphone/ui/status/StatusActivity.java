@@ -1,7 +1,6 @@
 package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -51,7 +50,6 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
 
         // department list
         listView = (ListView) findViewById(R.id.lv_list);
-        FragmentManager fragmentManager = getSupportFragmentManager();
         store = StatusStore.getInstance(this);
         store.addCallBacks(this);
     }
