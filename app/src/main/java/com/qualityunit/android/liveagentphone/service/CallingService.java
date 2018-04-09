@@ -637,7 +637,7 @@ public class CallingService extends Service implements SipAppObserver {
         notificationBuilder.setContentTitle(missedCallStr);
         notificationBuilder.setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName);
         notificationBuilder.setTicker(missedCallStr);
-        notificationBuilder.setSmallIcon(R.drawable.ic_call_end_24dp);
+        notificationBuilder.setSmallIcon(R.drawable.ic_phone_missed_black_24dp);
         notificationBuilder.setAutoCancel(true);
 
         Intent notificationIntent = new Intent(getApplicationContext(), DialerActivity.class);
