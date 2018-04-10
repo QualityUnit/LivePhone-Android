@@ -75,7 +75,21 @@ public class ContactsListAdapter extends ArrayAdapter<ContactsItem> {
             } else if (!TextUtils.isEmpty(item.avatar_url)) {
                 loadServerAvatar(baseUrl, item, viewHolder);
             }
-            viewHolder.text.setText(contactName);
+            viewHolder.textPrimary.setText(contactName);
+            if (item.phones != null && !item.phones.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                for (String phone : item.phones) {
+                    if (sb.length() != 0) {
+                        sb.append(", ");
+                    }
+                    sb.append(phone);
+                }
+                viewHolder.textSecodary.setVisibility(View.VISIBLE);
+                viewHolder.textSecodary.setText(sb.toString());
+            } else {
+                viewHolder.textSecodary.setVisibility(View.GONE);
+                viewHolder.textSecodary.setText("");
+            }
         }
         return convertView;
     }
@@ -94,11 +108,13 @@ public class ContactsListAdapter extends ArrayAdapter<ContactsItem> {
 
     public static class ViewHolder {
 
-        TextView text;
+        TextView textPrimary;
+        TextView textSecodary;
         ImageView avatar;
 
         public ViewHolder(View convertView) {
-            text = (TextView) convertView.findViewById(R.id.tv_text);
+            textPrimary = (TextView) convertView.findViewById(R.id.tv_text_primary);
+            textSecodary = (TextView) convertView.findViewById(R.id.tv_text_secondary);
             avatar = (ImageView) convertView.findViewById(R.id.iv_avatar);
         }
     }
