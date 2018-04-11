@@ -32,7 +32,6 @@ public class ContactsStore {
     public static final int ITEMS_PER_PAGE = 100;
     public static final String SORT_DIRECTION = Const.SortDir.ASCENDING;
     public static final String SORT_FIELD = "lastname";
-    public static final int VISIBLE_THRESHOLD = 30;
     public static String TAG = ContactsStore.class.getSimpleName();
     private static ContactsStore instance;
     private ContactPaginationList cpl = new ContactPaginationList();

@@ -7,8 +7,7 @@
         android:id="@+id/iv_waterSymbol"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:visibility="invisible"
-        android:src="@drawable/ic_status_unavailable"
+        android:src="@drawable/ic_phone_icon"
         android:tint="@color/waterSymbolOnWhite"
         android:layout_gravity="center"/>
 

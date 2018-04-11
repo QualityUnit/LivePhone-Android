@@ -14,4 +14,7 @@
     <color name="textSecondaryOnWhite">#888888</color>
     <color name="tintOnWhite">#757575</color>
     <color name="waterSymbolOnWhite">#DDDDDD</color>
+    <color name="extension_enabled">#909091</color>
+    <color name="extension_disabled">#A91900</color>
+    <color name="extension_active">#75c220</color>
 </resources>
