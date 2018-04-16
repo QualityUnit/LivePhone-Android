@@ -90,17 +90,19 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
             searchTerm = savedInstanceState.getString("searchTerm", "");
             isLastPage = savedInstanceState.getBoolean("isLastPage", false);
         }
-        init();
+        store = ContactsStore.getInstance();
+        store.setListener(this);
+        init(PaginationList.InitFlag.INSTANCE);
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        setIntent(intent);
-        init();
+        handleIntent(intent);
     }
 
     private void handleIntent(Intent intent) {
+        setIntent(intent);
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             if (!TextUtils.isEmpty(query)) {
@@ -130,7 +132,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     @Override
     protected void onDestroy() {
         if (store != null) {
-            store.stop();
+            store.setListener(null);
         }
         scrollIndex = listView.getFirstVisiblePosition();
         View v = listView.getChildAt(0);
@@ -166,31 +168,25 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         return true;
     }
 
-    private void init () {
-        if (store == null) {
-            store = ContactsStore.getInstance();
-            final AccountManager accountManager = AccountManager.get(this);
-            final Account account = LaAccount.get();
-            final Handler handler = new Handler(Looper.myLooper());
-            accountManager.getAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, null, this, new AccountManagerCallback<Bundle>() {
+    private void init (final int initFlag) {
+        final AccountManager accountManager = AccountManager.get(this);
+        final Account account = LaAccount.get();
+        final Handler handler = new Handler(Looper.myLooper());
+        accountManager.getAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, null, this, new AccountManagerCallback<Bundle>() {
 
-                @Override
-                public void run(AccountManagerFuture<Bundle> future) {
-                    try {
-                        String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
-                        String token = future.getResult().getString(AccountManager.KEY_AUTHTOKEN);
-                        store.init(SearchActivity.this, basePath, token);
-                        handleIntent(SearchActivity.this.getIntent());
-                    } catch (AuthenticatorException | OperationCanceledException | IOException e) {
-                        Log.e(TAG, "", e);
-                        Toast.makeText(SearchActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-
+            @Override
+            public void run(AccountManagerFuture<Bundle> future) {
+                try {
+                    String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
+                    String token = future.getResult().getString(AccountManager.KEY_AUTHTOKEN);
+                    store.init(basePath, token, initFlag);
+                } catch (AuthenticatorException | OperationCanceledException | IOException e) {
+                    Log.e(TAG, "", e);
+                    Toast.makeText(SearchActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
-            }, handler);
-        } else {
-            handleIntent(getIntent());
-        }
+
+            }
+        }, handler);
     }
 
     private ContactsListAdapter getAdapter() {
@@ -263,12 +259,12 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     }
 
     @Override
-    public void onGetList (final List<ContactsItem> list, final PaginationList.ListState listState) {
+    public void onGetList (final List<ContactsItem> list, final PaginationList.State listState) {
         isLastPage = listState.isLastPage();
         tvEmpty.setVisibility(listState.isEmpty() ? View.VISIBLE : View.GONE);
-        swipeRefreshLayout.setRefreshing(listState.isRefreshing());
         pbLoading.setVisibility(listState.isLoading() ? View.VISIBLE : View.GONE);
-        if (!listState.isLoading() && !listState.isRefreshing()) {
+        swipeRefreshLayout.setRefreshing(listState.isRefreshing());
+        if (!listState.isLoading()) {
             swipeRefreshLayout.setEnabled(true);
         } else {
             swipeRefreshLayout.setEnabled(false);
@@ -277,7 +273,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     }
 
     @Override
-    public void onError(String errorMessage) {
+    public void onError(String errorMessage, final PaginationList.State listState) {
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
     }
 }

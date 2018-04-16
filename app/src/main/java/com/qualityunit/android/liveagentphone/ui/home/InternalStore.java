@@ -44,31 +44,30 @@ public class InternalStore {
 
     // ******** API ************
 
-    public void init (PaginationList.CallbackListener<InternalItem> callbackListener, String basePath, String token) {
+    /**
+     *
+     * @param basePath
+     * @param token
+     * @param initFlag @see {@link PaginationList.InitFlag}
+     */
+    public void init (String basePath, String token, int initFlag) {
         this.basePath = basePath;
         this.token = token;
-        ipl.setListener(callbackListener);
-        ipl.init(createArgs(), false);
-    }
-
-    /**
-     * Avoid to call any callback method
-     */
-    public void stop () {
-        ipl.setListener(null);
+        ipl.init(initFlag, createArgs());
     }
 
     public void refresh () {
-        ipl.refresh(null);
+        ipl.refresh();
     }
 
     public void nextPage () {
         ipl.nextPage();
     }
 
-    public void clear () {
-        ipl.clear();
+    public void setListener(PaginationList.CallbackListener<InternalItem> callbackListener) {
+        ipl.setListener(callbackListener);
     }
+
 
     // ************ private methods ************
 
@@ -91,9 +90,14 @@ public class InternalStore {
 
         @Override
         public List<InternalItem> loadList(int pageToLoad, Bundle args) throws Exception {
+            JSONObject filters = new JSONObject();
+            filters.put("computed_status", "A,E"); // default
+//            if (args.containsKey("searchTerm")) {
+//                filters.put("q", args.getString("searchTerm"));
+//            }
             String basePath = stringFromArg(args, "basePath");
             String token = stringFromArg(args, "token");
-            return getExtensions(basePath, token, pageToLoad, ITEMS_PER_PAGE);
+            return getExtensions(basePath, token, pageToLoad, ITEMS_PER_PAGE, filters.toString());
         }
 
         private String stringFromArg(Bundle args, String string) throws Exception {
@@ -103,12 +107,13 @@ public class InternalStore {
             return args.getString(string);
         }
 
-        private List<InternalItem> getExtensions(String basePath, String token, int requestedPage, int itemsPerPage) throws IOException, ApiException {
+        private List<InternalItem> getExtensions(String basePath, String token, int requestedPage, int itemsPerPage, String filters) throws IOException, ApiException {
             List<InternalItem> list = new ArrayList<>();
             Client client = Client.getInstance();
             Request request = client.GET(basePath, "/extensions", token)
                     .addParam("_perPage", itemsPerPage)
                     .addParam("_page", requestedPage)
+                    .addParam("_filters", filters)
                     .build();
             Response response = client.newCall(request).execute();
             if (response.isSuccessful()) {

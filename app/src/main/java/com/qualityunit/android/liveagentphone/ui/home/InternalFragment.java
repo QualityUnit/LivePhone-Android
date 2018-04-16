@@ -87,6 +87,8 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
             searchTerm = savedInstanceState.getString("searchTerm", "");
             isLastPage = savedInstanceState.getBoolean("isLastPage", false);
         }
+        store = InternalStore.getInstance();
+        store.setListener(this);
         init();
     }
 
@@ -102,7 +104,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     @Override
     public void onDestroy() {
         if (store != null) {
-            store.stop();
+            store.setListener(null);
         }
         scrollIndex = listView.getFirstVisiblePosition();
         View v = listView.getChildAt(0);
@@ -111,9 +113,6 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private void init () {
-        if (store == null) {
-            store = InternalStore.getInstance();
-        }
         final AccountManager accountManager = AccountManager.get(getContext());
         final Account account = LaAccount.get();
         final Handler handler = new Handler(Looper.myLooper());
@@ -124,7 +123,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
                 try {
                     String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
                     String token = future.getResult().getString(AccountManager.KEY_AUTHTOKEN);
-                    store.init(InternalFragment.this, basePath, token);
+                    store.init(basePath, token, PaginationList.InitFlag.LOAD);
                 } catch (AuthenticatorException | OperationCanceledException | IOException e) {
                     Log.e(TAG, "", e);
                     Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -184,7 +183,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     @Override
-    public void onGetList (final List<InternalItem> list, final PaginationList.ListState listState) {
+    public void onGetList (final List<InternalItem> list, final PaginationList.State listState) {
         isLastPage = listState.isLastPage();
         tvEmpty.setVisibility(listState.isEmpty() ? View.VISIBLE : View.GONE);
         swipeRefreshLayout.setRefreshing(listState.isRefreshing());
@@ -198,7 +197,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     @Override
-    public void onError(String errorMessage) {
+    public void onError(String errorMessage, final PaginationList.State listState) {
         Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
     }
 }

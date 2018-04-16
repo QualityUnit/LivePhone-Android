@@ -50,21 +50,24 @@ public class ContactsStore {
 
     // ******** API ************
 
-    public void init (PaginationList.CallbackListener<ContactsItem> callbackListener, String basePath, String token) {
+    /**
+     *
+     * @param basePath
+     * @param token
+     * @param initFlag @see {@link PaginationList.InitFlag}
+     */
+    public void init (String basePath, String token, int initFlag) {
         this.basePath = basePath;
         this.token = token;
+        cpl.init(initFlag, createArgs(null));
+    }
+
+    public void setListener (@Nullable PaginationList.CallbackListener<ContactsItem> callbackListener) {
         cpl.setListener(callbackListener);
     }
 
-    /**
-     * Avoid to call any callback method
-     */
-    public void stop () {
-        cpl.setListener(null);
-    }
-
     public void refresh () {
-        cpl.refresh(null);
+        cpl.refresh();
     }
 
     public void nextPage () {
@@ -72,11 +75,7 @@ public class ContactsStore {
     }
 
     public void search (String searchTerm) {
-        cpl.init(createArgs(searchTerm), true);
-    }
-
-    public void clear () {
-        cpl.clear();
+        cpl.init(PaginationList.InitFlag.RELOAD, createArgs(searchTerm));
     }
 
     // ************ private methods ************
