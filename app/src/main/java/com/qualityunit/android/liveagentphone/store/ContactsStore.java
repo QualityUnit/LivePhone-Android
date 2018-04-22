@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.home;
+package com.qualityunit.android.liveagentphone.store;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -8,6 +8,8 @@ import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
 import com.qualityunit.android.liveagentphone.net.rest.ApiException;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
+import com.qualityunit.android.liveagentphone.ui.common.Store;
+import com.qualityunit.android.liveagentphone.ui.home.ContactsItem;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.okhttp.Request;
@@ -26,7 +28,7 @@ import java.util.List;
  * Retained fragment for handling contact list
  * Created by rasto on 28.11.16.
  */
-public class ContactsStore {
+public class ContactsStore implements Store<ContactsItem>{
 
     public static final int FIRST_PAGE = 1;
     public static final int ITEMS_PER_PAGE = 100;
@@ -56,26 +58,41 @@ public class ContactsStore {
      * @param token
      * @param initFlag @see {@link PaginationList.InitFlag}
      */
+    @Override
     public void init (String basePath, String token, int initFlag) {
         this.basePath = basePath;
         this.token = token;
         cpl.init(initFlag, createArgs(null));
     }
 
+    @Override
+    public void reload() {
+        cpl.init(PaginationList.InitFlag.RELOAD, cpl.getCurrentState().getArgs());
+    }
+
+    @Override
     public void setListener (@Nullable PaginationList.CallbackListener<ContactsItem> callbackListener) {
         cpl.setListener(callbackListener);
     }
 
+    @Override
     public void refresh () {
         cpl.refresh();
     }
 
+    @Override
     public void nextPage () {
         cpl.nextPage();
     }
 
+    @Override
     public void search (String searchTerm) {
         cpl.init(PaginationList.InitFlag.RELOAD, createArgs(searchTerm));
+    }
+
+    @Override
+    public void clear() {
+        cpl.clear();
     }
 
     // ************ private methods ************
@@ -153,8 +170,8 @@ public class ContactsStore {
                                 Tools.getStringFromJson(jsonItem, "avatar_url"),
                                 Tools.getStringFromJson(jsonItem, "type")
                         );
-                        contactsItem.emails = Tools.getStringArrayFromJson(jsonItem, "emails");
-                        contactsItem.phones = Tools.getStringArrayFromJson(jsonItem, "phones");
+                        contactsItem.setEmails(Tools.getStringArrayFromJson(jsonItem, "emails"));
+                        contactsItem.setPhones(Tools.getStringArrayFromJson(jsonItem, "phones"));
                         list.add(contactsItem);
                     }
 

@@ -35,8 +35,6 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
     private static final int layout = R.layout.internal_list_item;
 
     private final String baseUrl;
-    private final Drawable defaultAvatarAgent;
-    private final Drawable defaultAvatarDepartment;
     private Context context;
 
     public InternalListAdapter(Context context, List<InternalItem> list) {
@@ -46,15 +44,19 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
         baseUrl = accountManager
                 .getUserData(LaAccount.get(), LaAccount.USERDATA_URL_API)
                 .replace(Const.Api.API_POSTFIX, "");
-        defaultAvatarAgent = ContextCompat.getDrawable(context, R.drawable.ll_avatar);
-        defaultAvatarDepartment = ContextCompat.getDrawable(context, R.drawable.ll_department);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+        return getViewStatic(context, baseUrl, getItem(position), convertView, parent);
+    }
+
+    public static View getViewStatic(Context context, String baseUrl, InternalItem item, View convertView, ViewGroup parent) {
+        Drawable defaultAvatarAgent = ContextCompat.getDrawable(context, R.drawable.ll_avatar);
+        Drawable defaultAvatarDepartment = ContextCompat.getDrawable(context, R.drawable.ll_department);
         final ViewHolder viewHolder;
-        if (convertView == null) {
-            LayoutInflater inflater = LayoutInflater.from(getContext());
+        if (convertView == null || !(convertView.getTag() instanceof ViewHolder)) {
+            LayoutInflater inflater = LayoutInflater.from(context);
             convertView = inflater.inflate(layout, parent, false);
             viewHolder = new ViewHolder(convertView);
             convertView.setTag(viewHolder);
@@ -62,7 +64,6 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
         else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        final InternalItem item = getItem(position);
         if(item != null) {
             if (item.agent == null) {
                 // deparment extension
@@ -83,7 +84,7 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
                     }
                     Picasso.with(context).load(avatarUrl).placeholder(defaultAvatarAgent).transform(new CircleTransform()).into(viewHolder.avatar);
                 } else if (!TextUtils.isEmpty(avatarUrl)) {
-                    loadServerAvatar(baseUrl, item, viewHolder);
+                    loadServerAvatar(context, defaultAvatarAgent, baseUrl, item, viewHolder);
                 }
             }
             resolveStatus(item, viewHolder);
@@ -91,7 +92,7 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
         return convertView;
     }
 
-    private void resolveStatus(InternalItem item, ViewHolder viewHolder) {
+    public static void resolveStatus(InternalItem item, ViewHolder viewHolder) {
         switch (item.status) {
             case STATUS_ACTIVE:
                 viewHolder.status.setBackgroundResource(R.drawable.bg_extension_active);
@@ -108,7 +109,7 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
         }
     }
 
-    private void loadServerAvatar(String baseUrl, InternalItem item, ViewHolder viewHolder) {
+    public static void loadServerAvatar(Context context, Drawable defaultAvatarAgent, String baseUrl, InternalItem item, ViewHolder viewHolder) {
         String url;
         url = baseUrl + item.agent.avatarUrl.replace("__BASE_URL__", "/");
         if (!TextUtils.isEmpty(url)) {

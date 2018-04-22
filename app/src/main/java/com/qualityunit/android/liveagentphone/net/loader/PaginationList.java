@@ -10,7 +10,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.qualityunit.android.liveagentphone.net.loader.PaginationList.InitFlag.INSTANCE;
+import static com.qualityunit.android.liveagentphone.net.loader.PaginationList.InitFlag.LOAD;
 import static com.qualityunit.android.liveagentphone.net.loader.PaginationList.InitFlag.RELOAD;
 
 /**
@@ -71,16 +71,14 @@ public abstract class PaginationList<T> implements Handler.Callback {
      * @param args optional arguments that they are available in loadList() method
      */
     public void init (int initFlag, @Nullable Bundle args) {
-        State newState;
-        if (initFlag == INSTANCE) {
-            newState = currentState.createCopy().setInitiated(true);
-        } else {
+        State newState = currentState.createCopy().setInitiated(true);
+        if ((initFlag == LOAD  && !currentState.isInitiated()) || initFlag == RELOAD) {
+            list.clear();
             newState = new State(firstPage,  args);
-            if (!currentState.isInitiated() || initFlag == RELOAD) {
-                list.clear();
-                newState.setLoading(true);
-                resetBackgroundTask(firstPage, args);
-            }
+            newState.setInitiated(true)
+                    .setLoaded(true)
+                    .setLoading(true);
+            resetBackgroundTask(firstPage, args);
         }
         show(newState, list);
     }
@@ -93,7 +91,8 @@ public abstract class PaginationList<T> implements Handler.Callback {
             return;
         }
         State newState = currentState.createCopy()
-                .setRefreshing(true);
+                .setRefreshing(true)
+                .setLoaded(true);
         resetBackgroundTask(firstPage, currentState.getArgs());
         show(newState, list);
     }
@@ -107,7 +106,8 @@ public abstract class PaginationList<T> implements Handler.Callback {
             return;
         }
         State newState = currentState.createCopy()
-                .setRefreshing(true);
+                .setRefreshing(true)
+                .setLoaded(true);
         resetBackgroundTask(currentState.getPage() + 1, currentState.getArgs());
         show(newState, list);
     }
@@ -124,17 +124,6 @@ public abstract class PaginationList<T> implements Handler.Callback {
         }
     }
 
-//    /**
-//     * Clear list and cancel loading thread
-//     */
-//    private void clean () {
-//        if (thread != null) {
-//            thread.forget();
-//            thread = null;
-//        }
-//        list.clear();
-//    }
-
     /**
      * Get error message and state
      * @param newState
@@ -143,7 +132,7 @@ public abstract class PaginationList<T> implements Handler.Callback {
     private void showError(State newState, String errorMsg) {
         currentState = newState;
         if (listener != null) {
-            listener.onError(errorMsg, currentState);
+            listener.onError(list, errorMsg, currentState);
         }
     }
 
@@ -154,6 +143,20 @@ public abstract class PaginationList<T> implements Handler.Callback {
     public void setListener (@Nullable CallbackListener<T> listener) {
         // set null if you don't want to get callback anymore
         this.listener = listener;
+    }
+
+    /**
+     * Clear the list (set state as before first load)
+     */
+    public void clear() {
+        list.clear();
+        State newState = new State(firstPage,  null)
+                .setInitiated(true);
+        show(newState, list);
+    }
+
+    public State getCurrentState() {
+        return currentState;
     }
 
     // *********** ABSTRACT METHODS ****************
@@ -215,27 +218,29 @@ public abstract class PaginationList<T> implements Handler.Callback {
 
         /**
          * Get current list
-         * @param list if error is occurred then this is null
+         * @param list
          * @param listState state of pagination list
          */
         void onGetList(@NonNull List<T> list, @NonNull State listState);
 
         /**
          * When error is occured, tihs methos is called
+         * @param list
          * @param errorMessage details about error
          * @param listState state of pagination list
          */
-        void onError(@Nullable String errorMessage, @NonNull State listState);
+        void onError(@NonNull List<T> list, @Nullable String errorMessage, @NonNull State listState);
     }
 
     public static class State {
 
-        private boolean isInitiated;
-        private boolean isLastPage;
-        private boolean isLoading;
-        private boolean isRefreshing;
-        private boolean isEmpty;
-        private int page;
+        private boolean isInitiated; // true after created an instance of list with given flag
+        private boolean isLoaded; // true after first load started
+        private boolean isLastPage; // true when last page is loaded
+        private boolean isLoading; // true while loading first page
+        private boolean isRefreshing; // true while refreshing entire list or loading next page
+        private boolean isEmpty; // true after empty response comes
+        private int page; // current page loaded
         private Bundle args;
 
         public State(int page, @Nullable Bundle args) {
@@ -243,8 +248,9 @@ public abstract class PaginationList<T> implements Handler.Callback {
             this.args = args;
         }
 
-        public State(boolean isInitiated, boolean isLastPage, boolean isLoading, boolean isRefreshing, boolean isEmpty, int page, @Nullable Bundle args) {
+        public State(boolean isInitiated, boolean isLoaded, boolean isLastPage, boolean isLoading, boolean isRefreshing, boolean isEmpty, int page, @Nullable Bundle args) {
             this.isInitiated = isInitiated;
+            this.isLoaded = isLoaded;
             this.isLastPage = isLastPage;
             this.isLoading = isLoading;
             this.isRefreshing = isRefreshing;
@@ -254,13 +260,14 @@ public abstract class PaginationList<T> implements Handler.Callback {
         }
 
         public State createCopy() {
-            return new State(isInitiated, isLastPage, isLoading, isRefreshing, isEmpty, page, args == null ? null : new Bundle(args));
+            return new State(isInitiated, isLoaded, isLastPage, isLoading, isRefreshing, isEmpty, page, args == null ? null : new Bundle(args));
         }
 
         @Override
         public String toString() {
             return "State{" +
                     "isInitiated=" + isInitiated +
+                    ", isLoaded=" + isLoaded +
                     ", isLastPage=" + isLastPage +
                     ", isLoading=" + isLoading +
                     ", isRefreshing=" + isRefreshing +
@@ -272,6 +279,11 @@ public abstract class PaginationList<T> implements Handler.Callback {
 
         public State setInitiated(boolean initiated) {
             isInitiated = initiated;
+            return this;
+        }
+
+        public State setLoaded(boolean loaded) {
+            isLoaded = loaded;
             return this;
         }
 
@@ -302,6 +314,10 @@ public abstract class PaginationList<T> implements Handler.Callback {
 
         public boolean isInitiated() {
             return isInitiated;
+        }
+
+        public boolean isLoaded() {
+            return isLoaded;
         }
 
         public boolean isLastPage() {

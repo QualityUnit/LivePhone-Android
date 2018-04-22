@@ -8,35 +8,85 @@ import java.util.List;
 
 public class ContactsItem {
 
-    public String id;
-    public String firstname;
-    public String lastname;
-    public String system_name;
-    public String avatar_url;
-    public String type;
-    public List<String> emails;
-    public List<String> phones;
+    private String id;
+    private String firstName;
+    private String lastName;
+    private String systemName;
+    private String avatarUrl;
+    private String type;
+    private List<String> emails;
+    private List<String> phones;
 
-    public ContactsItem(String id, String firstname, String lastname, String system_name, String avatar_url, String type) {
+    public ContactsItem(String id, String firstName, String lastName, String systemName, String avatarUrl, String type) {
         this.id = id;
-        this.firstname = firstname;
-        this.lastname = lastname;
-        this.system_name = system_name;
-        this.avatar_url = avatar_url;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.systemName = systemName;
+        this.avatarUrl = avatarUrl;
         this.type = type;
     }
 
-    @Override
-    public String toString() {
-        return "ContactsItem{" +
-                "id='" + id + '\'' +
-                ", firstname='" + firstname + '\'' +
-                ", lastname='" + lastname + '\'' +
-                ", system_name='" + system_name + '\'' +
-                ", avatar_url='" + avatar_url + '\'' +
-                ", type='" + type + '\'' +
-                ", emails=" + emails.toString() +
-                ", phones=" + phones.toString() +
-                '}';
+    public String getId() {
+        return id;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getSystemName() {
+        return systemName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public List<String> getEmails() {
+        return emails;
+    }
+
+    public List<String> getPhones() {
+        return phones;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setSystemName(String systemName) {
+        this.systemName = systemName;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setEmails(List<String> emails) {
+        this.emails = emails;
+    }
+
+    public void setPhones(List<String> phones) {
+        this.phones = phones;
     }
 }

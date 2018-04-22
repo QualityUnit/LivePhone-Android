@@ -56,7 +56,9 @@
     <string name="status_available">Available</string>
     <string name="status_unavailable">Unavailable</string>
     <string name="action_availability">Availability</string>
-    <string name="search_hint">Search contacts</string>
+    <string name="search_hint">Search contacts, agents&#8230;</string>
     <string name="outgoing_call">Outgoing call</string>
     <string name="incoming_call">Incoming call</string>
+    <string name="contacts">Contacts</string>
+    <string name="internal">Internal</string>
 </resources>

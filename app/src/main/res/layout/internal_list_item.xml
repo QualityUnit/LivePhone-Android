@@ -23,8 +23,7 @@
             android:id="@+id/v_status"
             android:layout_width="12dp"
             android:layout_height="12dp"
-            android:layout_gravity="center"
-            android:background="@drawable/bg_extension_active"/>
+            android:layout_gravity="center"/>
 
     </FrameLayout>
 
@@ -44,7 +43,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:text="Robert Fico"
             android:textColor="@color/textPrimaryOnWhite"
             android:gravity="center_vertical"
             android:textAppearance="?android:attr/textAppearanceMedium"/>
@@ -53,7 +51,6 @@
             android:id="@+id/tv_department"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="podvody"
             android:gravity="center_vertical"
             android:textColor="@color/textSecondaryOnWhite"
             android:maxLines="1"

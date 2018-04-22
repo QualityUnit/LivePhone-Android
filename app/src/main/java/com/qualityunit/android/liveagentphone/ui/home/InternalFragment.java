@@ -9,6 +9,7 @@ import android.accounts.OperationCanceledException;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -25,7 +26,8 @@ import android.widget.Toast;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
-import com.qualityunit.android.liveagentphone.service.CallingCommands;
+import com.qualityunit.android.liveagentphone.store.InternalStore;
+import com.qualityunit.android.liveagentphone.ui.call.InitCallActivity;
 import com.qualityunit.android.liveagentphone.ui.common.PaginationScrollListener;
 
 import java.io.IOException;
@@ -165,9 +167,8 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        final InternalItem item = getAdapter().getItem(position);
-        String remoteName = item.agent == null ? item.department.departmentName : item.agent.name;
-        CallingCommands.makeCall(getContext(), item.number, "", remoteName);
+        InitCallActivity.intInternalCall(getContext(), getAdapter().getItem(position));
+//        CallingCommands.makeCall(getContext(), item.number, "", remoteName);
     }
 
     @Override
@@ -197,7 +198,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     @Override
-    public void onError(String errorMessage, final PaginationList.State listState) {
+    public void onError(@NonNull List<InternalItem> list, @Nullable String errorMessage, @NonNull PaginationList.State listState) {
         Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
     }
 }

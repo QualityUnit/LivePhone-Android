@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
+import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
 
 /**
  * Created by rasto on 18.10.16.
@@ -28,6 +29,9 @@ import com.qualityunit.android.liveagentphone.service.CallingCommands;
 public class InitCallActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
 
     public static final String INTENT_FILTER_INIT_CALL = "com.qualityunit.android.liveagentphone.INITCALL";
+    public static final String EXTRA_DIAL_STRING = "dialString";
+    public static final String EXTRA_CONTACT_NAME = "contactName";
+    public static final String EXTRA_REMOTE_NUMBER = "number";
     private FloatingActionButton fabMakeCall;
     private FloatingActionButton fabCancelCall;
     private Toolbar toolbar;
@@ -94,9 +98,9 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
         if (bundle == null) {
             return;
         }
-        dialString = bundle.getString("dialString");
-        contactName = bundle.getString("contactName");
-        remoteNumber = bundle.getString("number");
+        dialString = bundle.getString(EXTRA_DIAL_STRING);
+        contactName = bundle.getString(EXTRA_CONTACT_NAME);
+        remoteNumber = bundle.getString(EXTRA_REMOTE_NUMBER);
         TextView tvPrimary = (TextView) findViewById(R.id.tv_primary);
         TextView tvSecondary = (TextView) findViewById(R.id.tv_secondary);
         if (!TextUtils.isEmpty(contactName)) {
@@ -153,4 +157,14 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
         }
     }
 
+    public static void intInternalCall(Context context, InternalItem item) {
+        String remoteName = item.agent == null ? item.department.departmentName : item.agent.name;
+        Intent intent = new Intent(context, InitCallActivity.class);
+        Bundle bundle = new Bundle();
+        bundle.putString(InitCallActivity.EXTRA_DIAL_STRING, item.number);
+        bundle.putString(InitCallActivity.EXTRA_REMOTE_NUMBER, item.number);
+        bundle.putString(InitCallActivity.EXTRA_CONTACT_NAME, remoteName);
+        intent.putExtras(bundle);
+        context.startActivity(intent);
+    }
 }

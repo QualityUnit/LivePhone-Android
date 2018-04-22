@@ -1,10 +1,14 @@
-package com.qualityunit.android.liveagentphone.ui.home;
+package com.qualityunit.android.liveagentphone.store;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
 import com.qualityunit.android.liveagentphone.net.rest.ApiException;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
+import com.qualityunit.android.liveagentphone.ui.common.Store;
+import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.okhttp.Request;
@@ -22,12 +26,13 @@ import java.util.List;
  * Retained fragment for handling extensions list
  * Created by rasto on 28.11.16.
  */
-public class InternalStore {
+public class InternalStore implements Store<InternalItem>{
 
     public static final int FIRST_PAGE = 1;
     public static final int ITEMS_PER_PAGE = 9999;
     public static String TAG = InternalStore.class.getSimpleName();
     private static InternalStore instance;
+    private static InternalStore searchInstance;
     private InternalPaginationList ipl = new InternalPaginationList();
     private String basePath;
     private String token;
@@ -37,6 +42,13 @@ public class InternalStore {
             instance = new InternalStore();
         }
         return instance;
+    }
+
+    public static InternalStore getSearchInstance() {
+        if (searchInstance == null) {
+            searchInstance = new InternalStore();
+        }
+        return searchInstance;
     }
 
     private InternalStore() {
@@ -50,29 +62,51 @@ public class InternalStore {
      * @param token
      * @param initFlag @see {@link PaginationList.InitFlag}
      */
+    @Override
     public void init (String basePath, String token, int initFlag) {
         this.basePath = basePath;
         this.token = token;
-        ipl.init(initFlag, createArgs());
+        ipl.init(initFlag, createArgs(null));
     }
 
+    @Override
+    public void reload() {
+        ipl.init(PaginationList.InitFlag.RELOAD, ipl.getCurrentState().getArgs());
+    }
+
+    @Override
     public void refresh () {
         ipl.refresh();
     }
 
+    @Override
     public void nextPage () {
         ipl.nextPage();
     }
 
+    @Override
     public void setListener(PaginationList.CallbackListener<InternalItem> callbackListener) {
         ipl.setListener(callbackListener);
+    }
+
+    @Override
+    public void search(String searchTerm) {
+        ipl.init(PaginationList.InitFlag.RELOAD, createArgs(searchTerm));
+    }
+
+    @Override
+    public void clear() {
+        ipl.clear();
     }
 
 
     // ************ private methods ************
 
-    private Bundle createArgs() {
+    private Bundle createArgs(@Nullable String searchTerm) {
         Bundle bundle = new Bundle();
+        if (!TextUtils.isEmpty(searchTerm)) {
+            bundle.putString("searchTerm", searchTerm);
+        }
         bundle.putString("basePath", basePath);
         bundle.putString("token", token);
         return bundle;
@@ -91,10 +125,10 @@ public class InternalStore {
         @Override
         public List<InternalItem> loadList(int pageToLoad, Bundle args) throws Exception {
             JSONObject filters = new JSONObject();
-            filters.put("computed_status", "A,E"); // default
-//            if (args.containsKey("searchTerm")) {
-//                filters.put("q", args.getString("searchTerm"));
-//            }
+            filters.put("computed_status", "A,E"); // default: show only Active and Enabled internals
+            if (args.containsKey("searchTerm")) {
+                filters.put("q", args.getString("searchTerm"));
+            }
             String basePath = stringFromArg(args, "basePath");
             String token = stringFromArg(args, "token");
             return getExtensions(basePath, token, pageToLoad, ITEMS_PER_PAGE, filters.toString());
