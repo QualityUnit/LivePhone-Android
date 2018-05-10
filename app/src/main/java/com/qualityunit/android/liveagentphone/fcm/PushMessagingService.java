@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.gcm;
+package com.qualityunit.android.liveagentphone.fcm;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,7 +6,8 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.android.gms.gcm.GcmListenerService;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
 import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
@@ -15,28 +16,24 @@ import com.qualityunit.android.liveagentphone.ui.call.InitCallActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.Date;
+import java.util.Map;
 
 import fr.turri.jiso8601.Iso8601Deserializer;
 
-public class PushListenerService extends GcmListenerService {
+public class PushMessagingService extends FirebaseMessagingService {
 
-    private static final String TAG = PushListenerService.class.getSimpleName();
+    private static final String TAG = PushMessagingService.class.getSimpleName();
 
-    /**
-     * Called when message is received.
-     *
-     * @param from SenderID of the sender.
-     * @param data Data bundle containing message data as key/value pairs.
-     *             For Set of keys use data.keySet().
-     */
     @Override
-    public void onMessageReceived(String from, Bundle data) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("#### PUSH NOTIFICATION RECEIVED ####\n");
-        for (String key : data.keySet()) {
-            sb.append("\t" + key + ": " + data.get(key));
+    public void onMessageReceived(RemoteMessage remoteMessage) {
+        Map<String, String> remoteMessageData = remoteMessage.getData();
+        if (remoteMessageData.size() > 0) {
+            Log.d(TAG, "PUSH NOTIFICATION: " + remoteMessageData);
         }
-        Log.d(TAG, sb.toString());
+        Bundle data = new Bundle();
+        for (Map.Entry<String, String> entry : remoteMessageData.entrySet()) {
+            data.putString(entry.getKey(), entry.getValue());
+        }
         try {
             // check if push is actual
             String time = data.getString("time");
@@ -44,9 +41,6 @@ public class PushListenerService extends GcmListenerService {
                 throw new CallingException("Push notification value 'field' is empty");
             }
             Date datePush = Iso8601Deserializer.toDate(time);
-            if (datePush == null) {
-                throw new CallingException("Invalid value in time 'field' of push notification: '" + time + "'.");
-            }
             Date dateSystem = new Date();
             long delta = (dateSystem.getTime() - datePush.getTime()) / 1000;
 //        Log.d(TAG, "Push has come in " + delta + " seconds");
@@ -84,5 +78,4 @@ public class PushListenerService extends GcmListenerService {
             Logger.e(TAG, e);
         }
     }
-
 }

@@ -5,6 +5,7 @@ import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.os.AsyncTask;
@@ -91,7 +92,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ((TextView)view.findViewById(R.id.tv_version)).setText(Tools.getVersionName());
+        ((TextView)view.findViewById(R.id.tv_version)).setText(Tools.getVersionName(getContext()));
         etUrl = (UrlEditText) view.findViewById(R.id.url);
         etUrl.addTextChangedListener(new TextWatcher() {
             @Override
@@ -103,9 +104,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (urlTester != null) {
-                    urlTester.test(s.toString().trim());
-                }
+                testUrl(s.toString());
             }
 
             @Override
@@ -116,7 +115,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
 
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                urlTester.test(etUrl.getText().toString().trim());
+                testUrl(((EditText)v).getText().toString().trim());
             }
 
         });
@@ -177,13 +176,19 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         tvError = (TextView) view.findViewById(R.id.tv_error);
     }
 
+    private void testUrl(String urlToTest) {
+        if (urlTester != null) {
+            urlTester.test(urlToTest);
+        }
+    }
+
     @Override
     public void onResume() {
         super.onResume();
         if (urlTester == null) {
-            urlTester = new ApiUrlTester();
+            urlTester = new ApiUrlTester(getContext());
         }
-        urlTester.test(etUrl.getText().toString().trim());
+        testUrl(etUrl.getText().toString().trim());
         preFillFields();
     }
 
@@ -191,6 +196,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
     public void onPause() {
         if (urlTester != null) {
             urlTester.stop();
+            urlTester = null;
         }
         saveFilledFields();
         super.onPause();
@@ -273,11 +279,10 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         if (!isError) {
             login();
         }
-
     }
 
     private void login() {
-        if (!Tools.isNetworkConnected()) {
+        if (!Tools.isNetworkConnected(getContext())) {
             setErrorLogin(getString(R.string.no_connection));
             return;
         }
@@ -367,6 +372,10 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
 
     private class ApiUrlTester extends UrlTester {
 
+        public ApiUrlTester(Context context) {
+            super(context);
+        }
+
         @Override
         protected void onUrlCallback(int code, String typedUrl, String apiUrl, String message) {
             setErrorUrl(null);
@@ -374,6 +383,9 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
             switch (code) {
                 case CODE.URL_BLANK:
                     setErrorUrl(null);
+                    break;
+                case CODE.NO_CONNECTION:
+                    setErrorUrl(getString(R.string.no_connection));
                     break;
                 case CODE.URL_OK:
                     LoginFragment.this.apiUrl = apiUrl;
@@ -384,9 +396,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                     break;
                 case CODE.COULD_NOT_REACH_HOST:
                     setErrorUrl(getString(R.string.cant_reach_host));
-                    break;
-                case CODE.NO_CONNECTION:
-                    setErrorLogin(getString(R.string.no_connection));
                     break;
                 case CODE.API_ERROR:
                     setErrorUrl(message);

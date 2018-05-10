@@ -52,7 +52,7 @@ public class ApiCall<T> {
     }
 
     public void executeAuthorized(final PingPong<Response> pingPong) {
-        if (!Tools.isNetworkConnected()) {
+        if (!Tools.isNetworkConnected(activity)) {
             pingPong.onResponse(new LoaderResult<Response>(null, ErrorCode.NO_CONNECTION, activity.getString(com.qualityunit.android.liveagentphone.R.string.no_connection)));
             return;
         }
@@ -166,7 +166,7 @@ public class ApiCall<T> {
 
     private Bundle createLogBundle(int errorCode, String errorMessage) {
         Bundle additionalInfo = new Bundle();
-        additionalInfo.putString("versionCode", String.valueOf(Tools.getVersionCode()));
+        additionalInfo.putString("versionCode", String.valueOf(Tools.getVersionCode(activity)));
         additionalInfo.putString("errorCode", String.valueOf(errorCode));
         additionalInfo.putString("errorMessage", errorMessage);
         additionalInfo.putString("apiBasePath", url);

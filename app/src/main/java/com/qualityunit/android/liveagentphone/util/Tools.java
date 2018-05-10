@@ -11,17 +11,11 @@ import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
-
-import com.qualityunit.android.liveagentphone.App;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -35,13 +29,12 @@ public abstract class Tools {
 	 * 
 	 * @return
 	 */
-	public static String getVersionName() {
+	public static String getVersionName(Context context) {
 		try {
-			return App.getAppContext().getPackageManager().getPackageInfo(App.getAppContext().getPackageName(), 0).versionName;
+			return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
 		} catch (NameNotFoundException e) {
             String msg = "Error while retrieving data about versionName from manifest file.";
             Log.e(Tools.class.getSimpleName(), msg);
-//            Crashlytics.log(Log.ERROR, Tools.class.getSimpleName(), msg);
 		}
 		return null;
 	}
@@ -51,39 +44,14 @@ public abstract class Tools {
      *
      * @return
      */
-    public static String getDeviceUniqueId() {
-        return Settings.Secure.getString(App.getAppContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+    public static String getDeviceUniqueId(Context context) {
+        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
     }
-
-	/**
-	 * DELETE LATER
-	 * 
-	 * @param txtData
-	 * @param filename
-	 */
-	public static void writeToSdcard(String txtData, String filename) {
-		try {
-			File myFile = new File("/sdcard/" + filename + ".txt");
-			myFile.createNewFile();
-			FileOutputStream fOut = new FileOutputStream(myFile);
-			OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-			myOutWriter.append(txtData);
-			myOutWriter.close();
-			fOut.close();
-			Toast.makeText(App.getAppContext(),
-                    "Done writing SD '" + filename + ".txt'",
-                    Toast.LENGTH_SHORT).show();
-		} catch (Exception e) {
-			Toast.makeText(App.getAppContext(), e.getMessage(),
-                    Toast.LENGTH_SHORT).show();
-		}
-	}
 
 	/**
 	 * @return Application's version code from the {@code PackageManager}.
 	 */
-	public static int getVersionCode() {
-		Context context = App.getAppContext();
+	public static int getVersionCode(Context context) {
 	    try {
 	        PackageInfo packageInfo = context.getPackageManager()
 	                .getPackageInfo(context.getPackageName(), 0);
@@ -93,8 +61,8 @@ public abstract class Tools {
 	    }
 	}
 
-    public static boolean isNetworkConnected() {
-        ConnectivityManager cm = (ConnectivityManager) App.getAppContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+    public static boolean isNetworkConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
         return networkInfo != null;
     }

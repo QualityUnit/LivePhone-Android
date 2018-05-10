@@ -55,9 +55,6 @@ public class Logger {
         }
         if(e != null) {
             Log.e(TAG, errMsg, e);
-    //        if (Fabric.isInitialized()) {
-    //            Fabric.getLogger().e(TAG, TextUtils.isEmpty(errMsg) ? "" : errMsg, e);
-    //        }
         }
     }
 }

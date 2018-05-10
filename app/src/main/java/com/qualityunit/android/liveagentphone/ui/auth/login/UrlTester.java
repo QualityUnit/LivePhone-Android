@@ -1,11 +1,12 @@
 package com.qualityunit.android.liveagentphone.ui.auth.login;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.qualityunit.android.liveagentphone.BuildConfig;
+import com.qualityunit.android.liveagentphone.App;
 import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
 import com.qualityunit.android.liveagentphone.util.Tools;
@@ -30,6 +31,7 @@ public abstract class UrlTester implements Handler.Callback {
     private boolean isStopped;
     private Timer timer = new Timer("urlLoop");
     private TimerTask timerTask;
+    private Context context;
 
     public static final class CODE {
         public static final int URL_OK = 0;
@@ -41,6 +43,10 @@ public abstract class UrlTester implements Handler.Callback {
     }
     private Handler handler = new Handler(this);
     private UrlThread currentThread;
+
+    public UrlTester(Context context) {
+        this.context = context;
+    }
 
     public void test(final String typedUrl) {
         cancelTimerTask();
@@ -55,7 +61,7 @@ public abstract class UrlTester implements Handler.Callback {
             handler.sendMessageDelayed(msg, 0);
             return;
         }
-        currentThread = new UrlThread(handler, typedUrl);
+        currentThread = new UrlThread(handler, typedUrl, context);
         currentThread.start();
     }
 
@@ -107,15 +113,17 @@ public abstract class UrlTester implements Handler.Callback {
         private volatile boolean isForget = false;
         private Handler handler;
         private final String typedUrl;
+        private Context context;
 
-        public UrlThread(Handler handler, String typedUrl) {
+        public UrlThread(Handler handler, String typedUrl, Context context) {
             this.handler = handler;
             this.typedUrl = typedUrl;
+            this.context = context;
         }
 
         @Override
         public void run() {
-            if (!Tools.isNetworkConnected()) {
+            if (!Tools.isNetworkConnected(context)) {
                 post(CODE.NO_CONNECTION, typedUrl, 0, "No connection");
                 return;
             }
@@ -124,7 +132,7 @@ public abstract class UrlTester implements Handler.Callback {
                 return;
             }
             String fixedUrl = typedUrl;
-            if (!BuildConfig.DEBUG && !fixedUrl.startsWith("https://")) {
+            if (!App.ALLOW_HTTP && !fixedUrl.startsWith("https://")) {
                 post(CODE.API_ERROR, fixedUrl, ERROR_DELAY_MILLIS, "URL does not loop with 'https://'");
                 return;
             }

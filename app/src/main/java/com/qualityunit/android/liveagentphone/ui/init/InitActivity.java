@@ -24,7 +24,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
-import com.qualityunit.android.liveagentphone.gcm.PushRegistrationIntentService;
+import com.qualityunit.android.liveagentphone.fcm.PushRegistrationIntentService;
 import com.qualityunit.android.liveagentphone.net.loader.GenericLoader;
 import com.qualityunit.android.liveagentphone.net.loader.LoaderResult;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
@@ -61,15 +61,13 @@ public class InitActivity extends AppCompatActivity {
     private Button bRetry;
     private Button bQuit;
     private PhoneGetLoaderCallbacks phoneGetLoaderCallbacks;
-    private BroadcastReceiver gcmRegistrationBroadcastReceiver;
+    private BroadcastReceiver fcmRegistrationBroadcastReceiver;
     private boolean isReceiverRegistered;
     // variables to save into instanceBundle
-    private long countDownMillisLeft;
-    private String errorMsg;
+    private long countDownMillisLeft = DEFAULT_COUNTDOWN_MILLIS;
     private int retryNumber;
-    private boolean gcmIsRegistered;
+    private boolean fcmIsRegistered;
     private boolean phoneIsLoaded;
-    private boolean isError;
     private String deviceId;
     private String pushToken;
 
@@ -82,25 +80,6 @@ public class InitActivity extends AppCompatActivity {
         pbLoading = (LinearLayout) findViewById(R.id.pb_loading);
         bRetry = (Button) findViewById(R.id.b_retry);
         bQuit = (Button) findViewById(R.id.b_quit);
-        if (savedInstanceState != null) {
-            countDownMillisLeft = savedInstanceState.getLong("countDownMillisLeft", DEFAULT_COUNTDOWN_MILLIS);
-            errorMsg = savedInstanceState.getString("errorMsg", "");
-            isError = savedInstanceState.getBoolean("isError", false);
-            retryNumber = savedInstanceState.getInt("retryNumber");
-            gcmIsRegistered = savedInstanceState.getBoolean("gcmIsRegistered", false);
-            phoneIsLoaded = savedInstanceState.getBoolean("phoneIsLoaded", false);
-            deviceId = savedInstanceState.getString("deviceId",null);
-            pushToken = savedInstanceState.getString("pushToken", null);
-        } else {
-            countDownMillisLeft = DEFAULT_COUNTDOWN_MILLIS;
-            errorMsg = "";
-            isError = false;
-            retryNumber = 0;
-            gcmIsRegistered = false;
-            phoneIsLoaded = false;
-            deviceId = null;
-            pushToken = null;
-        }
         bRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -120,19 +99,6 @@ public class InitActivity extends AppCompatActivity {
                 finish();
             }
         });
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putLong("countDownMillisLeft", countDownMillisLeft);
-        outState.putString("errorMsg", errorMsg);
-        outState.putBoolean("isError", isError);
-        outState.putInt("retryNumber", retryNumber);
-        outState.putBoolean("gcmIsRegistered", gcmIsRegistered);
-        outState.putBoolean("phoneIsLoaded", phoneIsLoaded);
-        outState.putString("deviceId", deviceId);
-        outState.putString("pushToken", pushToken);
-        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -204,7 +170,7 @@ public class InitActivity extends AppCompatActivity {
     }
 
     private void registerPushNotifications() {
-        if (!gcmIsRegistered) {
+        if (!fcmIsRegistered) {
             registerReceiver(true);
             Intent intent = new Intent(InitActivity.this, PushRegistrationIntentService.class);
             intent.putExtra("remoteDeviceId", deviceId);
@@ -222,19 +188,19 @@ public class InitActivity extends AppCompatActivity {
     private void registerReceiver(boolean register){
         if (register) {
             // registering receiver
-            if (gcmRegistrationBroadcastReceiver == null) {
-                gcmRegistrationBroadcastReceiver = new GcmRegistrationBroadcastReceiver();
+            if (fcmRegistrationBroadcastReceiver == null) {
+                fcmRegistrationBroadcastReceiver = new FcmRegistrationBroadcastReceiver();
             }
             if (!isReceiverRegistered) {
-                LocalBroadcastManager.getInstance(this).registerReceiver(gcmRegistrationBroadcastReceiver,
+                LocalBroadcastManager.getInstance(this).registerReceiver(fcmRegistrationBroadcastReceiver,
                         new IntentFilter(PushRegistrationIntentService.INTENT_REGISTRATION_COMPLETE));
                 isReceiverRegistered = true;
             }
         }
         else {
             // unregistering receiver
-            if (gcmRegistrationBroadcastReceiver != null) {
-                LocalBroadcastManager.getInstance(this).unregisterReceiver(gcmRegistrationBroadcastReceiver);
+            if (fcmRegistrationBroadcastReceiver != null) {
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(fcmRegistrationBroadcastReceiver);
             }
             isReceiverRegistered = false;
         }
@@ -291,7 +257,7 @@ public class InitActivity extends AppCompatActivity {
      */
     private void go() {
         if (countDownMillisLeft == 0
-                && gcmIsRegistered
+                && fcmIsRegistered
                 && phoneIsLoaded) {
             startActivity(new Intent(this, HomeActivity.class));
             overridePendingTransition(0, 0);
@@ -304,8 +270,6 @@ public class InitActivity extends AppCompatActivity {
      * @param errorMsg Error message
      */
     private void showError(String errorMsg) {
-        isError = true;
-        this.errorMsg = errorMsg;
         pbLoading.setVisibility(View.GONE);
         llButtons.setVisibility(View.VISIBLE);
         tvLoading.setText(errorMsg);
@@ -315,8 +279,6 @@ public class InitActivity extends AppCompatActivity {
      * Hide buttons, progressbar and error message when initiating starts
      */
     private void showProgress () {
-        isError = false;
-        this.errorMsg = "";
         pbLoading.setVisibility(View.VISIBLE);
         llButtons.setVisibility(View.GONE);
     }
@@ -324,13 +286,13 @@ public class InitActivity extends AppCompatActivity {
     /**
      * This class is receiving local broadcast messages about GCM registration
      */
-    private class GcmRegistrationBroadcastReceiver extends BroadcastReceiver {
+    private class FcmRegistrationBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             if (PushRegistrationIntentService.INTENT_REGISTRATION_COMPLETE.equals(intent.getAction())) {
-                gcmIsRegistered = intent.getBooleanExtra(PushRegistrationIntentService.IS_REGISTRATION_SUCCESS, false);
-                if (gcmIsRegistered) {
+                fcmIsRegistered = intent.getBooleanExtra(PushRegistrationIntentService.IS_REGISTRATION_SUCCESS, false);
+                if (fcmIsRegistered) {
                     go();
                 }
                 else {

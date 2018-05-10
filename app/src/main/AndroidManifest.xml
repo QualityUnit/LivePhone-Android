@@ -8,15 +8,9 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
     <uses-permission android:name="android.permission.MANAGE_ACCOUNTS"/>
     <uses-permission android:name="android.permission.USE_CREDENTIALS"/>
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
-    <uses-permission android:name="com.qualityunit.android.liveagentphone.permission.C2D_MESSAGE"/>
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
-    <permission android:name="com.qualityunit.android.liveagentphone.permission.C2D_MESSAGE"
-                android:protectionLevel="signature" />
-    <uses-permission android:name="com.qualityunit.android.liveagentphone.permission.C2D_MESSAGE" />
 
     <application
         android:name=".App"
@@ -27,39 +21,22 @@
         android:process="com.qualityunit.android.liveagentphone.main"
         android:theme="@style/AppTheme">
 
-        <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="dsadsadas" />
-
-        <receiver
-            android:name="com.google.android.gms.gcm.GcmReceiver"
-            android:exported="true"
-            android:permission="com.google.android.c2dm.permission.SEND" >
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-                <category android:name="com.qualityunit.android.liveagentphone" />
-            </intent-filter>
-        </receiver>
-
         <service
-            android:name=".gcm.PushListenerService"
-            android:exported="false" >
+            android:name=".fcm.PushMessagingService">
             <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
 
         <service
-            android:name=".gcm.PushInstanceIDListenerService"
-            android:exported="false">
+            android:name=".fcm.PushInstanceIdService">
             <intent-filter>
-                <action android:name="com.google.android.gms.iid.InstanceID" />
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
 
         <service
-            android:name=".gcm.PushRegistrationIntentService"
-            android:exported="false" />
+            android:name=".fcm.PushRegistrationIntentService" />
 
         <service android:name=".acc.LaAuthenticatorService">
             <intent-filter>

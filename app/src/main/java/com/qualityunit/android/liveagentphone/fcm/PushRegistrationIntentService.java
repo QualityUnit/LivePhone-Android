@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.gcm;
+package com.qualityunit.android.liveagentphone.fcm;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -12,8 +12,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.android.gms.iid.InstanceID;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.rest.Client;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
@@ -34,7 +33,6 @@ public class PushRegistrationIntentService extends IntentService {
     public static final String INTENT_REGISTRATION_COMPLETE = "INTENT_REGISTRATION_COMPLETE";
     public static final String IS_REGISTRATION_SUCCESS = "isRegistrationSuccess";
     public static final String FAILURE_MESSAGE = "failureMessage";
-    public static final String FCM_PROJECT_ID = "672120953624";
     private static final String REQUEST_KEY_DEVICE_ID = "deviceId";
     private static final String REQUEST_KEY_PUSH_TOKEN = "pushToken";
     private static final String REQUEST_KEY_PLATFORM_ANDROID = "platform";
@@ -49,32 +47,31 @@ public class PushRegistrationIntentService extends IntentService {
         Account account = LaAccount.get();
         AccountManager accountManager = AccountManager.get(getApplicationContext());
         try {
-            InstanceID instanceID = InstanceID.getInstance(this);
-            String pushToken = instanceID.getToken(FCM_PROJECT_ID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-            Log.d(TAG, "GCM Registration Token: " + pushToken);
+            String pushToken = FirebaseInstanceId.getInstance().getToken();
+            Log.d(TAG, "FCM Registration Token: " + pushToken);
             final String phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
-            final String deviceId = Tools.getDeviceUniqueId();
+            final String deviceId = Tools.getDeviceUniqueId(getApplicationContext());
             final String remotePushToken = intent.getStringExtra("remotePushToken");
             final String remoteDeviceId = intent.getStringExtra("remoteDeviceId");
             if (TextUtils.isEmpty(remoteDeviceId) || TextUtils.isEmpty(remotePushToken) || !remoteDeviceId.equals(deviceId) || !remotePushToken.equals(pushToken)) {
-                // update params with GCM token to server
+                // update params with FCM token to server
                 sendRegistrationToServer(pushToken, phoneId, deviceId);
             } else {
                 // do not update params - just notify that it's done
-                sendGcmRegistraionBroadcast(true, null);
+                sendFcmRegistraionBroadcast(true, null);
             }
         } catch (Exception e) {
-            Logger.e(TAG, e);
-            sendGcmRegistraionBroadcast(false, e.getMessage());
+            Log.d(TAG, e.getMessage());
+            sendFcmRegistraionBroadcast(false, e.getMessage());
         }
     }
 
     /**
      * Send app broadcast about registraion step
      *
-     * @param success Set to true when GCM registration has been succeeded
+     * @param success Set to true when FCM registration has been succeeded
      */
-    private void sendGcmRegistraionBroadcast(boolean success, String failureMessage) {
+    private void sendFcmRegistraionBroadcast(boolean success, String failureMessage) {
         Intent registrationComplete = new Intent(INTENT_REGISTRATION_COMPLETE);
         registrationComplete.putExtra(IS_REGISTRATION_SUCCESS, success);
         if (!TextUtils.isEmpty(failureMessage)) {
@@ -126,11 +123,11 @@ public class PushRegistrationIntentService extends IntentService {
                             String token = result.getString(AccountManager.KEY_AUTHTOKEN);
                             String path = "/phones/" + phoneId + "/_updateParams";
                             if (makeRequest(basePath, path, token, paramsString)) {
-                                sendGcmRegistraionBroadcast(true, null);
+                                sendFcmRegistraionBroadcast(true, null);
                             }
                         } catch (Exception e) {
                             Logger.e(TAG, e);
-                            sendGcmRegistraionBroadcast(false, e.getMessage());
+                            sendFcmRegistraionBroadcast(false, e.getMessage());
                         }
                     }
                 })).start();

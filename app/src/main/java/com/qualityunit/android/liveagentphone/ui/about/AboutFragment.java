@@ -38,7 +38,7 @@ public class AboutFragment extends BaseFragment<AboutActivity> {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         getActivity().setTitle(R.string.about);
-        ((TextView)view.findViewById(R.id.tv_version)).setText(Tools.getVersionName());
+        ((TextView)view.findViewById(R.id.tv_version)).setText(Tools.getVersionName(getContext()));
     }
 
     @Override
