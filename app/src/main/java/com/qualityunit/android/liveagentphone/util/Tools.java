@@ -1,14 +1,10 @@
 package com.qualityunit.android.liveagentphone.util;
 
-import android.app.Activity;
-import android.app.DownloadManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
@@ -27,7 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -60,30 +55,6 @@ public abstract class Tools {
         return Settings.Secure.getString(App.getAppContext().getContentResolver(), Settings.Secure.ANDROID_ID);
     }
 
-    public static float getDensity() {
-        return App.getAppContext().getResources().getDisplayMetrics().density;
-    }
-
-	/**
-	 * Convert value to dp<br/>
-	 * btw... this is bullshit converting
-	 * 
-	 * @param value
-	 *            in dp unit
-	 * @return
-	 */
-	public static int toDp(int value) {
-		return (int) (value * getDensity() + 0.5f);
-	}
-
-	public static int dpFromPx(final float px) {
-		return (int) (px / getDensity());
-	}
-
-	public static int pxFromDp(final float dp) {
-		return (int) (dp * getDensity());
-	}
-
 	/**
 	 * DELETE LATER
 	 * 
@@ -109,18 +80,6 @@ public abstract class Tools {
 	}
 
 	/**
-	 * Rounds double number by rule BigDecimal.ROUND_HALF_UP
-	 * @param unrounded
-	 * @param precision
-	 * @return
-	 */
-	public static double roundHalfUp(double unrounded, int precision){
-	    BigDecimal bd = new BigDecimal(unrounded);
-	    BigDecimal rounded = bd.setScale(precision, BigDecimal.ROUND_HALF_UP);
-	    return rounded.doubleValue();
-	}
-	
-	/**
 	 * @return Application's version code from the {@code PackageManager}.
 	 */
 	public static int getVersionCode() {
@@ -132,51 +91,6 @@ public abstract class Tools {
 	    } catch (NameNotFoundException e) {
 	        throw new RuntimeException("Could not get package name: " + e);
 	    }
-	}
-	
-	/**
-	 * @return device name e.g. Sony Ericsson LT18i
-	 */
-	public static String getDeviceName() {
-	    String manufacturer = Build.MANUFACTURER;
-	    String model = Build.MODEL;
-	    if (model.startsWith(manufacturer)) {
-	        return capitalize(model);
-	    } else {
-	        return capitalize(manufacturer) + " " + model;
-	    }
-	}
-
-
-	public static String capitalize(String s) {
-	    if (s == null || s.length() == 0) {
-	        return "";
-	    }
-	    char first = s.charAt(0);
-	    if (Character.isUpperCase(first)) {
-	        return s;
-	    } else {
-	        return Character.toUpperCase(first) + s.substring(1);
-	    }
-	}
-
-	public static void showDownloads(Activity activity) {
-        Intent i = new Intent();
-        i.setAction(DownloadManager.ACTION_VIEW_DOWNLOADS);
-        activity.startActivity(i);
-    }
-	
-	/**
-	 * transform server boolean flags into boolean value ("1", "0") <br/>
-     * if flag is null then return false
-	 * @param flag
-	 * @return
-	 */
-	public static boolean toBoolean(String flag) {
-        if(flag == null) {
-            return false;
-        }
-        return "1".equals(flag);
 	}
 
     public static boolean isNetworkConnected() {
@@ -326,20 +240,16 @@ public abstract class Tools {
 
     public static class MD5Util {
 
-        public static String hex(byte[] array) {
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < array.length; ++i) {
-                sb.append(Integer.toHexString((array[i]
-                        & 0xFF) | 0x100).substring(1,3));
-            }
-            return sb.toString();
-        }
-
         public static String md5Hex (String message) {
             try {
-                MessageDigest md =
-                        MessageDigest.getInstance("MD5");
-                return hex (md.digest(message.getBytes("CP1252")));
+                MessageDigest md = MessageDigest.getInstance("MD5");
+                byte[] array = md.digest(message.getBytes("CP1252"));
+                StringBuffer sb = new StringBuffer();
+                for (int i = 0; i < array.length; ++i) {
+                    sb.append(Integer.toHexString((array[i]
+                            & 0xFF) | 0x100).substring(1,3));
+                }
+                return sb.toString();
             } catch (NoSuchAlgorithmException e) {
             } catch (UnsupportedEncodingException e) {
             }

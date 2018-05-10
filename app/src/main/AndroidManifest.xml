@@ -127,6 +127,7 @@
             android:name=".ui.call.InitCallActivity"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTop"
+            android:label="@string/make_call"
             android:excludeFromRecents="true"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">

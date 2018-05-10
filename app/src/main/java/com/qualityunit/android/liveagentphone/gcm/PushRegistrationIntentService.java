@@ -34,7 +34,7 @@ public class PushRegistrationIntentService extends IntentService {
     public static final String INTENT_REGISTRATION_COMPLETE = "INTENT_REGISTRATION_COMPLETE";
     public static final String IS_REGISTRATION_SUCCESS = "isRegistrationSuccess";
     public static final String FAILURE_MESSAGE = "failureMessage";
-    public static final String GCM_PROJECT_ID = "672120953624";
+    public static final String FCM_PROJECT_ID = "672120953624";
     private static final String REQUEST_KEY_DEVICE_ID = "deviceId";
     private static final String REQUEST_KEY_PUSH_TOKEN = "pushToken";
     private static final String REQUEST_KEY_PLATFORM_ANDROID = "platform";
@@ -50,7 +50,7 @@ public class PushRegistrationIntentService extends IntentService {
         AccountManager accountManager = AccountManager.get(getApplicationContext());
         try {
             InstanceID instanceID = InstanceID.getInstance(this);
-            String pushToken = instanceID.getToken(GCM_PROJECT_ID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+            String pushToken = instanceID.getToken(FCM_PROJECT_ID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
             Log.d(TAG, "GCM Registration Token: " + pushToken);
             final String phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
             final String deviceId = Tools.getDeviceUniqueId();

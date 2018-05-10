@@ -6,19 +6,24 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primary"
     android:fitsSystemWindows="true"
     tools:context=".ui.call.InitCallActivity">
 
-    <TextView
+    <android.support.design.widget.AppBarLayout
+        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:gravity="center"
-        android:textColor="@color/textSecondaryOnDark"
-        android:text="@string/make_call"/>
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/AppTheme.PopupOverlay"/>
+
+    </android.support.design.widget.AppBarLayout>
 
     <LinearLayout
-        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -32,6 +37,7 @@
         <ImageView
             android:layout_width="64dp"
             android:layout_height="64dp"
+            android:tint="@color/waterSymbolOnWhite"
             android:src="@drawable/ic_avatar_white_24dp"/>
 
         <TextView
@@ -39,7 +45,7 @@
             android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/textPrimaryOnDark"
+            android:textColor="@color/textPrimaryOnWhite"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Large"/>
 
         <TextView
@@ -48,21 +54,10 @@
             android:visibility="gone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/textSecondaryOnDark"
+            android:textColor="@color/textSecondaryOnWhite"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"/>
 
     </LinearLayout>
-
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_cancelCall"
-        android:layout_width="@dimen/fab_action_size"
-        android:layout_height="@dimen/fab_action_size"
-        android:scaleType="center"
-        app:backgroundTint="@color/callButtonRed"
-        android:layout_gravity="bottom|center"
-        android:layout_marginBottom="@dimen/fab_action_margin"
-        android:layout_marginRight="150dp"
-        android:src="@drawable/ic_call_end_24dp"/>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_makeCall"
@@ -72,7 +67,6 @@
         app:backgroundTint="@color/callButtonGreen"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="@dimen/fab_action_margin"
-        android:layout_marginLeft="150dp"
         android:src="@drawable/ic_call_green_24dp"/>
 
 </android.support.design.widget.CoordinatorLayout>

@@ -26,8 +26,8 @@ public abstract class ToolbarActivity extends AppCompatActivity implements Fragm
         super.onCreate(savedInstanceState);
         beforeSetContentView();
         setContentView(getContentViewRes());
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
         onBackStackChanged();
     }

@@ -9,10 +9,26 @@
         android:id="@+id/iv_avatar"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/ll_avatar"/>
+        android:src="@drawable/ll_department"/>
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="2dp"
+        android:layout_marginLeft="28dp"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/bg_extension_background">
+
+        <View
+            android:id="@+id/v_status"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:layout_gravity="center"/>
+
+    </FrameLayout>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_alignParentEnd="true"
@@ -23,17 +39,16 @@
         android:gravity="center_vertical">
 
         <TextView
-            android:id="@+id/tv_text_primary"
-            android:layout_width="wrap_content"
+            android:id="@+id/tv_name"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"
             android:textColor="@color/textPrimaryOnWhite"
             android:gravity="center_vertical"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium"/>
 
         <TextView
-            android:id="@+id/tv_text_secondary"
+            android:id="@+id/tv_department"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
