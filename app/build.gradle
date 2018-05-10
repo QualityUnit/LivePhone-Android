@@ -8,8 +8,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 22
         // be carefull, keep it less than 23 (http://forum.unity3d.com/threads/systeminfo-deviceuniqueidentifier-android-6-0.367028/)
-        versionCode 14
-        versionName "1.2.0-beta"
+        versionCode 15
+        versionName "1.2.1-beta"
         ndk {
             abiFilters "armeabi", "armeabi-v7a", "x86"
         }
@@ -44,6 +44,18 @@ dependencies {
     implementation 'net.frakbot:glowpadbackport:2.1.1'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'fr.turri:jISO8601:0.2'
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        def requested = details.requested
+        if (requested.group == 'com.android.support') {
+            // Skip multidex because it follows a different versioning pattern.
+            if (!requested.name.startsWith("multidex")) {
+                details.useVersion '25.3.1'
+            }
+        }
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'
