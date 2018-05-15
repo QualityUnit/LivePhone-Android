@@ -64,6 +64,7 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
         else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
+        Picasso.with(context).cancelRequest(viewHolder.avatar);
         if(item != null) {
             if (item.agent == null) {
                 // deparment extension
@@ -109,7 +110,7 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
         }
     }
 
-    public static void loadServerAvatar(Context context, Drawable defaultAvatarAgent, String baseUrl, InternalItem item, ViewHolder viewHolder) {
+    public static void loadServerAvatar(Context context, Drawable defaultAvatarAgent, String baseUrl, InternalItem item, final ViewHolder viewHolder) {
         String url;
         url = baseUrl + item.agent.avatarUrl.replace("__BASE_URL__", "/");
         if (!TextUtils.isEmpty(url)) {
