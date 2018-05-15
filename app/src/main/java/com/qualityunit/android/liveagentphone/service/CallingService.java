@@ -746,7 +746,7 @@ public class CallingService extends Service implements SipAppObserver {
                             Matcher matcher = pattern.matcher(remoteUri);
                             if (matcher.find()) {
                                 notificationContentText = remoteNumber = matcher.group(1);
-                                Logger.e(TAG, "#### Remote number found: " + remoteNumber);
+                                Log.d(TAG, "#### Remote number found: " + remoteNumber);
                             }
                             else {
                                 Logger.e(TAG, "#### Remote number not found.");
@@ -755,7 +755,7 @@ public class CallingService extends Service implements SipAppObserver {
                             matcher = pattern.matcher(remoteUri);
                             if (matcher.find()) {
                                 notificationContentText = remoteName = matcher.group(1);
-                                Logger.e(TAG, "#### Remote name found: " + remoteName);
+                                Log.d(TAG, "#### Remote name found: " + remoteName);
                             }
                             else {
                                 Logger.e(TAG, "#### Remote name not found.");

@@ -3,7 +3,6 @@ package com.qualityunit.android.liveagentphone.ui.home;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -52,29 +51,26 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
     }
 
     public static View getViewStatic(Context context, String baseUrl, InternalItem item, View convertView, ViewGroup parent) {
-        Drawable defaultAvatarAgent = ContextCompat.getDrawable(context, R.drawable.ll_avatar);
-        Drawable defaultAvatarDepartment = ContextCompat.getDrawable(context, R.drawable.ll_department);
         final ViewHolder viewHolder;
         if (convertView == null || !(convertView.getTag() instanceof ViewHolder)) {
             LayoutInflater inflater = LayoutInflater.from(context);
             convertView = inflater.inflate(layout, parent, false);
             viewHolder = new ViewHolder(convertView);
             convertView.setTag(viewHolder);
-        }
-        else {
+        } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
         Picasso.with(context).cancelRequest(viewHolder.avatar);
         if(item != null) {
             if (item.agent == null) {
                 // deparment extension
-                viewHolder.avatar.setImageDrawable(defaultAvatarDepartment);
+                viewHolder.avatar.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ll_department));
                 viewHolder.name.setText(item.department.departmentName);
                 viewHolder.department.setText("");
                 viewHolder.department.setVisibility(View.GONE);
             } else {
                 // agent extension
-                viewHolder.avatar.setImageDrawable(defaultAvatarAgent);
+                viewHolder.avatar.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ll_avatar));
                 viewHolder.name.setText(item.agent.name);
                 viewHolder.department.setText(item.department.departmentName);
                 viewHolder.department.setVisibility(View.VISIBLE);
@@ -83,13 +79,16 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
                     if (avatarUrl.startsWith("//")) {
                         avatarUrl = "https:" + avatarUrl;
                     }
-                    Picasso.with(context).load(avatarUrl).placeholder(defaultAvatarAgent).transform(new CircleTransform()).into(viewHolder.avatar);
+                    Picasso.with(context).load(avatarUrl).transform(new CircleTransform()).into(viewHolder.avatar);
                 } else if (!TextUtils.isEmpty(avatarUrl)) {
-                    loadServerAvatar(context, defaultAvatarAgent, baseUrl, item, viewHolder);
+                    String url = baseUrl + avatarUrl.replace("__BASE_URL__", "/");
+                    if (!TextUtils.isEmpty(url)) {
+                        Picasso.with(context).load(url).transform(new CircleTransform()).into(viewHolder.avatar);
+                    }
                 }
             }
-            resolveStatus(item, viewHolder);
         }
+        resolveStatus(item, viewHolder);
         return convertView;
     }
 
@@ -107,14 +106,6 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
             default:
                 Log.d(TAG, "resolveStatus: Unknown status:'" + item.status + "'");
                 viewHolder.status.setBackgroundColor(Color.TRANSPARENT);
-        }
-    }
-
-    public static void loadServerAvatar(Context context, Drawable defaultAvatarAgent, String baseUrl, InternalItem item, final ViewHolder viewHolder) {
-        String url;
-        url = baseUrl + item.agent.avatarUrl.replace("__BASE_URL__", "/");
-        if (!TextUtils.isEmpty(url)) {
-            Picasso.with(context).load(url).placeholder(defaultAvatarAgent).transform(new CircleTransform()).into(viewHolder.avatar);
         }
     }
 
