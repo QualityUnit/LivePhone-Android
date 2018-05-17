@@ -38,7 +38,7 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:tint="@color/waterSymbolOnWhite"
-            android:src="@drawable/ic_avatar_white_24dp"/>
+            android:src="@drawable/ic_default_avatar"/>
 
         <TextView
             android:id="@+id/tv_primary"

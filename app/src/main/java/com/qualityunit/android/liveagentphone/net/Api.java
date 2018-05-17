@@ -76,7 +76,7 @@ public class Api {
                     public void run() {
                         try {
                             JSONObject filters = new JSONObject();
-                            filters.put("phoneId", phoneId);
+                            filters.put("phone_id", phoneId);
                             filters.put("service_type", "P");
                             final Client client = Client.getInstance();
                             final Request request = client
@@ -182,7 +182,7 @@ public class Api {
                         try {
                             final Client client = Client.getInstance();
                             final Request request = client
-                                    .GET(apiBasePath, "/devices/" + deviceId + "/departments", apiKey)
+                                    .GET(apiBasePath, "/devices/" + deviceId + "/departments?_page=0&_perPage=9999", apiKey)
                                     .build();
                             Response response = client.newCall(request).execute();
                             if (!response.isSuccessful()) {

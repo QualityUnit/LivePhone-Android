@@ -70,7 +70,8 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
                 viewHolder.department.setVisibility(View.GONE);
             } else {
                 // agent extension
-                viewHolder.avatar.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ll_avatar));
+                int defaultAvatarRes = R.drawable.ll_avatar;
+                viewHolder.avatar.setImageResource(defaultAvatarRes);
                 viewHolder.name.setText(item.agent.name);
                 viewHolder.department.setText(item.department.departmentName);
                 viewHolder.department.setVisibility(View.VISIBLE);
@@ -79,11 +80,11 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
                     if (avatarUrl.startsWith("//")) {
                         avatarUrl = "https:" + avatarUrl;
                     }
-                    Picasso.with(context).load(avatarUrl).transform(new CircleTransform()).into(viewHolder.avatar);
+                    Picasso.with(context).load(avatarUrl).placeholder(defaultAvatarRes).transform(new CircleTransform()).into(viewHolder.avatar);
                 } else if (!TextUtils.isEmpty(avatarUrl)) {
                     String url = baseUrl + avatarUrl.replace("__BASE_URL__", "/");
                     if (!TextUtils.isEmpty(url)) {
-                        Picasso.with(context).load(url).transform(new CircleTransform()).into(viewHolder.avatar);
+                        Picasso.with(context).load(url).placeholder(defaultAvatarRes).transform(new CircleTransform()).into(viewHolder.avatar);
                     }
                 }
             }
