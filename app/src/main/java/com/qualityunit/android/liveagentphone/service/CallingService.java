@@ -843,7 +843,7 @@ public class CallingService extends Service implements SipAppObserver {
                     @Override
                     public void run() {
                         if (isMissedCall) {
-                            showMissedCall(remoteNumber, remoteName);
+//                            showMissedCall(remoteNumber, remoteName); // uncomment to enable missed call notification
                         }
                     }
                 });
