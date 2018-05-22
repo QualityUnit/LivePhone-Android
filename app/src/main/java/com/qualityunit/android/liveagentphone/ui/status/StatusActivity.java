@@ -5,9 +5,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
@@ -21,15 +21,15 @@ import java.util.List;
 public class StatusActivity extends AppCompatActivity implements StatusCallbacks{
 
     private StatusStore store;
-    private Switch availabilitySwitch;
+    private Switch mobileAvailabilitySwitch;
     private ListView listView;
-    private View availabilitySwitchPane;
+    private LinearLayout llStatusWeb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.status_activity);
-        setTitle(getString(R.string.action_availability));
+        setTitle(R.string.status_available);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -40,24 +40,24 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
             }
         });
 
-        // main switch stuff
-        availabilitySwitchPane = findViewById(R.id.fl_mainSwitchPane);
-        availabilitySwitchPane.setVisibility(View.GONE);
-        View availabilitySwitchView = findViewById(R.id.ll_mainSwitch);
-        availabilitySwitch = (Switch) availabilitySwitchView.findViewById(R.id.s_active);
-        TextView availabilityLabel = (TextView) availabilitySwitchView.findViewById(R.id.tv_name);
-        availabilityLabel.setText(R.string.status_available);
+        // mobile status stuff
+        mobileAvailabilitySwitch = (Switch) toolbar.findViewById(R.id.s_mobileStatus);
+        mobileAvailabilitySwitch.setVisibility(View.GONE);
 
         // department list
         listView = (ListView) findViewById(R.id.lv_list);
         store = StatusStore.getInstance(this);
         store.addCallBacks(this);
+
+        // browser status stuff
+        llStatusWeb = (LinearLayout) findViewById(R.id.ll_status_web);
+        llStatusWeb.setVisibility(View.GONE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        store.getAll();
+        store.getDevice(true, true);
     }
 
     @Override
@@ -67,16 +67,27 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     }
 
     @Override
-    public void onDevice(Boolean isAvailable, Exception e) {
-        availabilitySwitch.setOnCheckedChangeListener(null);
-        availabilitySwitch.setChecked(isAvailable != null && isAvailable);
-        availabilitySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                store.updateDevice(isChecked);
+    public void onDevices(int mobilePhoneStatus, int browserPhoneStatus, Exception e) {
+        if (browserPhoneStatus > StatusStore.PHONE_STATUS_NULL) {
+            if (browserPhoneStatus == StatusStore.PHONE_STATUS_OUT_IN) {
+                llStatusWeb.setVisibility(View.VISIBLE);
             }
-        });
-        availabilitySwitchPane.setVisibility(View.VISIBLE);
+        } else {
+            llStatusWeb.setVisibility(View.GONE);
+        }
+        if (mobilePhoneStatus > StatusStore.PHONE_STATUS_NULL) {
+            mobileAvailabilitySwitch.setOnCheckedChangeListener(null);
+            mobileAvailabilitySwitch.setChecked(mobilePhoneStatus == StatusStore.PHONE_STATUS_OUT_IN);
+            mobileAvailabilitySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    store.updateDevice(isChecked, StatusStore.DEVICE_TYPE_MOBILE);
+                }
+            });
+            mobileAvailabilitySwitch.setVisibility(View.VISIBLE);
+        } else {
+            mobileAvailabilitySwitch.setVisibility(View.GONE);
+        }
         if (e != null) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -84,6 +95,10 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
 
     @Override
     public void onDepartmentList(List<DepartmentStatusItem> list, Exception e) {
+        if (list == null) {
+            listView.setAdapter(null);
+            return;
+        }
         StatusListAdapter adapter = new StatusListAdapter(this, list);
         listView.setAdapter(adapter);
     }

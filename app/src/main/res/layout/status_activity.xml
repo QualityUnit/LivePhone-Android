@@ -19,35 +19,57 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
-            app:popupTheme="@style/AppTheme.PopupOverlay"/>
+            app:popupTheme="@style/AppTheme.PopupOverlay">
+
+            <Switch
+                android:id="@+id/s_mobileStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_margin="16dp"
+                android:layout_centerVertical="true"/>
+
+        </android.support.v7.widget.Toolbar>
+
 
     </android.support.design.widget.AppBarLayout>
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                  android:orientation="vertical"
-                  android:layout_width="match_parent"
-                  android:layout_height="match_parent"
-                  app:layout_behavior="@string/appbar_scrolling_view_behavior">
-        <FrameLayout
-            android:id="@+id/fl_mainSwitchPane"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background"
-            android:clipToPadding="false"
-            android:elevation="3dp">
-
-            <include android:id="@+id/ll_mainSwitch" layout="@layout/status_list_item" />
-
-        </FrameLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <ListView
             android:id="@+id/lv_list"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1.0"
+            android:layout_weight="1"
             android:choiceMode="none"
             android:divider="@null"
             android:dividerHeight="0dp"/>
+
+        <LinearLayout
+            android:id="@+id/ll_status_web"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#E8F5E9"
+            android:padding="16dp"
+            android:elevation="3dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ll_browser"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="16dp"
+                android:text="@string/browserPhoneMessage"/>
+
+        </LinearLayout>
 
 
     </LinearLayout>

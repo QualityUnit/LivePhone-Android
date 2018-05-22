@@ -2,6 +2,7 @@ package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.text.TextUtils;
 
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.Api;
@@ -12,8 +13,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,33 +26,35 @@ import java.util.Set;
 public class StatusStore {
 
     public static final String TAG = StatusStore.class.getSimpleName();
+    public static final String DEVICE_TYPE_BROWSER = "W";
+    public static final String DEVICE_TYPE_MOBILE = "A";
+    public static final int PHONE_STATUS_NULL = 1;
+    public static final int PHONE_STATUS_OUT = 2;
+    public static final int PHONE_STATUS_OUT_IN = 3;
+    private static final String STATUS_ONLINE_FLAG = "N";
     private static StatusStore instance;
     private Activity activity;
-    private Integer deviceId;
     private String phoneId;
-    private String agentId;
-    private Boolean isAvailable;
-    private boolean isGettingAll;
+    private final Map<String, JSONObject> devices = new HashMap<>();
     private final Set<StatusCallbacks> callbacksSet = new HashSet<>();
-    private final Api.DeviceCallback deviceCallbacks = new Api.DeviceCallback() {
 
-        @Override
-        public void onResponse(Boolean isAvailable, Integer deviceId, String agentId, Exception e) {
-            StatusStore.this.isAvailable = isAvailable;
-            StatusStore.this.agentId = agentId;
-            StatusStore.this.deviceId = deviceId;
-            for (StatusCallbacks item : callbacksSet) {
-                item.onDevice(isAvailable, e);
-            }
-            if (isGettingAll) {
-                isGettingAll = false;
-                if (e == null) {
-                    getDepartments();
-                }
+    private void notifyCallbacks(final Exception e) throws JSONException {
+        for (StatusCallbacks item : callbacksSet) {
+            item.onDevices(getDeviceStatus(DEVICE_TYPE_MOBILE), getDeviceStatus(DEVICE_TYPE_BROWSER), e);
+        }
+    }
+
+    private int getDeviceStatus(String deviceType) throws JSONException {
+        int status = PHONE_STATUS_NULL;
+        JSONObject device = devices.get(deviceType);
+        if (device != null) {
+            String mobileStatus = device.getString("status");
+            if (!TextUtils.isEmpty(mobileStatus)) {
+                status = STATUS_ONLINE_FLAG.equals(mobileStatus) ? PHONE_STATUS_OUT_IN : PHONE_STATUS_OUT;
             }
         }
-
-    };
+        return status;
+    }
 
     public static StatusStore getInstance(Activity activity) {
         if (instance == null) {
@@ -80,40 +85,74 @@ public class StatusStore {
     }
 
     /**
-     * Fetch fresh status and department list
-     */
-    public void getAll() {
-        isGettingAll = true;
-        getDevice(true);
-    }
-
-    /**
      * Fetch current device phone status using phoneId from current account
      */
-    public void getDevice(boolean forceFetch) {
-        if (isAvailable == null || forceFetch) {
-            Api.getDevicePhoneStatus(activity, phoneId, deviceCallbacks);
-        } else {
-            for (StatusCallbacks item : callbacksSet) {
-                item.onDevice(isAvailable, null);
+    public void getDevice(boolean forceFetch, final boolean withDeparments) {
+        if (!forceFetch) {
+            try {
+                notifyCallbacks(null);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+            return;
         }
+        Api.getDevicesPhoneStatus(activity, phoneId, new Api.DevicesCallback() {
+            @Override
+            public void onResponse(JSONArray jsonArray, Exception e) {
+                try {
+                    if (jsonArray == null) {
+                        notifyCallbacks(new Exception("Phone devices not found"));
+                        return;
+                    }
+                    devices.clear();
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject object = jsonArray.getJSONObject(i);
+                        devices.put(object.getString("type"), object);
+                    }
+                    if (e == null && withDeparments && getDeviceStatus(DEVICE_TYPE_MOBILE) == PHONE_STATUS_OUT_IN) {
+                        getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
+                    }
+                    notifyCallbacks(e); // phoneStatus is updated here
+                } catch (JSONException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
     }
 
     /**
      * Update current device phone status
      * @param requestedStatus is requested new status
      */
-    public void updateDevice(boolean requestedStatus) {
-        if (deviceId != null) {
-            Api.updateDevicePhoneStatus(activity, deviceId, agentId, requestedStatus, deviceCallbacks);
+    public void updateDevice(final boolean requestedStatus, String deviceType) {
+        if (!requestedStatus) {
+            // clear department listview
+            for (StatusCallbacks item : callbacksSet) {
+                item.onDepartmentList(null, null);
+            }
         }
+        JSONObject deviceJsonObject = devices.get(deviceType);
+        Api.updateDevicePhoneStatus(activity, deviceJsonObject, requestedStatus, new Api.UpdateDeviceCallback() {
+            @Override
+            public void onResponse(JSONObject jsonObject, Exception e) {
+                try {
+                    devices.put(jsonObject.getString("type"), jsonObject);
+                    if (e == null && requestedStatus && getDeviceStatus(DEVICE_TYPE_MOBILE) == PHONE_STATUS_OUT_IN) {
+                        getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
+                    }
+                    notifyCallbacks(e);
+                } catch (JSONException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
     }
 
     /**
      * Get phone statuses for every department. You can call this method after calling getDevice().
+     * @param deviceId
      */
-    public void getDepartments() {
+    public void getDepartments(String deviceId) {
         if (deviceId == null) {
             String errMsg = "Cannot call 'getDepartments() before calling 'getDevice()'";
             for (StatusCallbacks item : callbacksSet) {
@@ -138,7 +177,8 @@ public class StatusStore {
                                     obj.getString("department_id"),
                                     obj.getString("user_id"),
                                     obj.getString("department_name"),
-                                    "N".equals(obj.getString("online_status"))
+                                    "N".equals(obj.getString("online_status")),
+                                    obj.getString("preset_status")
                             );
                             list.add(item);
                         } catch (JSONException e1) {

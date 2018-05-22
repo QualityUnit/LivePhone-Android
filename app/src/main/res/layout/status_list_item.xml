@@ -15,7 +15,7 @@
         android:padding="16dp"/>
 
     <Switch
-        android:id="@+id/s_active"
+        android:id="@+id/s_mobileStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="16dp"/>

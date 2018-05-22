@@ -1,16 +1,19 @@
 package com.qualityunit.android.liveagentphone.util;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.provider.Settings;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+
+import com.qualityunit.android.liveagentphone.App;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,6 +24,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public abstract class Tools {
 
@@ -44,8 +48,49 @@ public abstract class Tools {
      *
      * @return
      */
-    public static String getDeviceUniqueId(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+    public static String getDeviceUniqueId() {
+        String memoryKey = "com.qualityunit.android.liveagentphone.installid";
+        String installId = App.getSharedPreferences().getString(memoryKey, null);
+        if (TextUtils.isEmpty(installId)) {
+            installId = UUID.randomUUID().toString();
+            App.getSharedPreferences().edit().putString(memoryKey, installId).commit();
+        }
+        return installId;
+    }
+
+    /**
+     * @return device name e.g. Google Pixel  -
+     */
+    public static String getDeviceName() {
+        String name;
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.startsWith(manufacturer)) {
+            name = capitalizeFirstLetter(model);
+        } else {
+            name = capitalizeFirstLetter(manufacturer) + " " + model;
+        }
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        String bluetoothName = bluetoothAdapter.getName();
+        if(!TextUtils.isEmpty(bluetoothName)) {
+            name += " - " + bluetoothName;
+        }
+        if (TextUtils.isEmpty(name)) {
+            name = "Unknown mobile device";
+        }
+        return name;
+    }
+
+    private static String capitalizeFirstLetter(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
     }
 
 	/**

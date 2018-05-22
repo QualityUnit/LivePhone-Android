@@ -50,7 +50,7 @@ public class PushRegistrationIntentService extends IntentService {
             String pushToken = FirebaseInstanceId.getInstance().getToken();
             Log.d(TAG, "FCM Registration Token: " + pushToken);
             final String phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
-            final String deviceId = Tools.getDeviceUniqueId(getApplicationContext());
+            final String deviceId = Tools.getDeviceUniqueId();
             final String remotePushToken = intent.getStringExtra("remotePushToken");
             final String remoteDeviceId = intent.getStringExtra("remoteDeviceId");
             if (TextUtils.isEmpty(remoteDeviceId) || TextUtils.isEmpty(remotePushToken) || !remoteDeviceId.equals(deviceId) || !remotePushToken.equals(pushToken)) {

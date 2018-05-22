@@ -91,7 +91,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             finish();
             return;
         }
-        store.getDevice(true);
+        store.getDevice(true, false);
     }
 
     @Override
@@ -130,12 +130,12 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == STATUS_REQUEST_CODE) {
-            store.getDevice(false);
+            store.getDevice(false, false);
         }
     }
 
     @Override
-    public void onDevice(Boolean isAvailable, Exception e) {
+    public void onDevices(int mobilePhoneStatus, int browserPhoneStatus, Exception e) {
         if (e != null) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             return;
@@ -159,7 +159,18 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
 //            return;
 //        }
 
-        statusItemIconRes = isAvailable ? R.drawable.ic_status_available : R.drawable.ic_status_unavailable;
+        int phoneStatus = Math.max(mobilePhoneStatus, browserPhoneStatus);
+        switch (phoneStatus) {
+            case StatusStore.PHONE_STATUS_NULL:
+                statusItemIconRes = R.drawable.ic_status_no_calls;
+                break;
+            case StatusStore.PHONE_STATUS_OUT:
+                statusItemIconRes = R.drawable.ic_status_unavailable;
+                break;
+            case StatusStore.PHONE_STATUS_OUT_IN:
+                statusItemIconRes = R.drawable.ic_status_available;
+                break;
+        }
         updateStatusItem();
     }
 

@@ -74,7 +74,7 @@ public class StatusListAdapter extends ArrayAdapter<DepartmentStatusItem> {
 
         public ViewHolder(View convertView) {
             nameView = (TextView) convertView.findViewById(R.id.tv_name);
-            switchView = (Switch) convertView.findViewById(R.id.s_active);
+            switchView = (Switch) convertView.findViewById(R.id.s_mobileStatus);
         }
     }
 

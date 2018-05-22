@@ -58,17 +58,17 @@ public class Api {
         });
     }
 
-    public interface DeviceCallback {
-        void onResponse(Boolean isAvailable, Integer deviceId, String agentId, Exception e);
+    public interface DevicesCallback {
+        void onResponse(JSONArray jsonArray, Exception e);
     }
 
-    public static void getDevicePhoneStatus(final Activity activity, final String phoneId, final DeviceCallback deviceCallback) {
+    public static void getDevicesPhoneStatus(final Activity activity, final String phoneId, final DevicesCallback devicesCallback) {
         final Handler handler = new Handler(Looper.myLooper());
         prepare(handler, activity, new ApiPrepare() {
             @Override
             public void onApiReady(final String apiBasePath, final String apiKey, Exception e) {
                 if (e != null) {
-                    deviceCallback.onResponse(null, null, null, e);
+                    devicesCallback.onResponse(null, e);
                     return;
                 }
                 (new Thread(new Runnable() {
@@ -87,25 +87,21 @@ public class Api {
                             if (!response.isSuccessful()) {
                                 throw new ApiException(response.message(), response.code());
                             }
-                            JSONArray array = new JSONArray(response.body().string());
+                            final JSONArray array = new JSONArray(response.body().string());
                             if (array.length() < 1) {
                                 throw new ApiException("Phone service not found", response.code());
                             }
-                            JSONObject object = array.getJSONObject(0);
-                            final int newDeviceId = object.getInt("id");
-                            final String newAgentId = object.getString("agent_id");
-                            final boolean newIsAvailable = "N".equals(object.getString("status"));
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    deviceCallback.onResponse(newIsAvailable, newDeviceId, newAgentId, null);
+                                    devicesCallback.onResponse(array, null);
                                 }
                             });
                         } catch (JSONException | IOException | ApiException e) {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    deviceCallback.onResponse(null, null, null, e);
+                                    devicesCallback.onResponse(null, e);
                                 }
                             });
                         }
@@ -115,27 +111,29 @@ public class Api {
         });
     }
 
-    public static void updateDevicePhoneStatus(final Activity activity, final int deviceId, final String agentId, final boolean requestedStatus, final DeviceCallback deviceCallback) {
+    public interface UpdateDeviceCallback {
+        void onResponse(JSONObject jsonArray, Exception e);
+    }
+
+    public static void updateDevicePhoneStatus(final Activity activity, final JSONObject deviceJsonObject, final boolean requestedStatus, final UpdateDeviceCallback updateDeviceCallback) {
         final Handler handler = new Handler(Looper.myLooper());
         prepare(handler, activity, new ApiPrepare() {
             @Override
             public void onApiReady(final String apiBasePath, final String apiKey, Exception e) {
                 if (e != null) {
-                    deviceCallback.onResponse(!requestedStatus, deviceId, agentId, e);
+                    updateDeviceCallback.onResponse(deviceJsonObject, e);
                     return;
                 }
                 (new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            JSONObject body = new JSONObject();
-                            body.put("agent_id", agentId);
-                            body.put("service_type", "P");
-                            body.put("status", requestedStatus ? "N" : "F");
+                            final String deviceId = deviceJsonObject.getString("id");
+                            deviceJsonObject.put("status", requestedStatus ? "N" : "F");
                             final Client client = Client.getInstance();
                             final Request request = client
                                     .PUT(apiBasePath, "/devices/" + deviceId, apiKey)
-                                    .setBody(body.toString())
+                                    .setBody(deviceJsonObject.toString())
                                     .build();
                             Response response = client.newCall(request).execute();
                             if (!response.isSuccessful()) {
@@ -146,14 +144,14 @@ public class Api {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    deviceCallback.onResponse(newStatus, deviceId, agentId, null);
+                                    updateDeviceCallback.onResponse(deviceJsonObject, null);
                                 }
                             });
                         } catch (JSONException | IOException | ApiException e) {
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
-                                    deviceCallback.onResponse(!requestedStatus, deviceId, agentId, e);
+                                    updateDeviceCallback.onResponse(deviceJsonObject, e);
                                 }
                             });
                         }
@@ -167,7 +165,7 @@ public class Api {
         void onResponse(JSONArray array, Exception e);
     }
 
-    public static void getDepartmentStatusList(final Activity activity, final int deviceId, final DepartmentStatusListCallback departmetsCallback) {
+    public static void getDepartmentStatusList(final Activity activity, final String deviceId, final DepartmentStatusListCallback departmetsCallback) {
         final Handler handler = new Handler(Looper.myLooper());
         prepare(handler, activity, new ApiPrepare() {
             @Override
@@ -228,7 +226,10 @@ public class Api {
                         try {
                             JSONObject body = new JSONObject();
                             body.put("user_id", item.userId);
-                            body.put("department_name", item.departmentId);
+                            body.put("department_id", item.departmentId);
+                            body.put("department_name", item.departmentName);
+                            body.put("user_id", item.userId);
+                            body.put("preset_status", item.presetStatus);
                             body.put("online_status", requestedStatus ? "N" : "F");
                             final Client client = Client.getInstance();
                             final Request request = client
