@@ -38,7 +38,7 @@ public class StatusStore {
     private final Map<String, JSONObject> devices = new HashMap<>();
     private final Set<StatusCallbacks> callbacksSet = new HashSet<>();
 
-    private void notifyCallbacks(final Exception e) throws JSONException {
+    private void notifyOnDevices(final Exception e) throws JSONException {
         for (StatusCallbacks item : callbacksSet) {
             item.onDevices(getDeviceStatus(DEVICE_TYPE_MOBILE), getDeviceStatus(DEVICE_TYPE_BROWSER), e);
         }
@@ -90,18 +90,21 @@ public class StatusStore {
     public void getDevice(boolean forceFetch, final boolean withDeparments) {
         if (!forceFetch) {
             try {
-                notifyCallbacks(null);
+                notifyOnDevices(null);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             return;
+        }
+        for (StatusCallbacks item : callbacksSet) {
+            item.onLoadingDevices();
         }
         Api.getDevicesPhoneStatus(activity, phoneId, new Api.DevicesCallback() {
             @Override
             public void onResponse(JSONArray jsonArray, Exception e) {
                 try {
                     if (jsonArray == null) {
-                        notifyCallbacks(new Exception("Phone devices not found"));
+                        notifyOnDevices(new Exception("Phone devices not found"));
                         return;
                     }
                     devices.clear();
@@ -112,7 +115,7 @@ public class StatusStore {
                     if (e == null && withDeparments && getDeviceStatus(DEVICE_TYPE_MOBILE) == PHONE_STATUS_OUT_IN) {
                         getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
                     }
-                    notifyCallbacks(e); // phoneStatus is updated here
+                    notifyOnDevices(e); // phoneStatus is updated here
                 } catch (JSONException e1) {
                     e1.printStackTrace();
                 }
@@ -132,6 +135,9 @@ public class StatusStore {
             }
         }
         JSONObject deviceJsonObject = devices.get(deviceType);
+        for (StatusCallbacks item : callbacksSet) {
+            item.onLoadingDevices();
+        }
         Api.updateDevicePhoneStatus(activity, deviceJsonObject, requestedStatus, new Api.UpdateDeviceCallback() {
             @Override
             public void onResponse(JSONObject jsonObject, Exception e) {
@@ -140,7 +146,7 @@ public class StatusStore {
                     if (e == null && requestedStatus && getDeviceStatus(DEVICE_TYPE_MOBILE) == PHONE_STATUS_OUT_IN) {
                         getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
                     }
-                    notifyCallbacks(e);
+                    notifyOnDevices(e);
                 } catch (JSONException e1) {
                     e1.printStackTrace();
                 }
@@ -160,6 +166,9 @@ public class StatusStore {
             }
             Logger.e(TAG, errMsg);
             return;
+        }
+        for (StatusCallbacks item : callbacksSet) {
+            item.onLoadingDepartmentList();
         }
         Api.getDepartmentStatusList(activity, deviceId, new Api.DepartmentStatusListCallback() {
 
@@ -195,6 +204,5 @@ public class StatusStore {
 
         });
     }
-
 
 }

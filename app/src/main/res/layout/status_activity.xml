@@ -40,14 +40,35 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <ListView
-            android:id="@+id/lv_list"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:choiceMode="none"
-            android:divider="@null"
-            android:dividerHeight="0dp"/>
+            android:layout_weight="1">
+
+            <ListView
+                android:id="@+id/lv_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:choiceMode="none"
+                android:visibility="visible"
+                android:divider="@null"
+                android:dividerHeight="0dp"/>
+
+            <ProgressBar
+                android:id="@+id/pb_list_loading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                android:layout_gravity="center"/>
+
+            <TextView
+                android:id="@+id/tv_list_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                android:layout_gravity="center"/>
+
+        </FrameLayout>
 
         <LinearLayout
             android:id="@+id/ll_status_web"

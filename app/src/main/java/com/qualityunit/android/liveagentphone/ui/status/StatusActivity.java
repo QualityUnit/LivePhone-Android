@@ -7,7 +7,9 @@ import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
@@ -23,6 +25,8 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     private StatusStore store;
     private Switch mobileAvailabilitySwitch;
     private ListView listView;
+    private TextView listMessage;
+    private ProgressBar listLoading;
     private LinearLayout llStatusWeb;
 
     @Override
@@ -46,6 +50,8 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
 
         // department list
         listView = (ListView) findViewById(R.id.lv_list);
+        listMessage = (TextView) findViewById(R.id.tv_list_message);
+        listLoading = (ProgressBar) findViewById(R.id.pb_list_loading);
         store = StatusStore.getInstance(this);
         store.addCallBacks(this);
 
@@ -64,6 +70,11 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     protected void onDestroy() {
         store.removeCallBacks(this);
         super.onDestroy();
+    }
+
+    @Override
+    public void onLoadingDevices() {
+        // do nothing
     }
 
     @Override
@@ -94,11 +105,27 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     }
 
     @Override
+    public void onLoadingDepartmentList() {
+        listMessage.setVisibility(View.INVISIBLE);
+        listView.setVisibility(View.INVISIBLE);
+        listLoading.setVisibility(View.VISIBLE);
+    }
+
+    @Override
     public void onDepartmentList(List<DepartmentStatusItem> list, Exception e) {
+        listView.setVisibility(View.INVISIBLE);
+        listMessage.setVisibility(View.INVISIBLE);
+        listLoading.setVisibility(View.INVISIBLE);
         if (list == null) {
             listView.setAdapter(null);
             return;
         }
+        if (list.size() == 0) {
+            listMessage.setText(getString(R.string.empty));
+            listView.setVisibility(View.INVISIBLE);
+            listMessage.setVisibility(View.VISIBLE);
+        }
+        listView.setVisibility(View.VISIBLE);
         StatusListAdapter adapter = new StatusListAdapter(this, list);
         listView.setAdapter(adapter);
     }

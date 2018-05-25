@@ -135,6 +135,11 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     }
 
     @Override
+    public void onLoadingDevices() {
+        // nothing here
+    }
+
+    @Override
     public void onDevices(int mobilePhoneStatus, int browserPhoneStatus, Exception e) {
         if (e != null) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
@@ -172,6 +177,11 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
                 break;
         }
         updateStatusItem();
+    }
+
+    @Override
+    public void onLoadingDepartmentList() {
+        // nothing here
     }
 
     private void updateStatusItem() {
