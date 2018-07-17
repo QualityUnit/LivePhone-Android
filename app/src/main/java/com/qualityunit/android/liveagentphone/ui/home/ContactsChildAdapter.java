@@ -87,9 +87,13 @@ public class ContactsChildAdapter extends SearchChildAdapter<ContactsItem> {
         } else {
             url = item.getAvatarUrl();
         }
-        if (!TextUtils.isEmpty(url)) {
-            Picasso.with(context).load(url).placeholder(defaultAvatar).transform(new CircleTransform()).into(viewHolder.avatar);
+        if (TextUtils.isEmpty(url)) {
+            return;
         }
+        if (url.startsWith("/")) {
+            url = baseUrl + url;
+        }
+        Picasso.with(context).load(url).placeholder(defaultAvatar).transform(new CircleTransform()).into(viewHolder.avatar);
     }
 
     private static class ContactViewHolder {
