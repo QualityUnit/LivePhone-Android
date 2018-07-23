@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
+import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 /**
@@ -52,6 +53,9 @@ public class AboutFragment extends BaseFragment<AboutActivity> {
         switch (item.getItemId()) {
             case R.id.item_licenses:
                 activity.switchFragments(new LicensesFragment(), LicensesFragment.TAG);
+                break;
+            case R.id.item_send_logfile:
+                Logger.sendLogFile(getContext());
                 break;
         }
         return super.onOptionsItemSelected(item);

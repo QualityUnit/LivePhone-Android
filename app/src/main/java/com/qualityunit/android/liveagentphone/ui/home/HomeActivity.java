@@ -80,7 +80,6 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
                 }
             });
         }
-
     }
 
     @Override

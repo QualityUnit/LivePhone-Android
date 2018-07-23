@@ -1,7 +1,17 @@
 package com.qualityunit.android.liveagentphone.util;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.Date;
 
 /**
  * Created by rasto on 11.02.16.
@@ -10,6 +20,8 @@ public class Logger {
 
     private static final String TAG = Logger.class.getSimpleName();
     private static Logger instance;
+    public static String logFileName = "logfile.log";
+    public static String logFileDir = "LivePhone";
 
     private static Logger getInstance() {
         if (instance == null) {
@@ -57,4 +69,54 @@ public class Logger {
             Log.e(TAG, errMsg, e);
         }
     }
+
+    public static void logToFile(String text) {
+        String appDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir;
+        File dir = new File(appDir);
+        if (!dir.exists()) {
+            if (!dir.mkdirs()) {
+                e(TAG, "Failed to create directory: " + dir.getAbsolutePath());
+                return;
+            }
+        }
+        String fileName = String.format("%s%s%s", dir.getPath(), File.separator, logFileName);
+        File logFile = new File(fileName);
+        try {
+            if (!logFile.exists()) {
+                if (logFile.createNewFile()) {
+                    text = Tools.getDeviceName() + System.lineSeparator() + System.lineSeparator() + new Date().toString() + ": " + text; // initial line
+                }
+            }
+            FileOutputStream fos = new FileOutputStream(logFile, true);
+            OutputStreamWriter osw = new OutputStreamWriter(fos);
+
+            osw.append(new Date().toString() + ": " + text + System.lineSeparator());
+            osw.flush();
+            osw.close();
+            fos.close();
+            System.out.println("### logToFile: Success!");
+        } catch (IOException e) {
+            e(TAG, "Error while 'logToFile': " + logFileName, e);
+        }
+
+    }
+
+    private static String getLogFilePath() {
+        String logFilepath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir + File.separator + logFileName;
+        System.out.println("### getLogFilePath: " + logFilepath);
+        return logFilepath;
+    }
+
+    public static void sendLogFile(Context context) {
+        File filelocation = new File(getLogFilePath());
+        Uri path = Uri.fromFile(filelocation);
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+        emailIntent .setType("vnd.android.cursor.dir/email");
+        String to[] = {"rkostrab@qualityunit.com"};
+        emailIntent .putExtra(Intent.EXTRA_EMAIL, to);
+        emailIntent .putExtra(Intent.EXTRA_STREAM, path);
+        emailIntent .putExtra(Intent.EXTRA_SUBJECT, "LivePhone log file");
+        context.startActivity(Intent.createChooser(emailIntent , "Send email..."));
+    }
+
 }

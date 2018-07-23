@@ -350,6 +350,7 @@ public class CallingService extends Service implements SipAppObserver {
 
     private void initAndRegister() {
         try {
+            Logger.logToFile("Info: Initialization of SIP lib...");
             // unmute and turn off speaker from previous sessions
             enableMute(false);
             enableSpeaker(false);
@@ -369,9 +370,13 @@ public class CallingService extends Service implements SipAppObserver {
                         sipCore = new SipCore();
                         try {
                             sipCore.init(CallingService.this, workerThread.getName());
-                            Log.d(TAG, "#### Lib initialized successfully");
+                            String infoMsg = "Info: SIP initialized successfully";
+                            Logger.logToFile(infoMsg);
+                            Log.d(TAG, infoMsg);
                         } catch (final Exception e) {
-                            setError("Error while initializing sip lib", e);
+                            String errMsg = "Error while initializing: SIP lib: " + e.getMessage();
+                            Logger.logToFile(errMsg);
+                            setError(errMsg, e);
                             finishService();
                         }
                     }
@@ -382,9 +387,13 @@ public class CallingService extends Service implements SipAppObserver {
                         try {
                             sipAccount = new SipAccount(sipAccountConfig, sipCore);
                             sipAccount.create(sipAccountConfig, true);
-                            Log.d(TAG, "#### Account registration fired");
+                            String infoMsg = "Info: Account registration sent";
+                            Logger.logToFile(infoMsg);
+                            Log.d(TAG, infoMsg);
                         } catch (final Exception e) {
-                            setError("Error while creating and registering sipAccount", e);
+                            String errMsg = "Error while creating and registering sipAccount" + e.getMessage();
+                            Logger.logToFile(errMsg);
+                            setError(errMsg, e);
                             finishService();
                         }
                     }
@@ -392,7 +401,9 @@ public class CallingService extends Service implements SipAppObserver {
                 }
             });
         } catch (final Exception e) {
-            setError("Error while initializing sip lib" + e.getMessage(), e);
+            String errMsg = "Error while initializing sip lib: " + e.getMessage();
+            Logger.logToFile(errMsg);
+            setError(errMsg, e);
             finishService();
         }
     }
@@ -447,13 +458,16 @@ public class CallingService extends Service implements SipAppObserver {
     }
 
     private void waitForIncomingCall() {
+        Logger.logToFile("Info: Waiting to incoming call...");
         setCallState(CALLBACKS.WAITING_TO_CALL);
         waitingToCall = true;
         mainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (waitingToCall) {
-                    Log.d(TAG, "#### Hanging up call because waiting reached " + WAITING_TO_CALL_MILLIS + " seconds");
+                    String warnMsg = "Warn: Hanging up call because waiting reached " + WAITING_TO_CALL_MILLIS + " seconds";
+                    Logger.logToFile(warnMsg);
+                    Log.d(TAG, warnMsg);
                     finishService();
                 }
             }
@@ -473,7 +487,8 @@ public class CallingService extends Service implements SipAppObserver {
                     CallOpParam prm = new CallOpParam();
                     prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
                     sipCurrentCall.answer(prm);
-                    Log.d(TAG, "#### Call answered");
+                    String infoMsg = "Info: Call successfully received";
+                    Log.d(TAG, infoMsg);
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -761,6 +776,7 @@ public class CallingService extends Service implements SipAppObserver {
                                 Logger.e(TAG, "#### Remote name not found.");
                             }
                         }
+                        Logger.logToFile("Info: Ringing...");
                         startRingtone();
                         setCallState(CALLBACKS.RINGING);
                         sipCurrentCall = call;
@@ -773,7 +789,9 @@ public class CallingService extends Service implements SipAppObserver {
                         });
                     }
                 } catch (Exception e) {
-                    setError("Error while notifying incoming call", e);
+                    String errMsg = "Error while notifying incoming call: " + e.getMessage();
+                    Logger.logToFile(errMsg);
+                    setError(errMsg, e);
                     finishService();
                 }
             }
@@ -786,7 +804,9 @@ public class CallingService extends Service implements SipAppObserver {
             @Override
             public void run() {
                 if (sipCurrentCall != null) {
-                    Log.d(TAG, "Only one call at anytime!"); // skip rest of func while re-registering
+                    String warnMsg = "Warning: Only one call at anytime!";
+                    Logger.logToFile(warnMsg);
+                    Log.d(TAG, warnMsg); // skip rest of func while re-registering
                     return;
                 }
                 try {
@@ -796,17 +816,20 @@ public class CallingService extends Service implements SipAppObserver {
                             if (callDirection == CALL_DIRECTION.OUTGOING) {
                                 makeCall();
                             } else if (callDirection == CALL_DIRECTION.INCOMING) {
+                                Logger.logToFile("Info: Successfully registered to SIP");
                                 waitForIncomingCall();
                             } else {
-                                throw new CallingException("#### Unknown call direction, hanging up call...");
+                                throw new CallingException("Error: Unknown call direction, hanging up call...");
                             }
                         }
                     } else {
-                        String errMsg = "Registration: Asterisk returned code '" + returnCode + "'.";
+                        String errMsg = "Error while SIP registration: Asterisk returned code '" + returnCode + "'.";
                         Logger.e(TAG, errMsg);
+                        Logger.logToFile(errMsg);
                         setError(errMsg, null);
                     }
                 } catch (CallingException e) {
+                    Logger.logToFile(e.getMessage());
                     Logger.e(TAG, e);
                     finishService();
                 }
