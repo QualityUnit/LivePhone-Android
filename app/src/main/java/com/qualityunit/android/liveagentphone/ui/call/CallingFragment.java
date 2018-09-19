@@ -126,12 +126,14 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
             public void onTrigger(View v, int target) {
                 if (target == 0) {
                     // answer
+                    Logger.logToFile("Call UI: Answer call triggered.");
                     glowPad.setVisibility(View.GONE);
                     llCallState.setVisibility(View.VISIBLE);
                     activity.getFabHangupCall().setVisibility(View.VISIBLE);
                     activity.receiveCall();
                 } else if (target == 2) {
                     // decline
+                    Logger.logToFile("Call UI: Decline call triggered.");
                     glowPad.setVisibility(View.GONE);
                     llCallState.setVisibility(View.VISIBLE);
                     activity.declineCall();

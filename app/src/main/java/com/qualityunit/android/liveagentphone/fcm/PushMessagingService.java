@@ -40,7 +40,7 @@ public class PushMessagingService extends FirebaseMessagingService {
             // check if push is actual
             String time = data.getString("time");
             if (TextUtils.isEmpty(time)) {
-                String errMsg = "Error: Push notification value 'field' is empty";
+                String errMsg = "Error: Push notification value 'time' is empty";
                 Logger.logToFile(errMsg);
                 throw new CallingException(errMsg);
             }
@@ -73,6 +73,7 @@ public class PushMessagingService extends FirebaseMessagingService {
                 case Const.Push.PUSH_TYPE_INIT_CALL:
                     Intent intent = new Intent(getApplicationContext(), InitCallActivity.class);
                     intent.putExtras(data);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     getApplicationContext().startActivity(intent);
                     break;
                 case Const.Push.PUSH_TYPE_CANCEL_INIT_CALL:

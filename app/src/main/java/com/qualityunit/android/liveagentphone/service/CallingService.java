@@ -159,12 +159,13 @@ public class CallingService extends Service implements SipAppObserver {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
-        Log.d(TAG, "#### SERVICE onStartCommand (" + startId + ") with intent (" + (intent != null) + ")");
+        String info = "SERVICE: command ";
         try {
             if (intent == null) {
                 throw new CallingException("Intent is null");
             }
             int command = intent.getIntExtra(KEY_COMMAND, 0);
+            info += " " + command + " ";
             switch (command) {
                 case COMMANDS.MAKE_CALL:
                     if (sipCurrentCall != null) throw new CallingException(getString(R.string.only_one_call));
@@ -176,45 +177,57 @@ public class CallingService extends Service implements SipAppObserver {
                     notificationContentText = TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName ;
                     startActivity(createCallingActivityIntent());
                     initAndRegister();
+                    info += "MAKE_CALL";
                     break;
                 case COMMANDS.INCOMING_CALL:
                     if (!isGsmIdle) {
-                        Log.d(TAG, "Ongoing GSM call");
+                        String warn = "Ongoing GSM call";
+                        Logger.logToFile(warn);
+                        Log.d(TAG, warn);
                         break;
                     }
                     callDirection = CALL_DIRECTION.INCOMING;
                     initAndRegister();
+                    info += "INCOMING_CALL";
                     break;
                 case COMMANDS.RECEIVE_CALL:
                     receiveCall();
+                    info += "RECEIVE_CALL";
                     break;
                 case COMMANDS.SEND_DTMF:
                     String character = intent.getStringExtra("character");
                     if (TextUtils.isEmpty(character)) throw new CallingException("Empty DTMF argument");
                     if (sipCurrentCall == null) throw new CallingException("Cannot send DTMF signal when calling service is not running");
                     sendDtfm(character);
+                    info += "SEND_DTMF";
                     break;
                 case COMMANDS.HANGUP_CALL:
                     hangupCallAndFinishService();
+                    info += "HANGUP_CALL";
                     break;
                 case COMMANDS.ADJUST_INCALL_VOLUME:
                     boolean increase = intent.getBooleanExtra("increase", true);
                     adjustIncallVolume(increase);
+                    info += "ADJUST_INCALL_VOLUME";
                     break;
                 case COMMANDS.SILENCE_RINGING:
                     stopRingtone();
+                    info += "SILENCE_RINGING";
                     break;
                 case COMMANDS.UPDATE_STATE:
                     setCallState(lastState);
                     break;
                 case COMMANDS.TOGGLE_MUTE:
                     enableMute(!isMute);
+                    info += "TOGGLE_MUTE";
                     break;
                 case COMMANDS.TOGGLE_SPEAKER:
                     enableSpeaker(!isSpeaker);
+                    info += "TOGGLE_SPEAKER";
                     break;
                 case COMMANDS.TOGGLE_HOLD:
                     callHold(!isHold);
+                    info += "TOGGLE_HOLD";
                     break;
                 case COMMANDS.UPDATE_ALL:
                     sendUpdateDurationBroadcast();
@@ -228,8 +241,13 @@ public class CallingService extends Service implements SipAppObserver {
             return START_NOT_STICKY;
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-            setError("#### Error while starting " + TAG, e);
+            String err = "Error: SERVICE: Starting " + TAG;
+            setError(err, e);
+            Logger.logToFile(err);
             return START_REDELIVER_INTENT;
+        } finally {
+            Log.d(TAG, info);
+            Logger.logToFile(info);
         }
     }
 
@@ -432,7 +450,7 @@ public class CallingService extends Service implements SipAppObserver {
             @Override
             public void run() {
                 if (sipCurrentCall != null) {
-                    Log.d(TAG, "Only one call at anytime!");
+                    Log.d(TAG, "Warning: Make call: Only one call at anytime!");
                     return;
                 }
                 setCallState(CALLBACKS.STARTING_CALL);
@@ -479,7 +497,9 @@ public class CallingService extends Service implements SipAppObserver {
             @Override
             public void run() {
                 if (sipCurrentCall == null) {
-                    Log.d(TAG, "#### No ringing call now");
+                    String warn = "Warning: Receive call: No ringing call now";
+                    Logger.logToFile(warn);
+                    Log.d(TAG, warn);
                     return;
                 }
                 try {
@@ -488,6 +508,7 @@ public class CallingService extends Service implements SipAppObserver {
                     prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
                     sipCurrentCall.answer(prm);
                     String infoMsg = "Info: Call successfully received";
+                    Logger.logToFile(infoMsg);
                     Log.d(TAG, infoMsg);
                     mainHandler.post(new Runnable() {
                         @Override
@@ -497,6 +518,9 @@ public class CallingService extends Service implements SipAppObserver {
                     });
                     setCallState(CALLBACKS.CALL_ESTABLISHED);
                 } catch (Exception e) {
+                    String err = "Error while receiving call: " + e.getMessage();
+                    Logger.logToFile(err);
+                    Logger.e(TAG, e);
                 }
             }
         });
@@ -523,14 +547,17 @@ public class CallingService extends Service implements SipAppObserver {
                         CallOpParam prm = new CallOpParam();
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
                         sipCurrentCall.hangup(prm);
-                        Log.d(TAG, "#### Call successfully hanged up");
+                        Log.d(TAG, "Info: Hang up call: Call successfully hanged up");
+//                        sipCurrentCall = null;
                         // finishing of service is then called from "notifyCallState"
                     } catch (final Exception e) {
                         setError("Error while hanging up call", e);
                         finishService();
                     }
                 } else {
-                    setError("No call to hang up", null);
+                    String err = "No call to hang up";
+                    Logger.logToFile(err);
+                    setError(err, null);
                     finishService();
                 }
             }
@@ -601,8 +628,8 @@ public class CallingService extends Service implements SipAppObserver {
                     public void run() {
                         sipCurrentCall = null;
                         if (sipCore != null) {
-                            Log.d(TAG, "#### Deinitializing library");
                             sipCore.deinit();
+                            Log.d(TAG, "Info: Finishing service: Library deinitialized");
                         }
                         sipCore = null;
                         sipAccount = null;
@@ -804,7 +831,7 @@ public class CallingService extends Service implements SipAppObserver {
             @Override
             public void run() {
                 if (sipCurrentCall != null) {
-                    String warnMsg = "Warning: Only one call at anytime!";
+                    String warnMsg = "Warning: Registration: Only one call at anytime!";
                     Logger.logToFile(warnMsg);
                     Log.d(TAG, warnMsg); // skip rest of func while re-registering
                     return;
@@ -840,7 +867,9 @@ public class CallingService extends Service implements SipAppObserver {
     @Override
     public void notifyCallState(SipCall call) {
         try {
-            Log.d(TAG, "#### notifyCallState: " + call.getInfo().getStateText());
+            String info = "Info: CALL STATE: " + call.getInfo().getStateText();
+            Logger.logToFile(info);
+            Log.d(TAG, info);
         } catch (Exception e) {
             e.printStackTrace();
         }
