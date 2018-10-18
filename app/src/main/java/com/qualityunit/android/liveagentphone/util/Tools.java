@@ -53,7 +53,7 @@ public abstract class Tools {
         String installId = App.getSharedPreferences().getString(memoryKey, null);
         if (TextUtils.isEmpty(installId)) {
             installId = UUID.randomUUID().toString();
-            App.getSharedPreferences().edit().putString(memoryKey, installId).commit();
+            App.getSharedPreferences().edit().putString(memoryKey, installId).apply();
         }
         return installId;
     }
