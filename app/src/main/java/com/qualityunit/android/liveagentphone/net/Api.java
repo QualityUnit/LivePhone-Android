@@ -87,10 +87,38 @@ public class Api {
                             if (!response.isSuccessful()) {
                                 throw new ApiException(response.message(), response.code());
                             }
-                            final JSONArray array = new JSONArray(response.body().string());
-                            if (array.length() < 1) {
-                                throw new ApiException("Phone service not found", response.code());
+                            JSONArray jsonArray = new JSONArray(response.body().string());
+//                            if (array.length() < 1) {
+//                                throw new ApiException("Phone service not found", response.code());
+//                            }
+                            boolean isMobileDevice = false;
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject object = jsonArray.getJSONObject(i);
+                                if ("A".equals(object.getString("type"))) {
+                                    isMobileDevice = true;
+                                    break;
+                                }
                             }
+                            if (!isMobileDevice) {
+                                final String agentId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_AGENT_ID);
+                                JSONObject jsonBody = new JSONObject();
+                                jsonBody.put("phone_id", phoneId);
+                                jsonBody.put("agent_id", agentId);
+                                jsonBody.put("type", "A");
+                                jsonBody.put("service_type", "P");
+                                jsonBody.put("status", "N");
+                                final Request deviceRequest = client
+                                        .POST(apiBasePath, "/devices", apiKey)
+                                        .setBody(jsonBody.toString())
+                                        .build();
+                                Response deviceResponse = client.newCall(deviceRequest).execute();
+                                if (!deviceResponse.isSuccessful()) {
+                                    throw new ApiException(deviceResponse.message(), deviceResponse.code());
+                                }
+                                JSONObject jsonObject = new JSONObject(deviceResponse.body().string());
+                                jsonArray.put(jsonObject);
+                            }
+                            final JSONArray array = jsonArray;
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {

@@ -375,6 +375,7 @@ public class InitActivity extends AppCompatActivity {
                         addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_HOST, "connection_host", true);
                         addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_USER, "connection_user", true);
                         addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_PASS, "connection_pass", true);
+                        addAccountData(accountManager, account, object, LaAccount.USERDATA_AGENT_ID, "agent_id", true);
                         phoneIsLoaded = true;
                         if (object.has("params")) {
                             String paramsString = object.getString("params");

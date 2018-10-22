@@ -2,6 +2,7 @@ package com.qualityunit.android.liveagentphone.net.rest;
 
 import com.qualityunit.android.restful.RestClient;
 import com.qualityunit.android.restful.method.RestGetBuilder;
+import com.qualityunit.android.restful.method.RestPostBuilder;
 import com.qualityunit.android.restful.method.RestPutBuilder;
 
 /**
@@ -34,6 +35,13 @@ public class Client extends RestClient {
 
     public RestPutBuilder PUT (final String basePath, final String path, final String  token) {
         RestPutBuilder builder = new RestPutBuilder(basePath, path);
+        builder.addHeader("apikey", token);
+        builder.addHeader("Accept", "application/json");
+        return builder;
+    }
+
+    public RestPostBuilder POST (final String basePath, final String path, final String  token) {
+        RestPostBuilder builder = new RestPostBuilder(basePath, path);
         builder.addHeader("apikey", token);
         builder.addHeader("Accept", "application/json");
         return builder;
