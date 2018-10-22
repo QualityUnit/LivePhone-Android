@@ -76,10 +76,10 @@ public class InitActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.init_activity);
         llButtons = findViewById(R.id.ll_buttons);
-        tvLoading = (TextView) findViewById(R.id.tv_loading_status);
-        pbLoading = (LinearLayout) findViewById(R.id.pb_loading);
-        bRetry = (Button) findViewById(R.id.b_retry);
-        bQuit = (Button) findViewById(R.id.b_quit);
+        tvLoading = findViewById(R.id.tv_loading_status);
+        pbLoading = findViewById(R.id.pb_loading);
+        bRetry = findViewById(R.id.b_retry);
+        bQuit = findViewById(R.id.b_quit);
         bRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

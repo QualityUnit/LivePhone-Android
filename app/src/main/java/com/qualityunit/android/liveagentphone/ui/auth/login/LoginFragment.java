@@ -37,15 +37,21 @@ import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
-import com.qualityunit.android.restful.method.RestGetBuilder;
+import com.qualityunit.android.restful.method.RestPostBuilder;
 import com.qualityunit.android.restful.util.ResponseProcessor;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by rasto on 19.12.15.
@@ -293,13 +299,25 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         new AsyncTask<Void, Void, GetTokenResult>() {
             @Override
             protected GetTokenResult doInBackground(Void... params) {
-                final Client client = Client.getInstance();
-                final Request request = new RestGetBuilder(apiUrl, "/token")
-                        .addHeader("Accept", "application/json")
-                        .addParam("username", userName)
-                        .addParam("password", userPass)
-                        .build();
                 try {
+                    final Client client = Client.getInstance();
+                    JSONObject jsonBody = new JSONObject();
+                    jsonBody.put("login", userName);
+                    jsonBody.put("password", userPass);
+                    jsonBody.put("type", "P");
+                    TimeZone tz = TimeZone.getTimeZone("UTC");
+                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss'Z'");
+                    df.setTimeZone(tz);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(new Date());
+                    cal.add(Calendar.YEAR, 1);
+                    String validToDate = df.format(cal.getTime());
+                    jsonBody.put("valid_to_date", validToDate);
+                    jsonBody.put("name", Tools.getDeviceName());
+                    String jsonBodyString = jsonBody.toString();
+                    final Request request = new RestPostBuilder(apiUrl, "/apikeys/_login")
+                            .setBody(jsonBodyString)
+                            .build();
                     Call call = client.newCall(request);
                     Response response = call.execute();
                     if (response.isSuccessful()) {
@@ -312,8 +330,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                         res.putExtra(LaAccount.USERDATA_URL_TYPED, typedUrl);
                         res.putExtra(AuthActivity.PARAM_USER_PASS, userPass);
                         return new GetTokenResult(res);
-                    }
-                    else {
+                    } else {
                         String errorMessage = ResponseProcessor.errorMessage(response);
                         Log.e(TAG, errorMessage);
                         return new GetTokenResult(errorMessage, response.code());
