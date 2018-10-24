@@ -8,10 +8,6 @@ import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.Date;
 
 /**
  * Created by rasto on 11.02.16.
@@ -71,33 +67,33 @@ public class Logger {
     }
 
     public static void logToFile(String text) {
-        String appDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir;
-        File dir = new File(appDir);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                e(TAG, "Failed to create directory: " + dir.getAbsolutePath());
-                return;
-            }
-        }
-        String fileName = String.format("%s%s%s", dir.getPath(), File.separator, logFileName);
-        File logFile = new File(fileName);
-        try {
-            if (!logFile.exists()) {
-                if (logFile.createNewFile()) {
-                    text = Tools.getDeviceName() + System.lineSeparator() + System.lineSeparator() + new Date().toString() + ": " + text; // initial line
-                }
-            }
-            FileOutputStream fos = new FileOutputStream(logFile, true);
-            OutputStreamWriter osw = new OutputStreamWriter(fos);
-
-            osw.append(new Date().toString() + ": " + text + System.lineSeparator());
-            osw.flush();
-            osw.close();
-            fos.close();
-            System.out.println("### logToFile: Success!");
-        } catch (IOException e) {
-            e(TAG, "Error while 'logToFile': " + logFileName, e);
-        }
+//        String appDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir;
+//        File dir = new File(appDir);
+//        if (!dir.exists()) {
+//            if (!dir.mkdirs()) {
+//                e(TAG, "Failed to create directory: " + dir.getAbsolutePath());
+//                return;
+//            }
+//        }
+//        String fileName = String.format("%s%s%s", dir.getPath(), File.separator, logFileName);
+//        File logFile = new File(fileName);
+//        try {
+//            if (!logFile.exists()) {
+//                if (logFile.createNewFile()) {
+//                    text = Tools.getDeviceName() + System.lineSeparator() + System.lineSeparator() + new Date().toString() + ": " + text; // initial line
+//                }
+//            }
+//            FileOutputStream fos = new FileOutputStream(logFile, true);
+//            OutputStreamWriter osw = new OutputStreamWriter(fos);
+//
+//            osw.append(new Date().toString() + ": " + text + System.lineSeparator());
+//            osw.flush();
+//            osw.close();
+//            fos.close();
+//            System.out.println("### logToFile: Success!");
+//        } catch (IOException e) {
+//            e(TAG, "Error while 'logToFile': " + logFileName, e);
+//        }
 
     }
 
