@@ -5,13 +5,17 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -42,6 +46,11 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+import static android.Manifest.permission.GET_ACCOUNTS;
+import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+
 /**
  * Created by rasto on 26.01.16.
  */
@@ -63,6 +72,12 @@ public class InitActivity extends AppCompatActivity {
     private PhoneGetLoaderCallbacks phoneGetLoaderCallbacks;
     private BroadcastReceiver fcmRegistrationBroadcastReceiver;
     private boolean isReceiverRegistered;
+    private final int REQ_GET_ACCOUNTS = 1001;
+    private final int REQ_RECORD_AUDIO = 1002;
+    private final int REQ_WRITE_EXTERNAL_STORAGE = 1003;
+    private boolean grantedGetAccounts;
+    private boolean grantedWriteExternalStorage;
+    private boolean grantedRecordAudio;
     // variables to save into instanceBundle
     private long countDownMillisLeft = DEFAULT_COUNTDOWN_MILLIS;
     private int retryNumber;
@@ -109,9 +124,7 @@ public class InitActivity extends AppCompatActivity {
         }
         countDownStarted = System.currentTimeMillis();
         countDownTimer.start();
-        if (checkPlayServices()) {
-            startInit(false);
-        }
+        startInit(false);
         super.onResume();
     }
 
@@ -141,15 +154,16 @@ public class InitActivity extends AppCompatActivity {
      * @param forceReset
      */
     private void startInit(boolean forceReset) {
+        if (!checkPlayServices() || !checkAppPermissions()) {
+            return;
+        }
         showProgress();
         if (!LaAccount.isSet() || !accountIsAdded()) {
             startActivityForResult(new Intent(this, AuthActivity.class), REQUEST_CODE_LOGIN);
             overridePendingTransition(0, 0);
             return;
         }
-        else {
-            phoneGet(forceReset);
-        }
+        phoneGet(forceReset);
     }
 
     private void phoneGet(boolean force) {
@@ -231,6 +245,92 @@ public class InitActivity extends AppCompatActivity {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Check if the user granted all the permission that app needs
+     * @return
+     */
+    private boolean checkAppPermissions() {
+        // Dangerous permissions: GET_ACCOUNTS, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO
+        if (!checkOnePermission(GET_ACCOUNTS, REQ_GET_ACCOUNTS)) {
+            return false;
+        } else if (!checkOnePermission(WRITE_EXTERNAL_STORAGE, REQ_WRITE_EXTERNAL_STORAGE)) {
+            return false;
+        }  else if (!checkOnePermission(RECORD_AUDIO, REQ_RECORD_AUDIO)) {
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkOnePermission(String permissionName, int requestCode) {
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(InitActivity.this, permissionName) != PERMISSION_GRANTED) {
+            // Permission is not granted
+            // Should we show an explanation?
+            // returns false only if the user selected Never ask again
+            if (ActivityCompat.shouldShowRequestPermissionRationale(InitActivity.this, permissionName)) {
+                showTestNotification("You cannot use app without '" + permissionName + "' permission", permissionName, requestCode);
+                // Show an explanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+            } else {
+                // No explanation needed; request the permission
+                ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, requestCode);
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }
+            return false;
+        }
+        return true;
+    }
+
+    private void showTestNotification(String message, final String permissionName, final int requestCode) {
+        AlertDialog alertDialog = new AlertDialog.Builder(InitActivity.this).create();
+        alertDialog.setTitle("Uh oh");
+        alertDialog.setMessage(message);
+        alertDialog.setCancelable(false);
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, requestCode);
+                    }
+                });
+        alertDialog.show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQ_GET_ACCOUNTS:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    Log.d(TAG, "Permission granted: GET_ACCOUNTS");
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Log.d(TAG, "Permission denied: GET_ACCOUNTS");
+                }
+                break;
+            case REQ_WRITE_EXTERNAL_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
+                    Log.d(TAG, "Permission granted: WRITE_EXTERNAL_STORAGE");
+                } else {
+                    Log.d(TAG, "Permission denied: WRITE_EXTERNAL_STORAGE");
+                }
+                break;
+            case REQ_RECORD_AUDIO:
+                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
+                    Log.d(TAG, "Permission granted: RECORD_AUDIO");
+                } else {
+                    Log.d(TAG, "Permission denied: RECORD_AUDIO");
+                }
+                break;
+        }
     }
 
 
