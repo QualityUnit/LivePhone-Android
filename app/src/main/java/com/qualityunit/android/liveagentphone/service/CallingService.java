@@ -2,6 +2,7 @@ package com.qualityunit.android.liveagentphone.service;
 
 import android.accounts.AccountManager;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -340,7 +342,21 @@ public class CallingService extends Service implements SipAppObserver {
                 PendingIntent pendingHangupIntent = PendingIntent.getService(CallingService.this, 0,
                         new Intent(CallingService.this, CallingService.class).putExtra(KEY_COMMAND, COMMANDS.HANGUP_CALL),
                         PendingIntent.FLAG_UPDATE_CURRENT);
-                Notification notification = new Notification.Builder(getApplicationContext())
+                Notification.Builder builder;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    String channelId = "calling_service";
+                    NotificationChannel channel = new NotificationChannel(channelId, "Calling Service" , NotificationManager.IMPORTANCE_NONE);
+                    channel.setLightColor(Color.GREEN);
+                    channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+                    builder = new Notification.Builder(getApplicationContext(), channelId);
+                    NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    notificationManager.createNotificationChannel(channel);
+                } else {
+                    // If earlier version channel ID is not used
+                    // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
+                    builder = new Notification.Builder(getApplicationContext());
+                }
+                Notification notification = builder
                         .setSmallIcon(icon)
                         .setTicker(titleText)
                         .setContentTitle(titleText)
