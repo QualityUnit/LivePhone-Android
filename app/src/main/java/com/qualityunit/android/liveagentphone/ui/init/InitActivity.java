@@ -270,7 +270,7 @@ public class InitActivity extends AppCompatActivity {
             // Should we show an explanation?
             // returns false only if the user selected Never ask again
             if (ActivityCompat.shouldShowRequestPermissionRationale(InitActivity.this, permissionName)) {
-                showTestNotification("You cannot use app without '" + permissionName + "' permission", permissionName, requestCode);
+                showPermissionNotification("You cannot use app without '" + permissionName + "' permission", permissionName, requestCode);
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
@@ -286,7 +286,7 @@ public class InitActivity extends AppCompatActivity {
         return true;
     }
 
-    private void showTestNotification(String message, final String permissionName, final int requestCode) {
+    private void showPermissionNotification(String message, final String permissionName, final int requestCode) {
         AlertDialog alertDialog = new AlertDialog.Builder(InitActivity.this).create();
         alertDialog.setTitle("Uh oh");
         alertDialog.setMessage(message);
@@ -446,28 +446,32 @@ public class InitActivity extends AppCompatActivity {
 
         @Override
         public void onLoadFinished(Loader<LoaderResult<Response>> loader, final LoaderResult<Response> data) {
+            if (data == null) {
+                throw new NullPointerException("Error: LoaderResult cannot be null");
+            }
+            if (data.getObject() == null) {
+                throw new NullPointerException("Error '" + data.getCode() + "': " + data.getMessage());
+            }
+            if (data.getObject().body() == null) {
+                throw new NullPointerException("Error: Missing body.");
+            }
+            final JSONObject object;
+            try {
+                object = ResponseProcessor.bodyToJson(data.getObject());
+            } catch (IOException | JSONException e) {
                 InitActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            processResponse(data);
-                        } catch (EmptyValueException | NullPointerException | JSONException | IOException e) {
-                            showError(e.getMessage());
-                            Logger.e(TAG, e);
-                        }
+                        showError(e.getMessage());
+                        Logger.e(TAG, e);
                     }
-
-                    private void processResponse(LoaderResult<Response> data) throws NullPointerException, EmptyValueException, IOException, JSONException {
-                        if (data == null) {
-                            throw new NullPointerException("Error: LoaderResult cannot be null");
-                        }
-                        if (data.getObject() == null) {
-                            throw new NullPointerException("Error '" + data.getCode() + "': " + data.getMessage());
-                        }
-                        if (data.getObject().body() == null) {
-                            throw new NullPointerException("Error: Missing body.");
-                        }
-                        final JSONObject object = ResponseProcessor.bodyToJson(data.getObject());
+                });
+                return;
+            }
+            InitActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
                         final Account account = LaAccount.get();
                         final AccountManager accountManager = AccountManager.get(InitActivity.this);
                         addAccountData(accountManager, account, object, LaAccount.USERDATA_PHONE_ID, "id", true);
@@ -484,18 +488,22 @@ public class InitActivity extends AppCompatActivity {
                             pushToken = paramsObj.getString("pushToken");
                         }
                         registerPushNotifications();
-
+                    } catch (EmptyValueException | JSONException e) {
+                        showError(e.getMessage());
+                        Logger.e(TAG, e);
                     }
+                }
+            });
 
-                    private void addAccountData(AccountManager accountManager, Account account, JSONObject object, String key, String objectKey, boolean required) throws EmptyValueException, JSONException {
-                        if (required && (!object.has(objectKey) || TextUtils.isEmpty(object.getString(objectKey)))) {
-                            throw new EmptyValueException(key);
-                        }
-                        else {
-                            accountManager.setUserData(account, key, object.getString(objectKey));
-                        }
-                    }
-                });
+        }
+
+        private void addAccountData(AccountManager accountManager, Account account, JSONObject object, String key, String objectKey, boolean required) throws EmptyValueException, JSONException {
+            if (required && (!object.has(objectKey) || TextUtils.isEmpty(object.getString(objectKey)))) {
+                throw new EmptyValueException(key);
+            }
+            else {
+                accountManager.setUserData(account, key, object.getString(objectKey));
+            }
         }
 
         @Override
