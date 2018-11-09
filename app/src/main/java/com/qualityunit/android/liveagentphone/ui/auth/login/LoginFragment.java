@@ -38,7 +38,6 @@ import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.qualityunit.android.restful.method.RestPostBuilder;
-import com.qualityunit.android.restful.util.ResponseProcessor;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -325,13 +324,13 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                         res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
                         res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
                         res.putExtra(AccountManager.KEY_ACCOUNT_TYPE, LaAccount.ACCOUNT_TYPE);
-                        res.putExtra(AccountManager.KEY_AUTHTOKEN, (ResponseProcessor.bodyToJson(response)).getString("key"));
+                        res.putExtra(AccountManager.KEY_AUTHTOKEN, new JSONObject(response.body().string()).getString("key"));
                         res.putExtra(LaAccount.USERDATA_URL_API, apiUrl);
                         res.putExtra(LaAccount.USERDATA_URL_TYPED, typedUrl);
                         res.putExtra(AuthActivity.PARAM_USER_PASS, userPass);
                         return new GetTokenResult(res);
                     } else {
-                        String errorMessage = ResponseProcessor.errorMessage(response);
+                        String errorMessage = new JSONObject(response.body().string()).getString("message");
                         Log.e(TAG, errorMessage);
                         return new GetTokenResult(errorMessage, response.code());
                     }

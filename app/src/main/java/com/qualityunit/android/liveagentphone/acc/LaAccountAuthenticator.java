@@ -14,12 +14,13 @@ import com.qualityunit.android.liveagentphone.net.rest.Client;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.restful.method.RestGetBuilder;
-import com.qualityunit.android.restful.util.ResponseProcessor;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 
@@ -52,7 +53,7 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
     }
 
     @Override
-    public Bundle getAuthToken(AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options) throws NetworkErrorException {
+    public Bundle getAuthToken(final AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options) throws NetworkErrorException {
         // Extract the username and password from the Account Manager, and ask
         // the server for an appropriate AuthToken.
         final AccountManager am = AccountManager.get(context);
@@ -72,9 +73,13 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
                             .addParam("password", password)
                             .build();
                     Call call = client.newCall(request);
-                    Response resp = call.execute();
-                    authToken = (ResponseProcessor.bodyToJson(resp)).getString("key"); // message contains authToken
-                } catch (IOException | JSONException e) {
+                    final Response resp = call.execute();
+                    AuthRunnable runnable = new AuthRunnable(resp);
+                    Thread thread = new Thread(runnable);
+                    thread.start();
+                    thread.join();
+                    authToken = runnable.getNewToken();
+                } catch (IOException | InterruptedException e) {
                     Logger.e(TAG, "", e);
                 }
             }
@@ -98,6 +103,38 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
         final Bundle bundle = new Bundle();
         bundle.putParcelable(AccountManager.KEY_INTENT, intent);
         return bundle;
+    }
+
+    private class AuthRunnable implements Runnable {
+
+        private volatile String newToken;
+        private Response resp;
+
+        AuthRunnable(Response resp) {
+            this.resp = resp;
+        }
+
+        @Override
+        public void run() {
+            try {
+                if (resp == null) {
+                    throw new NullPointerException("Error: Response is null.");
+                }
+                ResponseBody body = resp.body();
+                if (body == null) {
+                    throw new NullPointerException("Error: Response does not contain body.");
+                }
+                JSONObject obj = new JSONObject(body.string());
+                newToken = obj.getString("key"); // message contains authToken
+            } catch (IOException | JSONException | NullPointerException e) {
+                Logger.e(TAG, "", e);
+            }
+        }
+
+        String getNewToken() {
+            return newToken;
+        }
+
     }
 
     @Override

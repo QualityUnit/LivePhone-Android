@@ -452,49 +452,48 @@ public class InitActivity extends AppCompatActivity {
             if (data.getObject() == null) {
                 throw new NullPointerException("Error '" + data.getCode() + "': " + data.getMessage());
             }
-            if (data.getObject().body() == null) {
-                throw new NullPointerException("Error: Missing body.");
-            }
-            final JSONObject object;
-            try {
-                object = ResponseProcessor.bodyToJson(data.getObject());
-            } catch (IOException | JSONException e) {
-                InitActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        showError(e.getMessage());
-                        Logger.e(TAG, e);
-                    }
-                });
-                return;
-            }
-            InitActivity.this.runOnUiThread(new Runnable() {
+            ResponseProcessor.bodyToJson(data.getObject(), new ResponseProcessor.ResponseCallback() {
                 @Override
-                public void run() {
-                    try {
-                        final Account account = LaAccount.get();
-                        final AccountManager accountManager = AccountManager.get(InitActivity.this);
-                        addAccountData(accountManager, account, object, LaAccount.USERDATA_PHONE_ID, "id", true);
-                        addAccountData(accountManager, account, object, LaAccount.USERDATA_NUMBER, "number", false);
-                        addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_HOST, "connection_host", true);
-                        addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_USER, "connection_user", true);
-                        addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_PASS, "connection_pass", true);
-                        addAccountData(accountManager, account, object, LaAccount.USERDATA_AGENT_ID, "agent_id", true);
-                        phoneIsLoaded = true;
-                        if (object.has("params")) {
-                            String paramsString = object.getString("params");
-                            JSONObject paramsObj = new JSONObject(paramsString);
-                            deviceId = paramsObj.getString("deviceId");
-                            pushToken = paramsObj.getString("pushToken");
+                public void onSuccess(final JSONObject object) {
+                    InitActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                final Account account = LaAccount.get();
+                                final AccountManager accountManager = AccountManager.get(InitActivity.this);
+                                addAccountData(accountManager, account, object, LaAccount.USERDATA_PHONE_ID, "id", true);
+                                addAccountData(accountManager, account, object, LaAccount.USERDATA_NUMBER, "number", false);
+                                addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_HOST, "connection_host", true);
+                                addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_USER, "connection_user", true);
+                                addAccountData(accountManager, account, object, LaAccount.USERDATA_SIP_PASS, "connection_pass", true);
+                                addAccountData(accountManager, account, object, LaAccount.USERDATA_AGENT_ID, "agent_id", true);
+                                phoneIsLoaded = true;
+                                if (object.has("params")) {
+                                    String paramsString = object.getString("params");
+                                    JSONObject paramsObj = new JSONObject(paramsString);
+                                    deviceId = paramsObj.getString("deviceId");
+                                    pushToken = paramsObj.getString("pushToken");
+                                }
+                                registerPushNotifications();
+                            } catch (EmptyValueException | JSONException e) {
+                                showError(e.getMessage());
+                                Logger.e(TAG, e);
+                            }
                         }
-                        registerPushNotifications();
-                    } catch (EmptyValueException | JSONException e) {
-                        showError(e.getMessage());
-                        Logger.e(TAG, e);
-                    }
+                    });
+                }
+
+                @Override
+                public void onFailure(final Exception e) {
+                    InitActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showError(e.getMessage());
+                            Logger.e(TAG, e);
+                        }
+                    });
                 }
             });
-
         }
 
         private void addAccountData(AccountManager accountManager, Account account, JSONObject object, String key, String objectKey, boolean required) throws EmptyValueException, JSONException {
