@@ -25,6 +25,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URLEncoder;
 
+import static com.qualityunit.android.liveagentphone.Const.OnlineStatus.STATUS_OFFLINE_FLAG;
+import static com.qualityunit.android.liveagentphone.Const.OnlineStatus.STATUS_ONLINE_FLAG;
+
 /**
  * Created by rasto on 31.10.17.
  */
@@ -106,7 +109,8 @@ public class Api {
                                 jsonBody.put("agent_id", agentId);
                                 jsonBody.put("type", "A");
                                 jsonBody.put("service_type", "P");
-                                jsonBody.put("status", "N");
+                                jsonBody.put("online_status", STATUS_ONLINE_FLAG);
+                                jsonBody.put("preset_status", STATUS_ONLINE_FLAG);
                                 final Request deviceRequest = client
                                         .POST(apiBasePath, "/devices", apiKey)
                                         .setBody(jsonBody.toString())
@@ -157,7 +161,8 @@ public class Api {
                     public void run() {
                         try {
                             final String deviceId = deviceJsonObject.getString("id");
-                            deviceJsonObject.put("status", requestedStatus ? "N" : "F");
+                            deviceJsonObject.put("device_status", requestedStatus ? STATUS_ONLINE_FLAG : STATUS_OFFLINE_FLAG);
+                            deviceJsonObject.put("preset_status", requestedStatus ? STATUS_ONLINE_FLAG : STATUS_OFFLINE_FLAG);
                             final Client client = Client.getInstance();
                             final Request request = client
                                     .PUT(apiBasePath, "/devices/" + deviceId, apiKey)
@@ -168,7 +173,7 @@ public class Api {
                                 throw new ApiException(response.message(), response.code());
                             }
                             JSONObject object = new JSONObject(response.body().string());
-                            final boolean newStatus = "N".equals(object.getString("status"));
+                            final boolean newStatus = STATUS_ONLINE_FLAG.equals(object.getString("preset_status"));
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -258,7 +263,7 @@ public class Api {
                             body.put("department_name", item.departmentName);
                             body.put("user_id", item.userId);
                             body.put("preset_status", item.presetStatus);
-                            body.put("online_status", requestedStatus ? "N" : "F");
+                            body.put("online_status", requestedStatus ? STATUS_ONLINE_FLAG : STATUS_OFFLINE_FLAG);
                             final Client client = Client.getInstance();
                             final Request request = client
                                     .PUT(apiBasePath, "/devices/" + item.deviceId + "/departments/" + item.departmentId, apiKey)
@@ -269,7 +274,7 @@ public class Api {
                                 throw new ApiException(response.message(), response.code());
                             }
                             JSONObject object = new JSONObject(response.body().string());
-                            item.onlineStatus = "N".equals(object.getString("online_status"));
+                            item.onlineStatus = STATUS_ONLINE_FLAG.equals(object.getString("online_status"));
                             handler.post(new Runnable() {
                                 @Override
                                 public void run() {

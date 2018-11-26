@@ -29,5 +29,9 @@ public class Const {
         public static final String PUSH_TYPE_CANCEL_INIT_CALL = "OC";
     }
 
+    public static class OnlineStatus {
+        public static final String STATUS_ONLINE_FLAG = "N";
+        public static final String STATUS_OFFLINE_FLAG = "F";
+    }
 
 }

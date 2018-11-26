@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.qualityunit.android.liveagentphone.Const.OnlineStatus.STATUS_ONLINE_FLAG;
+
 /**
  * Created by rasto on 31.10.17.
  */
@@ -31,7 +33,6 @@ public class StatusStore {
     public static final int PHONE_STATUS_NULL = 1;
     public static final int PHONE_STATUS_OUT = 2;
     public static final int PHONE_STATUS_OUT_IN = 3;
-    private static final String STATUS_ONLINE_FLAG = "N";
     private static StatusStore instance;
     private Activity activity;
     private String phoneId;
@@ -186,7 +187,7 @@ public class StatusStore {
                                     obj.getString("department_id"),
                                     obj.getString("user_id"),
                                     obj.getString("department_name"),
-                                    "N".equals(obj.getString("online_status")),
+                                    STATUS_ONLINE_FLAG.equals(obj.getString("online_status")),
                                     obj.getString("preset_status")
                             );
                             list.add(item);
