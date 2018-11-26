@@ -48,7 +48,7 @@ public class StatusStore {
         int status = PHONE_STATUS_NULL;
         JSONObject device = devices.get(deviceType);
         if (device != null) {
-            String mobileStatus = device.getString("status");
+            String mobileStatus = device.getString("preset_status");
             if (!TextUtils.isEmpty(mobileStatus)) {
                 status = STATUS_ONLINE_FLAG.equals(mobileStatus) ? PHONE_STATUS_OUT_IN : PHONE_STATUS_OUT;
             }
