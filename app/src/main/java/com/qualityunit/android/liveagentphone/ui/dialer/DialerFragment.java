@@ -165,80 +165,86 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
         }
 
         @Override
-        public void onLoadFinished(Loader<LoaderResult<Response>> loader, LoaderResult<Response> data) {
-            if (data.getObject().body() == null) {
-                String errMsg = "Missing response body";
-                Logger.e(TAG, Tools.formatError(errMsg));
-                Toast.makeText(getContext(), errMsg, Toast.LENGTH_SHORT).show();
-                return;
-            }
-            final List<OutGoingItem> list = new ArrayList<>();
-            try {
-                JSONArray array = new JSONArray(data.getObject().body().string()); // WARNING - string() can be performed only once
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject jsonItem = array.getJSONObject(i);
-                    list.add(new OutGoingItem(
-                            Tools.getStringFromJson(jsonItem, "id"),
-                            Tools.getStringFromJson(jsonItem, "number"),
-                            Tools.getStringFromJson(jsonItem, "name"),
-                            Tools.getStringFromJson(jsonItem, "departmentid"),
-                            Tools.fixDecimalsBefore(Tools.getIntFromJson(jsonItem, "dial_out_prefix"), 2)
-                    ));
-                }
-            } catch (IOException | JSONException e) {
-                Toast.makeText(activity, "Could not load phone numbers", Toast.LENGTH_LONG).show();
-                return;
-            }
-            activity.runOnUiThread(new Runnable() {
+        public void onLoadFinished(Loader<LoaderResult<Response>> loader, final LoaderResult<Response> data) {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    if (list.isEmpty()) {
-                        tvOutgoingnumber.setText(getString(R.string.no_outgoing_numbers));
+                    if (data.getObject().body() == null) {
+                        String errMsg = "Missing response body";
+                        Logger.e(TAG, Tools.formatError(errMsg));
+                        Toast.makeText(getContext(), errMsg, Toast.LENGTH_SHORT).show();
+                        return;
                     }
-                    else {
-                        if (list.size() == 1) {
-                            outGoingNumber = list.get(0);
-                            tvOutgoingnumber.setText(createSpinText(outGoingNumber));
+                    final List<OutGoingItem> list = new ArrayList<>();
+                    try {
+                        JSONArray array = new JSONArray(data.getObject().body().string()); // WARNING - string() can be performed only once
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject jsonItem = array.getJSONObject(i);
+                            list.add(new OutGoingItem(
+                                    Tools.getStringFromJson(jsonItem, "id"),
+                                    Tools.getStringFromJson(jsonItem, "number"),
+                                    Tools.getStringFromJson(jsonItem, "name"),
+                                    Tools.getStringFromJson(jsonItem, "departmentid"),
+                                    Tools.fixDecimalsBefore(Tools.getIntFromJson(jsonItem, "dial_out_prefix"), 2)
+                            ));
                         }
-                        else {
-                            final OutGoingAdapter outGoingAdapter = new OutGoingAdapter(getActivity());
-                            for (OutGoingItem outGoingItem : list) {
-                                if (TextUtils.isEmpty(outGoingItem.number)) {
-                                    Toast.makeText(getActivity(), "Error: phoneNumber cannot be null or empty", Toast.LENGTH_LONG).show();
-                                }
-                                else {
-                                    outGoingAdapter.add(outGoingItem);
-                                }
-                            }
-                            if (outGoingAdapter.isEmpty()) {
+                    } catch (IOException | JSONException e) {
+                        Toast.makeText(activity, "Could not load phone numbers", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (list.isEmpty()) {
                                 tvOutgoingnumber.setText(getString(R.string.no_outgoing_numbers));
                             }
                             else {
-                                outgoingNumberPicker = new AlertDialog.Builder(getContext());
-                                outgoingNumberPicker.setTitle(getString(R.string.choose_number));
-                                outgoingNumberPicker.setAdapter(outGoingAdapter, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        pickOutgoingNumber(which, outGoingAdapter);
+                                if (list.size() == 1) {
+                                    outGoingNumber = list.get(0);
+                                    tvOutgoingnumber.setText(createSpinText(outGoingNumber));
+                                }
+                                else {
+                                    final OutGoingAdapter outGoingAdapter = new OutGoingAdapter(getActivity());
+                                    for (OutGoingItem outGoingItem : list) {
+                                        if (TextUtils.isEmpty(outGoingItem.number)) {
+                                            Toast.makeText(getActivity(), "Error: phoneNumber cannot be null or empty", Toast.LENGTH_LONG).show();
+                                        }
+                                        else {
+                                            outGoingAdapter.add(outGoingItem);
+                                        }
                                     }
-                                });
-                                pickOutgoingNumber(pickedOutgoingNumberIndex, outGoingAdapter);
+                                    if (outGoingAdapter.isEmpty()) {
+                                        tvOutgoingnumber.setText(getString(R.string.no_outgoing_numbers));
+                                    }
+                                    else {
+                                        outgoingNumberPicker = new AlertDialog.Builder(getContext());
+                                        outgoingNumberPicker.setTitle(getString(R.string.choose_number));
+                                        outgoingNumberPicker.setAdapter(outGoingAdapter, new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                pickOutgoingNumber(which, outGoingAdapter);
+                                            }
+                                        });
+                                        pickOutgoingNumber(pickedOutgoingNumberIndex, outGoingAdapter);
+                                    }
+                                }
                             }
                         }
-                    }
-                }
 
-                private void pickOutgoingNumber(int index, OutGoingAdapter outGoingAdapter) {
-                    if (index < 0) {
-                        tvOutgoingnumber.setText("");
-                    }
-                    else {
-                        pickedOutgoingNumberIndex = index;
-                        outGoingNumber = outGoingAdapter.getItem(pickedOutgoingNumberIndex);
-                        tvOutgoingnumber.setText(createSpinText(outGoingNumber));
-                    }
+                        private void pickOutgoingNumber(int index, OutGoingAdapter outGoingAdapter) {
+                            if (index < 0) {
+                                tvOutgoingnumber.setText("");
+                            }
+                            else {
+                                pickedOutgoingNumberIndex = index;
+                                outGoingNumber = outGoingAdapter.getItem(pickedOutgoingNumberIndex);
+                                tvOutgoingnumber.setText(createSpinText(outGoingNumber));
+                            }
+                        }
+                    });
                 }
-            });
+            }).start();
+
 
         }
 

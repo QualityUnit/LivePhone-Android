@@ -20,6 +20,7 @@ public abstract class ToolbarActivity extends AppCompatActivity implements Fragm
 
     private static final String TAG = ToolbarActivity.class.getSimpleName();
     protected Toolbar toolbar;
+    private boolean isResumed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +31,18 @@ public abstract class ToolbarActivity extends AppCompatActivity implements Fragm
         setSupportActionBar(toolbar);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
         onBackStackChanged();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        isResumed = true;
+    }
+
+    @Override
+    public void onPause() {
+        isResumed = false;
+        super.onPause();
     }
 
     protected void beforeSetContentView() {}
@@ -59,7 +72,9 @@ public abstract class ToolbarActivity extends AppCompatActivity implements Fragm
     }
 
     public void popToFragment(String tagOfFragment) {
-        getSupportFragmentManager().popBackStack(tagOfFragment, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        if (isResumed) {
+            getSupportFragmentManager().popBackStack(tagOfFragment, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        }
     }
 
     public Snackbar createSnackBar(@StringRes int textRes, int snackLength) {
@@ -83,7 +98,9 @@ public abstract class ToolbarActivity extends AppCompatActivity implements Fragm
                 toolbar.setNavigationOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        onBackPressed();
+                        if (isResumed) {
+                            onBackPressed();
+                        }
                     }
                 });
             }
