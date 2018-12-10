@@ -33,6 +33,8 @@ public class StatusStore {
     public static final int PHONE_STATUS_NULL = 1;
     public static final int PHONE_STATUS_OUT = 2;
     public static final int PHONE_STATUS_OUT_IN = 3;
+    public static final String STATUS_TYPE_PRESET = "preset_status";
+    public static final String STATUS_TYPE_ONLINE = "online_status";
     private static StatusStore instance;
     private Activity activity;
     private String phoneId;
@@ -41,15 +43,15 @@ public class StatusStore {
 
     private void notifyOnDevices(final Exception e) throws JSONException {
         for (StatusCallbacks item : callbacksSet) {
-            item.onDevices(getDeviceStatus(DEVICE_TYPE_MOBILE), getDeviceStatus(DEVICE_TYPE_BROWSER), e);
+            item.onDevices(getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET), getDeviceStatus(DEVICE_TYPE_BROWSER, STATUS_TYPE_ONLINE), e);
         }
     }
 
-    private int getDeviceStatus(String deviceType) throws JSONException {
+    private int getDeviceStatus(String deviceType, String statusType) throws JSONException {
         int status = PHONE_STATUS_NULL;
         JSONObject device = devices.get(deviceType);
         if (device != null) {
-            String mobileStatus = device.getString("preset_status");
+            String mobileStatus = device.getString(statusType);
             if (!TextUtils.isEmpty(mobileStatus)) {
                 status = STATUS_ONLINE_FLAG.equals(mobileStatus) ? PHONE_STATUS_OUT_IN : PHONE_STATUS_OUT;
             }
@@ -113,7 +115,7 @@ public class StatusStore {
                         JSONObject object = jsonArray.getJSONObject(i);
                         devices.put(object.getString("type"), object);
                     }
-                    if (e == null && withDeparments && getDeviceStatus(DEVICE_TYPE_MOBILE) == PHONE_STATUS_OUT_IN) {
+                    if (e == null && withDeparments && getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET) == PHONE_STATUS_OUT_IN) {
                         getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
                     }
                     notifyOnDevices(e); // phoneStatus is updated here
@@ -144,7 +146,7 @@ public class StatusStore {
             public void onResponse(JSONObject jsonObject, Exception e) {
                 try {
                     devices.put(jsonObject.getString("type"), jsonObject);
-                    if (e == null && requestedStatus && getDeviceStatus(DEVICE_TYPE_MOBILE) == PHONE_STATUS_OUT_IN) {
+                    if (e == null && requestedStatus && getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET) == PHONE_STATUS_OUT_IN) {
                         getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
                     }
                     notifyOnDevices(e);
