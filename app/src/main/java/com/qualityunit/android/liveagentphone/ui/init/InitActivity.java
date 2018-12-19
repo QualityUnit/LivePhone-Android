@@ -447,10 +447,24 @@ public class InitActivity extends AppCompatActivity {
         @Override
         public void onLoadFinished(Loader<LoaderResult<Response>> loader, final LoaderResult<Response> data) {
             if (data == null) {
-                throw new NullPointerException("Error: LoaderResult cannot be null");
+                InitActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String message = "Error: LoaderResult cannot be null";
+                        showError(message);
+                        Logger.e(TAG, message);
+                    }
+                });
             }
             if (data.getObject() == null) {
-                throw new NullPointerException("Error '" + data.getCode() + "': " + data.getMessage());
+                InitActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String message = "Error '" + data.getCode() + "': " + data.getMessage();
+                        showError(message);
+                        Logger.e(TAG, message);
+                    }
+                });
             }
             ResponseProcessor.bodyToJson(data.getObject(), new ResponseProcessor.ResponseCallback() {
                 @Override
