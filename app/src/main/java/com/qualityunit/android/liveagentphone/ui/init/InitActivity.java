@@ -455,6 +455,7 @@ public class InitActivity extends AppCompatActivity {
                         Logger.e(TAG, message);
                     }
                 });
+                return;
             }
             if (data.getObject() == null) {
                 InitActivity.this.runOnUiThread(new Runnable() {
@@ -465,6 +466,7 @@ public class InitActivity extends AppCompatActivity {
                         Logger.e(TAG, message);
                     }
                 });
+                return;
             }
             ResponseProcessor.bodyToJson(data.getObject(), new ResponseProcessor.ResponseCallback() {
                 @Override
