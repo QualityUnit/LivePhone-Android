@@ -28,7 +28,7 @@ public class PushMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Map<String, String> remoteMessageData = remoteMessage.getData();
         if (remoteMessageData.size() > 0) {
-            String infoMsg = "--------------------------------------------------------\nPUSH NOTIFICATION: " + remoteMessageData;
+            String infoMsg = "-----------------------------------------------------------------------------------\nPUSH NOTIFICATION: " + remoteMessageData;
             Logger.logToFile(infoMsg);
             Log.d(TAG, infoMsg);
         }
@@ -68,6 +68,7 @@ public class PushMessagingService extends FirebaseMessagingService {
             }
             switch (type) {
                 case Const.Push.PUSH_TYPE_INCOMING_CALL:
+                    Logger.logToFile("PUSH: Starting CallingService...");
                     CallingCommands.incomingCall(getApplicationContext());
                     break;
                 case Const.Push.PUSH_TYPE_INIT_CALL:
