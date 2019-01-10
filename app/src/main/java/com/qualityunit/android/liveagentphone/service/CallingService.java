@@ -139,6 +139,7 @@ public class CallingService extends Service implements SipAppObserver {
     @Override
     public void onCreate() {
         super.onCreate();
+        Logger.logToFile("SERVICE: Start 'onCreate'");
         // acquire wakelock
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getSimpleName());
@@ -147,6 +148,7 @@ public class CallingService extends Service implements SipAppObserver {
             proximityWakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, getClass().getSimpleName());
             proximityWakeLock.acquire();
         }
+        Logger.logToFile("SERVICE: wakelocks acquired");
         startMainThread();
         startWorkerThread();
         mainHandler.post(new Runnable() {
@@ -158,6 +160,7 @@ public class CallingService extends Service implements SipAppObserver {
                 registerReceiver(gsmStateReceiver, phoneStateFilter);
             }
         });
+        Logger.logToFile("SERVICE: Done 'onCreate'");
     }
 
     @Nullable
@@ -168,6 +171,8 @@ public class CallingService extends Service implements SipAppObserver {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
+        Logger.logToFile("SERVICE: 'onStartCommand with flag: '" + flags + "'");
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -192,6 +197,7 @@ public class CallingService extends Service implements SipAppObserver {
                             info += "MAKE_CALL";
                             break;
                         case COMMANDS.INCOMING_CALL:
+                            Logger.logToFile("SERVICE: case 'INCOMING_CALL'");
                             if (!isGsmIdle) {
                                 String warn = "Ongoing GSM call";
                                 Logger.logToFile(warn);
@@ -266,7 +272,7 @@ public class CallingService extends Service implements SipAppObserver {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG, "#### SERVICE onDestroy");
+        Logger.logToFile("SERVICE: 'onDestroy'");
         stopRingtone();
         unregisterReceiver(gsmStateReceiver);
         stopWorkerThread();
@@ -371,55 +377,56 @@ public class CallingService extends Service implements SipAppObserver {
     }
 
     private void startWorkerThread() {
+        Logger.logToFile("SERVICE: Starting thread handler...");
         if (workerHandler == null) {
-            Log.d(TAG, "#### Worker handler is null");
             if (workerThread == null) {
-                Log.d(TAG, "#### Worker thread is null");
                 workerThread = new HandlerThread(SIP_THREAD_NAME, Thread.MAX_PRIORITY);
                 workerThread.start();
-                Log.d(TAG, "#### Worker thread started");
             }
             workerHandler = new Handler(workerThread.getLooper());
-            Log.d(TAG, "#### Worker handler initiated");
+            Logger.logToFile("SERVICE: New worker thread initiated");
+        } else {
+            Logger.logToFile("SERVICE: Previous worker thread used");
         }
     }
 
     private void stopWorkerThread() {
         if (workerThread != null) {
             workerThread.quitSafely();
-            Log.d(TAG, "#### Worker thread and handler stopped");
             workerThread = null;
             workerHandler = null;
+            Logger.logToFile("SERVICE: Worker thread destroyed");
         }
     }
 
     private void startMainThread() {
+        Logger.logToFile("SERVICE: Starting main thread...");
         if (mainHandler == null) {
-            Log.d(TAG, "#### Main handler is null");
             if (mainThread == null) {
-                Log.d(TAG, "#### Main thread is null");
                 mainThread = new HandlerThread(SIP_THREAD_NAME, Process.THREAD_PRIORITY_FOREGROUND);
                 mainThread.setPriority(Thread.MAX_PRIORITY);
                 mainThread.start();
-                Log.d(TAG, "#### Main thread started");
             }
             mainHandler = new Handler(mainThread.getLooper());
-            Log.d(TAG, "#### Main handler initiated");
+            Logger.logToFile("SERVICE: New main thread initiated");
+        } else {
+            Logger.logToFile("SERVICE: Previous main thread used");
         }
+
     }
 
     private void stopMainThread() {
         if (mainThread != null) {
             mainThread.quitSafely();
-            Log.d(TAG, "#### Main thread and handler stopped");
             mainThread = null;
             mainHandler = null;
+            Logger.logToFile("SERVICE: Main thread destroyed");
         }
     }
 
     private void initAndRegister() {
         try {
-            Logger.logToFile("Info: Initialization of SIP lib...");
+            Logger.logToFile("SERVICE: Initialization of SIP lib...");
             // unmute and turn off speaker from previous sessions
             enableMute(false);
             enableSpeaker(false);
@@ -905,6 +912,7 @@ public class CallingService extends Service implements SipAppObserver {
                         Logger.e(TAG, errMsg);
                         Logger.logToFile(errMsg);
                         setError(errMsg, null);
+                        finishService();
                     }
                 } catch (CallingException e) {
                     Logger.logToFile(e.getMessage());
@@ -942,14 +950,14 @@ public class CallingService extends Service implements SipAppObserver {
             }
             else if (state == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
                 setCallState(CALLBACKS.CALL_ENDED);
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (isMissedCall) {
+//                mainHandler.post(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if (isMissedCall) {
 //                            showMissedCall(remoteNumber, remoteName); // uncomment to enable missed call notification
-                        }
-                    }
-                });
+//                        }
+//                    }
+//                });
                 finishService();
             }
         } catch (Exception e) {

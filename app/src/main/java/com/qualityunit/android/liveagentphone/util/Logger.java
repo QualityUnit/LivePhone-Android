@@ -71,6 +71,7 @@ public class Logger {
     }
 
     public static void logToFile(String text) {
+        Log.d(TAG, text);
         String appDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir;
         File dir = new File(appDir);
         if (!dir.exists()) {
@@ -94,7 +95,6 @@ public class Logger {
             osw.flush();
             osw.close();
             fos.close();
-            System.out.println("### logToFile: Success!");
         } catch (IOException e) {
             e(TAG, "Error while 'logToFile': " + logFileName, e);
         }
@@ -112,7 +112,7 @@ public class Logger {
         Uri path = Uri.fromFile(filelocation);
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent .setType("vnd.android.cursor.dir/email");
-        String to[] = {"rkostrab@qualityunit.com"};
+        String to[] = {"support@qualityunit.com"};
         emailIntent .putExtra(Intent.EXTRA_EMAIL, to);
         emailIntent .putExtra(Intent.EXTRA_STREAM, path);
         emailIntent .putExtra(Intent.EXTRA_SUBJECT, "LivePhone log file");
