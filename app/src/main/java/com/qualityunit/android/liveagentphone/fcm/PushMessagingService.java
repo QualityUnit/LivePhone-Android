@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -28,9 +27,9 @@ public class PushMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Map<String, String> remoteMessageData = remoteMessage.getData();
         if (remoteMessageData.size() > 0) {
-            String infoMsg = "-----------------------------------------------------------------------------------\nPUSH NOTIFICATION: " + remoteMessageData;
+            String infoMsg = "=============================================================================================\n" +
+                    "PUSH NOTIFICATION: type:'" + remoteMessageData.get("type") + "' - " + remoteMessageData.get("title");
             Logger.logToFile(infoMsg);
-            Log.d(TAG, infoMsg);
         }
         Bundle data = new Bundle();
         for (Map.Entry<String, String> entry : remoteMessageData.entrySet()) {
@@ -40,19 +39,16 @@ public class PushMessagingService extends FirebaseMessagingService {
             // check if push is actual
             String time = data.getString("time");
             if (TextUtils.isEmpty(time)) {
-                String errMsg = "Error: Push notification value 'time' is empty";
+                String errMsg = "PUSH: Error: Push notification value 'time' is empty";
                 Logger.logToFile(errMsg);
                 throw new CallingException(errMsg);
             }
             Date datePush = Iso8601Deserializer.toDate(time);
             Date dateSystem = new Date();
             long delta = (dateSystem.getTime() - datePush.getTime());
-            String infoMsg = "Info: Push delayed: " + delta + " millis";
-            Logger.logToFile(infoMsg);
+            Logger.logToFile("PUSH: Push delayed: " + delta + " millis");
             if (delta > Const.Push.MAX_INCOMING_CALL_PUSH_DELAY) {
-                String warnMsg = "Warning: Late push (" + delta + " millis) Cancelling SIP registration.";
-                Logger.logToFile(warnMsg);
-                Log.d(TAG, warnMsg);
+                Logger.logToFile("PUSH: Late push (" + delta + " millis) Cancelling SIP registration.");
                 return;
             }
 

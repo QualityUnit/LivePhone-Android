@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import java.io.File;
@@ -28,10 +29,6 @@ public class Logger {
             instance = new Logger();
         }
         return instance;
-    }
-
-    private Logger() {
-        Log.d(TAG, "Logger successfuly initialized");
     }
 
     public static void e(String TAG, Throwable e) {
@@ -90,7 +87,6 @@ public class Logger {
             }
             FileOutputStream fos = new FileOutputStream(logFile, true);
             OutputStreamWriter osw = new OutputStreamWriter(fos);
-
             osw.append(new Date().toString() + ": " + text + System.lineSeparator());
             osw.flush();
             osw.close();
@@ -103,13 +99,12 @@ public class Logger {
 
     private static String getLogFilePath() {
         String logFilepath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir + File.separator + logFileName;
-        System.out.println("### getLogFilePath: " + logFilepath);
         return logFilepath;
     }
 
     public static void sendLogFile(Context context) {
-        File filelocation = new File(getLogFilePath());
-        Uri path = Uri.fromFile(filelocation);
+        File file = new File(getLogFilePath());
+        Uri path = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent .setType("vnd.android.cursor.dir/email");
         String to[] = {"support@qualityunit.com"};
