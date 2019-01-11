@@ -63,4 +63,8 @@
     <string name="internal">Internal</string>
     <string name="browser_phone_message">You are logged in into browser app and calls will be redirected into this LivePhone</string>
     <string name="send_log_file">Send log</string>
+    <string name="permission_reason_get_accounts">LivePhone needs this permission to manage your login account.</string>
+    <string name="permission_reason_write_external_storage">LivePhone needs this permission to log anonymous data you can send them anytime to help improve this app</string>
+    <string name="permission_reason_record_audio">LivePhone needs this permission to handle ongoing call</string>
+    <string name="permission_reason_read_phone_state">LivePhone needs this permission to handle GSM calls properly while calling using this app</string>
 </resources>

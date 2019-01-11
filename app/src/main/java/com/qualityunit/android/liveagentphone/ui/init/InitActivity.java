@@ -47,6 +47,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 import static android.Manifest.permission.GET_ACCOUNTS;
+import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -72,12 +73,6 @@ public class InitActivity extends AppCompatActivity {
     private PhoneGetLoaderCallbacks phoneGetLoaderCallbacks;
     private BroadcastReceiver fcmRegistrationBroadcastReceiver;
     private boolean isReceiverRegistered;
-    private final int REQ_GET_ACCOUNTS = 1001;
-    private final int REQ_RECORD_AUDIO = 1002;
-    private final int REQ_WRITE_EXTERNAL_STORAGE = 1003;
-    private boolean grantedGetAccounts;
-    private boolean grantedWriteExternalStorage;
-    private boolean grantedRecordAudio;
     // variables to save into instanceBundle
     private long countDownMillisLeft = DEFAULT_COUNTDOWN_MILLIS;
     private int retryNumber;
@@ -252,50 +247,48 @@ public class InitActivity extends AppCompatActivity {
      * @return
      */
     private boolean checkAppPermissions() {
-        // Dangerous permissions: GET_ACCOUNTS, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO
-        if (!checkOnePermission(GET_ACCOUNTS, REQ_GET_ACCOUNTS)) {
+        // Dangerous permissions: GET_ACCOUNTS, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO, READ_PHONE_STATE
+        if (!checkOnePermission(GET_ACCOUNTS, getString(R.string.permission_reason_get_accounts))) {
             return false;
-        } else if (!checkOnePermission(WRITE_EXTERNAL_STORAGE, REQ_WRITE_EXTERNAL_STORAGE)) {
+        } else if (!checkOnePermission(WRITE_EXTERNAL_STORAGE, getString(R.string.permission_reason_write_external_storage))) {
             return false;
-        }  else if (!checkOnePermission(RECORD_AUDIO, REQ_RECORD_AUDIO)) {
+        }  else if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_record_audio))) {
+            return false;
+        } else if (!checkOnePermission(READ_PHONE_STATE, getString(R.string.permission_reason_read_phone_state))) {
             return false;
         }
         return true;
     }
 
-    private boolean checkOnePermission(String permissionName, int requestCode) {
-        // Here, thisActivity is the current activity
+    private boolean checkOnePermission(String permissionName, String reason) {
         if (ContextCompat.checkSelfPermission(InitActivity.this, permissionName) != PERMISSION_GRANTED) {
             // Permission is not granted
             // Should we show an explanation?
             // returns false only if the user selected Never ask again
             if (ActivityCompat.shouldShowRequestPermissionRationale(InitActivity.this, permissionName)) {
-                showPermissionNotification("You cannot use app without '" + permissionName + "' permission", permissionName, requestCode);
+                showPermissionNotification(permissionName, reason);
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
             } else {
                 // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, requestCode);
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
+                ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, 1000);
             }
             return false;
         }
         return true;
     }
 
-    private void showPermissionNotification(String message, final String permissionName, final int requestCode) {
+    private void showPermissionNotification(final String permissionName, final String reason) {
         AlertDialog alertDialog = new AlertDialog.Builder(InitActivity.this).create();
-        alertDialog.setTitle("Uh oh");
-        alertDialog.setMessage(message);
+        alertDialog.setTitle(permissionName.replace("android.permission.", ""));
+        alertDialog.setMessage(reason);
         alertDialog.setCancelable(false);
         alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, requestCode);
+                        ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, 1000);
                     }
                 });
         alertDialog.show();
@@ -303,36 +296,8 @@ public class InitActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case REQ_GET_ACCOUNTS:
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                    Log.d(TAG, "Permission granted: GET_ACCOUNTS");
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Log.d(TAG, "Permission denied: GET_ACCOUNTS");
-                }
-                break;
-            case REQ_WRITE_EXTERNAL_STORAGE:
-                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
-                    Log.d(TAG, "Permission granted: WRITE_EXTERNAL_STORAGE");
-                } else {
-                    Log.d(TAG, "Permission denied: WRITE_EXTERNAL_STORAGE");
-                }
-                break;
-            case REQ_RECORD_AUDIO:
-                if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
-                    Log.d(TAG, "Permission granted: RECORD_AUDIO");
-                } else {
-                    Log.d(TAG, "Permission denied: RECORD_AUDIO");
-                }
-                break;
-        }
+        Log.d(TAG, "Permission '" + permissions[0] + "' granted: " + (grantResults[0] == PERMISSION_GRANTED));
     }
-
 
     /**
      * Check if last used account is not removed from android accounts
