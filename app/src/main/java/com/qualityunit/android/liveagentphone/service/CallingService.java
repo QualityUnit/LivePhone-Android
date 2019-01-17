@@ -61,7 +61,8 @@ import java.util.regex.Pattern;
 public class CallingService extends Service implements SipAppObserver {
 
     private static final String TAG = CallingService.class.getSimpleName();
-    private static final String SIP_THREAD_NAME = "SipThrd";
+    private static final String SIP_THREAD_NAME_MAIN = "SipThrdMain";
+    private static final String SIP_THREAD_NAME_WORKER = "SipThrdWorker";
     private static final int ONGOING_NOTIFICATION_ID = 1;
     private static final long[] VIBRATOR_PATTERN = {0, 1000, 1000};
     private static final long WAITING_TO_CALL_MILLIS = 5000;
@@ -175,6 +176,7 @@ public class CallingService extends Service implements SipAppObserver {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
+                Log.d(TAG, "THREAD: onStartCommand: " + mainHandler.getLooper().getThread().getId());
                 String info = "SERVICE: command ";
                 try {
                     if (intent == null) {
@@ -198,12 +200,9 @@ public class CallingService extends Service implements SipAppObserver {
                             initAndRegister();
                             break;
                         case COMMANDS.INCOMING_CALL:
+                            waitingToCall = true;
                             info += "INCOMING_CALL";
                             Logger.logToFile(info);
-                            if (!isGsmIdle) {
-                                Logger.logToFile("SERVICE: Ongoing GSM call");
-                                break;
-                            }
                             callDirection = CALL_DIRECTION.INCOMING;
                             initAndRegister();
                             break;
@@ -292,9 +291,9 @@ public class CallingService extends Service implements SipAppObserver {
             wakeLock.release();
             wakeLock = null;
         }
+        Logger.logToFile("SERVICE: 'DESTROYED'");
         super.onDestroy();
-        Logger.logToFile("SERVICE: 'Killing process...'");
-        android.os.Process.killProcess(android.os.Process.myPid()); // this also kills calling activity (which is running on the same PID)
+//        android.os.Process.killProcess(android.os.Process.myPid()); // this also kills calling activity (which is running on the same PID)
     }
 
     private void sendDtfm(final String character) {
@@ -388,7 +387,7 @@ public class CallingService extends Service implements SipAppObserver {
     private void startWorkerThread() {
         if (workerHandler == null) {
             if (workerThread == null) {
-                workerThread = new HandlerThread(SIP_THREAD_NAME, Thread.MAX_PRIORITY);
+                workerThread = new HandlerThread(SIP_THREAD_NAME_WORKER, Thread.MAX_PRIORITY);
                 workerThread.start();
             }
             workerHandler = new Handler(workerThread.getLooper());
@@ -410,7 +409,7 @@ public class CallingService extends Service implements SipAppObserver {
     private void startMainThread() {
         if (mainHandler == null) {
             if (mainThread == null) {
-                mainThread = new HandlerThread(SIP_THREAD_NAME, Process.THREAD_PRIORITY_FOREGROUND);
+                mainThread = new HandlerThread(SIP_THREAD_NAME_MAIN, Process.THREAD_PRIORITY_FOREGROUND);
                 mainThread.setPriority(Thread.MAX_PRIORITY);
                 mainThread.start();
             }
@@ -447,6 +446,7 @@ public class CallingService extends Service implements SipAppObserver {
             workerHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    Log.d(TAG, "THREAD: initAndRegister: " + workerHandler.getLooper().getThread().getId());
                     // init sip lib
                     if (sipCore == null) {
                         setCallState(CALLBACKS.INITIALIZING);
@@ -456,9 +456,9 @@ public class CallingService extends Service implements SipAppObserver {
                             Logger.logToFile("SERVICE: SIP initialized successfully");
                         } catch (final Exception e) {
                             String errMsg = "Error while initializing: SIP lib: " + e.getMessage();
-                            Logger.logToFile(errMsg);
+                            Logger.logToFile("SERVICE: " + errMsg);
                             setError(errMsg, e);
-                            finishService();
+                            finishService(true);
                         }
                     }
 
@@ -471,19 +471,19 @@ public class CallingService extends Service implements SipAppObserver {
                             Logger.logToFile("SERVICE: Account registration sent");
                         } catch (final Exception e) {
                             String errMsg = "Error while creating and registering sipAccount" + e.getMessage();
-                            Logger.logToFile(errMsg);
+                            Logger.logToFile("SERVICE: " + errMsg);
                             setError(errMsg, e);
-                            finishService();
+                            finishService(true);
                         }
                     }
                     // wait for registration callback and continue from listener "notifyRegState"
                 }
             });
         } catch (final Exception e) {
-            String errMsg = "Error while initializing sip lib: " + e.getMessage();
-            Logger.logToFile(errMsg);
+            String errMsg = "Error while initializing SIP lib: " + e.getMessage();
+            Logger.logToFile("SERVICE: " + errMsg);
             setError(errMsg, e);
-            finishService();
+            finishService(true);
         }
     }
 
@@ -526,12 +526,13 @@ public class CallingService extends Service implements SipAppObserver {
                     String sipCalleeUri = Tools.Sip.createCalleeUri(prefix, cleanedRemoteNumber, sipHost);
                     call.makeCall(sipCalleeUri, prm);
                     sipCurrentCall = call;
-                    Log.d(TAG, "#### Call to '" + sipCalleeUri + "' started successfully");
                     Logger.logToFile("SERVICE: Call started successfully");
                 } catch (final Exception e) {
                     call.delete();
-                    setError("Error while making SIP call:" + e.getMessage(), e);
-                    finishService();
+                    String errMsg = "Error while making SIP call:" + e.getMessage();
+                    setError(errMsg, e);
+                    Logger.logToFile("SERVICE: " + errMsg);
+                    finishService(true);
                 }
             }
         });
@@ -540,11 +541,11 @@ public class CallingService extends Service implements SipAppObserver {
     private void waitForIncomingCall() {
         Logger.logToFile("SERVICE: Waiting to incoming call...");
         setCallState(CALLBACKS.WAITING_TO_CALL);
-        waitingToCall = true;
         mainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (waitingToCall) {
+                    waitingToCall = false;
                     Logger.logToFile("SERVICE: Hanging up call because waiting reached " + WAITING_TO_CALL_MILLIS + " seconds");
                     finishService();
                 }
@@ -556,11 +557,11 @@ public class CallingService extends Service implements SipAppObserver {
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (sipCurrentCall == null) {
-                    Logger.logToFile("Warning: Receive call: No ringing call now");
-                    return;
-                }
+                Log.d(TAG, "THREAD: receiveCall: " + workerHandler.getLooper().getThread().getId());
                 try {
+                    if (sipCurrentCall == null) {
+                        throw new Exception("No ringing call now");
+                    }
                     stopRingtone();
                     CallOpParam prm = new CallOpParam();
                     prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
@@ -574,7 +575,7 @@ public class CallingService extends Service implements SipAppObserver {
                     });
                     setCallState(CALLBACKS.CALL_ESTABLISHED);
                 } catch (Exception e) {
-                    String err = "Error while receiving call: " + e.getMessage();
+                    String err = "SERVICE: Error while receiving call: " + e.getMessage();
                     Logger.logToFile(err);
                     Logger.e(TAG, e);
                 }
@@ -604,17 +605,18 @@ public class CallingService extends Service implements SipAppObserver {
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
                         sipCurrentCall.hangup(prm);
                         Logger.logToFile("SERVICE: Hang up call: Call successfully hanged up");
-//                        sipCurrentCall = null;
                         // finishing of service is then called from "notifyCallState"
                     } catch (final Exception e) {
-                        setError("Error while hanging up call", e);
-                        finishService();
+                        String err = "Error while hanging up call: " + e.getMessage();
+                        setError(err, e);
+                        Logger.logToFile("SERVICE: " + err);
+                        finishService(true);
                     }
                 } else {
-                    String err = "SERVICE: No call to hang up";
-                    Logger.logToFile(err);
+                    String err = "No call to hang up";
+                    Logger.logToFile("SERVICE: " + err);
                     setError(err, null);
-                    finishService();
+                    finishService(true);
                 }
             }
         });
@@ -678,22 +680,41 @@ public class CallingService extends Service implements SipAppObserver {
     }
 
     private void finishService() {
+        finishService(false);
+    }
+
+    private void finishService(final boolean ignoreWaitingToCall) {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
+                if (!ignoreWaitingToCall && waitingToCall) {
+                    Logger.logToFile("SERVICE: Stop destroying service when another call is coming ");
+                    return;
+                }
                 workerHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        sipCurrentCall = null;
+                        if (sipCurrentCall != null) {
+                            sipCurrentCall.delete();
+                            sipCurrentCall = null;
+                        }
+                        if (sipAccount != null) {
+                            sipAccount.delete();
+                            sipAccount = null;
+                        }
                         if (sipCore != null) {
                             sipCore.deinit();
                             Logger.logToFile("SERVICE: Finishing service: Library deinitialized");
+                            sipCore = null;
                         }
-                        sipCore = null;
-                        sipAccount = null;
                         mainHandler.post(new Runnable() {
                             @Override
                             public void run() {
+                                if (!ignoreWaitingToCall && waitingToCall) {
+                                    Logger.logToFile("SERVICE: Rerunning service because another call is coming");
+                                    CallingCommands.incomingCall(CallingService.this);
+                                    return;
+                                }
                                 stopSelf();
                             }
                         });
@@ -825,59 +846,67 @@ public class CallingService extends Service implements SipAppObserver {
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
+                Log.d(TAG, "THREAD: notifyIncomingCall: " + workerHandler.getLooper().getThread().getId());
                 try {
                     CallOpParam prm = new CallOpParam();
                     CallSetting opt = prm.getOpt();
                     opt.setAudioCount(1);
                     opt.setVideoCount(0);
                     opt.setFlag(0);
-                    if (sipCurrentCall != null) {
+                    if (sipCurrentCall != null || !isGsmIdle) {
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_BUSY_HERE);
                         call.hangup(prm);
                         call.delete();
-                    }
-                    else {
-                        prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
-                        call.answer(prm);
-                        waitingToCall = false;
-                        String remoteUri = call.getInfo().getRemoteUri();
-                        if (!TextUtils.isEmpty(remoteUri)) {
-                            Pattern pattern = Pattern.compile("\\<sip\\:(.+)\\@.+\\>");
-                            Matcher matcher = pattern.matcher(remoteUri);
-                            if (matcher.find()) {
-                                notificationContentText = remoteNumber = matcher.group(1);
-                                Log.d(TAG, "SERVICE: Remote number found: " + remoteNumber);
-                            }
-                            else {
-                                Log.d(TAG, "SERVICE: Remote number not found.");
-                            }
-                            pattern = Pattern.compile("\\\"?([^\\\"]*)\\\"?");
-                            matcher = pattern.matcher(remoteUri);
-                            if (matcher.find()) {
-                                notificationContentText = remoteName = matcher.group(1);
-                                Log.d(TAG, "SERVICE: Remote name found: " + remoteName);
-                            }
-                            else {
-                                Log.d(TAG, "SERVICE: Remote name not found.");
-                            }
+                        if (!isGsmIdle) {
+                            finishService(true);
                         }
-                        Logger.logToFile("SERVICE: Ringing...");
-                        startRingtone();
-                        setCallState(CALLBACKS.RINGING);
-                        sipCurrentCall = call;
-                        mainHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                isMissedCall = true;
-                                startActivity(createCallingActivityIntent());
-                            }
-                        });
+                        return;
                     }
+                    prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
+                    call.answer(prm);
+                    mainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            waitingToCall = false;
+                        }
+                    });
+                    String remoteUri = call.getInfo().getRemoteUri();
+                    if (!TextUtils.isEmpty(remoteUri)) {
+                        Pattern pattern = Pattern.compile("\\<sip\\:(.+)\\@.+\\>");
+                        Matcher matcher = pattern.matcher(remoteUri);
+                        if (matcher.find()) {
+                            notificationContentText = remoteNumber = matcher.group(1);
+                            Log.d(TAG, "SERVICE: Remote number found: " + remoteNumber);
+                        }
+                        else {
+                            Log.d(TAG, "SERVICE: Remote number not found.");
+                        }
+                        pattern = Pattern.compile("\\\"?([^\\\"]*)\\\"?");
+                        matcher = pattern.matcher(remoteUri);
+                        if (matcher.find()) {
+                            notificationContentText = remoteName = matcher.group(1);
+                            Log.d(TAG, "SERVICE: Remote name found: " + remoteName);
+                        }
+                        else {
+                            Log.d(TAG, "SERVICE: Remote name not found.");
+                        }
+                    }
+                    Logger.logToFile("SERVICE: Ringing...");
+                    startRingtone();
+                    setCallState(CALLBACKS.RINGING);
+                    sipCurrentCall = call;
+                    mainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            isMissedCall = true;
+                            startActivity(createCallingActivityIntent());
+                        }
+                    });
                 } catch (Exception e) {
                     String errMsg = "Error while notifying incoming call: " + e.getMessage();
                     Logger.logToFile(errMsg);
                     setError(errMsg, e);
-                    finishService();
+                    finishService(true);
                 }
             }
         });
@@ -900,6 +929,7 @@ public class CallingService extends Service implements SipAppObserver {
                                 makeCall();
                             } else if (callDirection == CALL_DIRECTION.INCOMING) {
                                 Logger.logToFile("SERVICE: Successfully registered to SIP");
+                                Log.d(TAG, "THREAD: notifyRegState: " + workerHandler.getLooper().getThread().getId());
                                 waitForIncomingCall();
                             } else {
                                 throw new CallingException("Error: Unknown call direction, hanging up call...");
@@ -909,12 +939,12 @@ public class CallingService extends Service implements SipAppObserver {
                         String errMsg = "SERVICE: Error while SIP registration: Asterisk returned code '" + returnCode + "'";
                         Logger.logToFile(errMsg);
                         setError(errMsg, null);
-                        finishService();
+                        finishService(true);
                     }
                 } catch (CallingException e) {
                     Logger.logToFile(e.getMessage());
                     Logger.e(TAG, e);
-                    finishService();
+                    finishService(true);
                 }
             }
         });

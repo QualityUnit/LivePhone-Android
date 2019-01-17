@@ -19,19 +19,21 @@ import com.qualityunit.android.liveagentphone.service.CallingService;
 import com.qualityunit.android.liveagentphone.ui.common.ToolbarActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Created by rasto on 18.10.16.
  */
 
 public class CallingActivity extends ToolbarActivity {
 
-    private static final String TAG = CallingActivity.class.getSimpleName();
     private FloatingActionButton fabHangupCall;
-    private boolean isCallEnded;
     private boolean isSipEventsReceiverRegistered;
     private boolean isRinging;
     private boolean isCallEstablished;
     private SipBroadcastReceiver sipBroadcastReceiver = new SipBroadcastReceiver();
+    private Timer finishTimer;
 
     @Override
     protected boolean allwaysShowHomeAsUp() {
@@ -50,7 +52,7 @@ public class CallingActivity extends ToolbarActivity {
         if (savedInstanceState == null) {
             addFragment(new CallingFragment(), CallingFragment.TAG);
         }
-        fabHangupCall = (FloatingActionButton) findViewById(R.id.fab_hangCall);
+        fabHangupCall = findViewById(R.id.fab_hangCall);
         if (fabHangupCall != null) {
             fabHangupCall.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -65,6 +67,7 @@ public class CallingActivity extends ToolbarActivity {
     @Override
     protected void onDestroy() {
         unregisterSipEventsReceiver();
+        cancelDelayedFinish();
         super.onDestroy();
     }
 
@@ -95,12 +98,13 @@ public class CallingActivity extends ToolbarActivity {
     }
 
     public void declineCall() {
-        if (isCallEnded) {
+        if (finishTimer != null) {
+            cancelDelayedFinish();
             finish();
             return;
         }
-        isCallEnded = true;
         CallingCommands.hangupCall(CallingActivity.this);
+        finishDelayed();
     }
 
     public void receiveCall() {
@@ -109,6 +113,26 @@ public class CallingActivity extends ToolbarActivity {
 
     public FloatingActionButton getFabHangupCall() {
         return fabHangupCall;
+    }
+
+    private void finishDelayed() {
+        if (finishTimer != null) {
+            return;
+        }
+        finishTimer = new Timer();
+        finishTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                finish();
+            }
+        }, 2000);
+    }
+
+    private void cancelDelayedFinish() {
+        if (finishTimer != null) {
+            finishTimer.cancel();
+            finishTimer = null;
+        }
     }
 
     private void registerSipEventsReceiver() {
@@ -149,8 +173,8 @@ public class CallingActivity extends ToolbarActivity {
                     break;
                 case CallingService.CALLBACKS.CALL_ENDED:
                     isCallEstablished = false;
-                    isCallEnded = true;
                     popToFragment(CallingFragment.TAG);
+                    finishDelayed();
                     break;
                 default:
                     Logger.e(TAG, "Unknown event type in 'onReceive' method!");
