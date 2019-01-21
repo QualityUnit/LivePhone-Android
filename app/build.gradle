@@ -43,6 +43,7 @@ dependencies {
     implementation 'net.frakbot:glowpadbackport:2.1.1'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'fr.turri:jISO8601:0.2'
+    implementation 'com.android.volley:volley:1.1.1'
 }
 
 // https://stackoverflow.com/questions/42949974/android-support-repo-46-0-0-with-android-studio-2-3
