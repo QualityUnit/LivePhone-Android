@@ -16,12 +16,19 @@ import android.support.v4.util.LruCache;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
+import com.qualityunit.android.liveagentphone.net.request.ObjectRequest;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
+
+import static com.android.volley.Request.Method.GET;
 
 public class Client {
 
@@ -98,6 +105,39 @@ public class Client {
     public interface AuthDataCallback {
         void onAuthData(Client client, String basepath, String apikey);
         void onException(Exception e);
+    }
+
+    public interface ApiCallCallback<T> {
+        void onSuccess(T object);
+        void onFailure(Exception e);
+    }
+
+    /////////////////////// API ///////////////////////
+
+    public static void getPhone(Activity activity, final ApiCallCallback<JSONObject> apiCallCallback) {
+        final String TAG = "GET /phones/_app_";
+        prepare(activity, new AuthDataCallback() {
+            @Override
+            public void onAuthData(Client client, String basepath, String apikey) {
+                ObjectRequest request = new ObjectRequest(GET, basepath + "/phones/_app_", apikey, null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject object) {
+                        apiCallCallback.onSuccess(object);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError e) {
+                        apiCallCallback.onFailure(e);
+                    }
+                });
+                client.addToQueue(request, TAG);
+            }
+
+            @Override
+            public void onException(Exception e) {
+                apiCallCallback.onFailure(e);
+            }
+        });
     }
 
 }

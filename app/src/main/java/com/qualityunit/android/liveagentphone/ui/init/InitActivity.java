@@ -20,15 +20,12 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.fcm.PushRegistrationIntentService;
 import com.qualityunit.android.liveagentphone.net.Client;
-import com.qualityunit.android.liveagentphone.net.request.ObjectRequest;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
@@ -42,7 +39,6 @@ import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static com.android.volley.Request.Method.GET;
 
 /**
  * Created by rasto on 26.01.16.
@@ -150,25 +146,14 @@ public class InitActivity extends AppCompatActivity {
      * Make a GET /phones/_app_ call to API
      */
     private void phoneGet() {
-        Client.prepare(this, new Client.AuthDataCallback() {
+        Client.getPhone(this, new Client.ApiCallCallback<JSONObject>() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
-                ObjectRequest request = new ObjectRequest(GET, basepath + "/phones/_app_", apikey, null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject object) {
-                        onPhoneGet(object);
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError e) {
-                        showError(e.getMessage());
-                    }
-                });
-                client.addToQueue(request, "GET /phones/_app_");
+            public void onSuccess(JSONObject object) {
+                onPhoneGet(object);
             }
 
             @Override
-            public void onException(Exception e) {
+            public void onFailure(Exception e) {
                 showError(e.getMessage());
             }
         });
