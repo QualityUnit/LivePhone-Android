@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 
 import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
-import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
+import com.qualityunit.android.liveagentphone.net.PaginationList;
 
 import java.util.List;
 

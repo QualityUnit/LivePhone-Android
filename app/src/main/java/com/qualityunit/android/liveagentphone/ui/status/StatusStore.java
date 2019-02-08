@@ -5,14 +5,11 @@ import android.app.Activity;
 import android.text.TextUtils;
 
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
-import com.qualityunit.android.liveagentphone.net.Api;
-import com.qualityunit.android.liveagentphone.util.Logger;
+import com.qualityunit.android.liveagentphone.net.Client;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,22 +35,35 @@ public class StatusStore {
     private static StatusStore instance;
     private Activity activity;
     private String phoneId;
-    private final Map<String, JSONObject> devices = new HashMap<>();
+    private Map<String, JSONObject> devices = new HashMap<>();
     private final Set<StatusCallbacks> callbacksSet = new HashSet<>();
 
-    private void notifyOnDevices(final Exception e) throws JSONException {
-        for (StatusCallbacks item : callbacksSet) {
-            item.onDevices(getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET), getDeviceStatus(DEVICE_TYPE_BROWSER, STATUS_TYPE_ONLINE), e);
+    private void notifyOnDevices(Exception e) {
+        try {
+            // For mobile, we're showing STATUS_TYPE_PRESET. It should be the same as STATUS_TYPE_ONLINE
+            // For browser, we have to show STATUS_TYPE_ONLINE. STATUS_TYPE_PRESET can be true but STATUS_TYPE_ONLINE finally reflects opened Agent panel in browser
+            int mobileStatus = getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET);
+            int browserStatus = getDeviceStatus(DEVICE_TYPE_BROWSER, STATUS_TYPE_ONLINE);
+            for (StatusCallbacks item : callbacksSet) {
+                item.onDevices(mobileStatus, browserStatus, e);
+            }
+        } catch (JSONException ex) {
+            for (StatusCallbacks item : callbacksSet) {
+                item.onDevices(PHONE_STATUS_NULL, PHONE_STATUS_NULL, e);
+            }
         }
+
     }
 
     private int getDeviceStatus(String deviceType, String statusType) throws JSONException {
         int status = PHONE_STATUS_NULL;
-        JSONObject device = devices.get(deviceType);
-        if (device != null) {
-            String mobileStatus = device.getString(statusType);
-            if (!TextUtils.isEmpty(mobileStatus)) {
-                status = STATUS_ONLINE_FLAG.equals(mobileStatus) ? PHONE_STATUS_OUT_IN : PHONE_STATUS_OUT;
+        if (devices != null) {
+            JSONObject device = devices.get(deviceType);
+            if (device != null) {
+                String mobileStatus = device.getString(statusType);
+                if (!TextUtils.isEmpty(mobileStatus)) {
+                    status = STATUS_ONLINE_FLAG.equals(mobileStatus) ? PHONE_STATUS_OUT_IN : PHONE_STATUS_OUT;
+                }
             }
         }
         return status;
@@ -88,71 +98,69 @@ public class StatusStore {
     }
 
     /**
-     * Fetch current device phone status using phoneId from current account
+     * Get browser and mobile devices statuses. If mobile devices does not exist then create it
      */
     public void getDevice(boolean forceFetch, final boolean withDeparments) {
         if (!forceFetch) {
-            try {
-                notifyOnDevices(null);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            notifyOnDevices(null);
             return;
         }
         for (StatusCallbacks item : callbacksSet) {
             item.onLoadingDevices();
         }
-        Api.getDevicesPhoneStatus(activity, phoneId, new Api.DevicesCallback() {
+        Client.getDevicesPhoneStatus(activity, phoneId, new Client.Callback<Map<String, JSONObject>>() {
             @Override
-            public void onResponse(JSONArray jsonArray, Exception e) {
+            public void onSuccess(Map<String, JSONObject> object) {
                 try {
-                    if (jsonArray == null) {
-                        notifyOnDevices(new Exception("Phone devices not found"));
-                        return;
-                    }
-                    devices.clear();
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject object = jsonArray.getJSONObject(i);
-                        devices.put(object.getString("type"), object);
-                    }
-                    if (e == null && withDeparments && getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET) == PHONE_STATUS_OUT_IN) {
+                    devices = object;
+                    if (withDeparments && getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET) == PHONE_STATUS_OUT_IN) {
                         getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
                     }
-                    notifyOnDevices(e); // phoneStatus is updated here
-                } catch (JSONException e1) {
-                    e1.printStackTrace();
+                    notifyOnDevices(null); // phoneStatus is updated here
+                } catch (JSONException e) {
+                    notifyOnDevices(e);
                 }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                notifyOnDevices(e);
             }
         });
     }
 
     /**
-     * Update current device phone status
+     * Update mobile device phone preset and status
      * @param requestedStatus is requested new status
      */
-    public void updateDevice(final boolean requestedStatus, String deviceType) {
+    public void updateMobileDevice(final boolean requestedStatus) {
         if (!requestedStatus) {
             // clear department listview
             for (StatusCallbacks item : callbacksSet) {
                 item.onDepartmentList(null, null);
             }
         }
-        JSONObject deviceJsonObject = devices.get(deviceType);
+        JSONObject deviceJsonObject = devices.get(DEVICE_TYPE_MOBILE);
         for (StatusCallbacks item : callbacksSet) {
             item.onLoadingDevices();
         }
-        Api.updateDevicePhoneStatus(activity, deviceJsonObject, requestedStatus, new Api.UpdateDeviceCallback() {
+        Client.updateDevicePhoneStatus(activity, deviceJsonObject, requestedStatus, new Client.Callback<JSONObject>() {
             @Override
-            public void onResponse(JSONObject jsonObject, Exception e) {
+            public void onSuccess(JSONObject object) {
                 try {
-                    devices.put(jsonObject.getString("type"), jsonObject);
-                    if (e == null && requestedStatus && getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET) == PHONE_STATUS_OUT_IN) {
+                    devices.put(DEVICE_TYPE_MOBILE, object);
+                    if (requestedStatus && getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET) == PHONE_STATUS_OUT_IN) {
                         getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
                     }
-                    notifyOnDevices(e);
+                    notifyOnDevices(null);
                 } catch (JSONException e1) {
-                    e1.printStackTrace();
+                    notifyOnDevices(e1);
                 }
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                notifyOnDevices(e);
             }
         });
     }
@@ -162,49 +170,23 @@ public class StatusStore {
      * @param deviceId
      */
     public void getDepartments(String deviceId) {
-        if (deviceId == null) {
-            String errMsg = "Cannot call 'getDepartments() before calling 'getDevice()'";
-            for (StatusCallbacks item : callbacksSet) {
-                item.onDepartmentList(null, new Exception(errMsg));
-            }
-            Logger.e(TAG, errMsg);
-            return;
-        }
         for (StatusCallbacks item : callbacksSet) {
             item.onLoadingDepartmentList();
         }
-        Api.getDepartmentStatusList(activity, deviceId, new Api.DepartmentStatusListCallback() {
-
+        Client.getDepartmentStatusList(activity, deviceId, new Client.Callback<List<DepartmentStatusItem>>() {
             @Override
-            public void onResponse(JSONArray array, Exception e) {
-                List<DepartmentStatusItem> list = null;
-                if (e == null) {
-                    int arrayLength = array.length();
-                    list = new ArrayList<>(arrayLength);
-                    for (int i = 0; i < arrayLength; i++) {
-                        try {
-                            JSONObject obj = array.getJSONObject(i);
-                            DepartmentStatusItem item = new DepartmentStatusItem(
-                                    obj.getInt("device_id"),
-                                    obj.getString("department_id"),
-                                    obj.getString("user_id"),
-                                    obj.getString("department_name"),
-                                    STATUS_ONLINE_FLAG.equals(obj.getString("online_status")),
-                                    obj.getString("preset_status")
-                            );
-                            list.add(item);
-                        } catch (JSONException e1) {
-                            e = e1;
-                            e.printStackTrace();
-                            break;
-                        }
-                    }
-                }
+            public void onSuccess(List<DepartmentStatusItem> list) {
                 for (StatusCallbacks item : callbacksSet) {
-                    item.onDepartmentList(list, e);
+                    item.onDepartmentList(list, null);
                 }
             }
 
+            @Override
+            public void onFailure(Exception e) {
+                for (StatusCallbacks item : callbacksSet) {
+                    item.onDepartmentList(null, e);
+                }
+            }
         });
     }
 

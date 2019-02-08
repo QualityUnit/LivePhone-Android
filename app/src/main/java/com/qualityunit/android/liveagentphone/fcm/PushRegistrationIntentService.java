@@ -10,22 +10,18 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
-import com.qualityunit.android.liveagentphone.net.rest.Client;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PushRegistrationIntentService extends IntentService {
 
@@ -101,61 +97,39 @@ public class PushRegistrationIntentService extends IntentService {
         params.put(REQUEST_KEY_DEVICE_ID, deviceId);
         params.put(REQUEST_KEY_PLATFORM_ANDROID, REQUEST_VALUE_PLATFORM_ANDROID);
         params.put(REQUEST_KEY_PUSH_TOKEN, pushToken);
-        final String paramsString;
-        try {
-            paramsString = URLEncoder.encode(params.toString(), "utf-8");
-        } catch (UnsupportedEncodingException e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-            return;
-        }
+        final Map<String, Object> requestParam = new HashMap<String, Object>(1){{
+            put("params", params.toString());
+        }};
         final Account account = LaAccount.get();
         final AccountManager accountManager = AccountManager.get(getApplicationContext());
-        accountManager.invalidateAuthToken(account.type, null);
+//        accountManager.invalidateAuthToken(account.type, null);
         accountManager.getAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, null, true, new AccountManagerCallback<Bundle>() {
             @Override
             public void run(final AccountManagerFuture<Bundle> future) {
-                (new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Bundle result = future.getResult();
-                            String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
-                            String token = result.getString(AccountManager.KEY_AUTHTOKEN);
-                            String path = "/phones/" + phoneId + "/_updateParams";
-                            if (makeRequest(basePath, path, token, paramsString)) {
-                                sendFcmRegistraionBroadcast(true, null);
-                            }
-                        } catch (Exception e) {
+                try {
+                    Bundle result = future.getResult();
+                    String basepath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
+                    String apikey = result.getString(AccountManager.KEY_AUTHTOKEN);
+                    com.qualityunit.android.liveagentphone.net.Client.updatePhoneParams(getApplicationContext(), basepath, phoneId, apikey, requestParam, new com.qualityunit.android.liveagentphone.net.Client.Callback<JSONObject>() {
+                        @Override
+                        public void onSuccess(JSONObject object) {
+                            sendFcmRegistraionBroadcast(true, null);
+                        }
+
+                        @Override
+                        public void onFailure(Exception e) {
                             Logger.e(TAG, e);
                             sendFcmRegistraionBroadcast(false, e.getMessage());
                         }
-                    }
-                })).start();
+                    });
+                } catch (Exception e) {
+                    Logger.e(TAG, e);
+                    sendFcmRegistraionBroadcast(false, e.getMessage());
+                }
             }
 
         }, null);
 
-    }
-
-    /**
-     * Make PUT request. If code 20x comes from server then return true. If fallback is fired then return false.
-     * @param basePath
-     * @param path
-     * @param token
-     * @param paramsString
-     * @throws Exception
-     */
-    private boolean makeRequest(String basePath, String path, String token, String paramsString) throws Exception {
-        final Client client = Client.getInstance();
-        final Request request = client.PUT(basePath, path, token)
-                .addEncodedParam("params", paramsString)
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                .build();
-        Response response = client.newCall(request).execute();
-        if (!response.isSuccessful()) {
-            throw new Exception(Tools.formatError(response.code(), response.message()));
-        }
-        return true;
     }
 
 }

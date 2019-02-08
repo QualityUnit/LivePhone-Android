@@ -10,7 +10,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.qualityunit.android.liveagentphone.R;
-import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
+import com.qualityunit.android.liveagentphone.net.PaginationList;
 
 import java.util.ArrayList;
 import java.util.HashMap;

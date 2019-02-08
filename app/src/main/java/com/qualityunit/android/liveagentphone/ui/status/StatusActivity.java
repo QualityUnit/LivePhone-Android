@@ -92,7 +92,7 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
             mobileAvailabilitySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    store.updateDevice(isChecked, StatusStore.DEVICE_TYPE_MOBILE);
+                    store.updateMobileDevice(isChecked);
                 }
             });
             mobileAvailabilitySwitch.setVisibility(View.VISIBLE);
@@ -100,7 +100,7 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
             mobileAvailabilitySwitch.setVisibility(View.GONE);
         }
         if (e != null) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -118,16 +118,18 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
         listLoading.setVisibility(View.INVISIBLE);
         if (list == null) {
             listView.setAdapter(null);
-            return;
-        }
-        if (list.size() == 0) {
+        } else if (list.size() == 0) {
             listMessage.setText(getString(R.string.empty));
             listView.setVisibility(View.INVISIBLE);
             listMessage.setVisibility(View.VISIBLE);
+        } else {
+            listView.setVisibility(View.VISIBLE);
+            StatusListAdapter adapter = new StatusListAdapter(this, list);
+            listView.setAdapter(adapter);
         }
-        listView.setVisibility(View.VISIBLE);
-        StatusListAdapter adapter = new StatusListAdapter(this, list);
-        listView.setAdapter(adapter);
+        if (e != null) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
 }

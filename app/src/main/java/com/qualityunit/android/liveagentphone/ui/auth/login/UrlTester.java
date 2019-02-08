@@ -1,6 +1,6 @@
 package com.qualityunit.android.liveagentphone.ui.auth.login;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
@@ -8,14 +8,11 @@ import android.util.Log;
 
 import com.qualityunit.android.liveagentphone.App;
 import com.qualityunit.android.liveagentphone.Const;
-import com.qualityunit.android.liveagentphone.net.rest.Client;
+import com.qualityunit.android.liveagentphone.net.Client;
 import com.qualityunit.android.liveagentphone.util.Tools;
-import com.qualityunit.android.restful.method.RestGetBuilder;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
-import java.io.IOException;
+import org.json.JSONObject;
+
 import java.net.MalformedURLException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -31,7 +28,7 @@ public abstract class UrlTester implements Handler.Callback {
     private boolean isStopped;
     private Timer timer = new Timer("urlLoop");
     private TimerTask timerTask;
-    private Context context;
+    private Activity activity;
 
     public static final class CODE {
         public static final int URL_OK = 0;
@@ -44,8 +41,8 @@ public abstract class UrlTester implements Handler.Callback {
     private Handler handler = new Handler(this);
     private UrlThread currentThread;
 
-    public UrlTester(Context context) {
-        this.context = context;
+    public UrlTester(Activity activity) {
+        this.activity = activity;
     }
 
     public void test(final String typedUrl) {
@@ -61,7 +58,7 @@ public abstract class UrlTester implements Handler.Callback {
             handler.sendMessageDelayed(msg, 0);
             return;
         }
-        currentThread = new UrlThread(handler, typedUrl, context);
+        currentThread = new UrlThread(handler, typedUrl, activity);
         currentThread.start();
     }
 
@@ -113,17 +110,17 @@ public abstract class UrlTester implements Handler.Callback {
         private volatile boolean isForget = false;
         private Handler handler;
         private final String typedUrl;
-        private Context context;
+        private Activity activity;
 
-        public UrlThread(Handler handler, String typedUrl, Context context) {
+        public UrlThread(Handler handler, String typedUrl, Activity activity) {
             this.handler = handler;
             this.typedUrl = typedUrl;
-            this.context = context;
+            this.activity = activity;
         }
 
         @Override
         public void run() {
-            if (!Tools.isNetworkConnected(context)) {
+            if (!Tools.isNetworkConnected(activity)) {
                 post(CODE.NO_CONNECTION, typedUrl, 0, "No connection");
                 return;
             }
@@ -152,29 +149,29 @@ public abstract class UrlTester implements Handler.Callback {
             startChecking(fixedUrl);
         }
 
-        private void startChecking(String url) {
+        private void startChecking(final String basePath) {
             try {
-                Log.d(TAG, "Testing URL: '" + url + "'");
+                Log.d(TAG, "Testing URL: '" + basePath + "'");
                 // testing URL validity
-                if (!Tools.isUrlValid(url) || (!url.startsWith("http://") && !url.startsWith("https://"))) {
+                if (!Tools.isUrlValid(basePath) || (!basePath.startsWith("http://") && !basePath.startsWith("https://"))) {
                     throw new MalformedURLException();
                 }
                 // testing ping request
-                final Client client = Client.getInstance();
-                final Request request = new RestGetBuilder(url, "/ping")
-                        .addHeader("Accept", "application/json")
-                        .build();
-                Call call = client.newCall(request);
-                Response resp = call.execute();
-                if (resp.isSuccessful() && "{}".equals(resp.body().string())) {
-                    post(CODE.URL_OK, url, 0, "OK");
-                } else {
-                    post(CODE.API_ERROR, url, ERROR_DELAY_MILLIS, resp.message());
-                }
+                Client.ping(activity, basePath, new Client.Callback<JSONObject>() {
+                    @Override
+                    public void onSuccess(JSONObject object) {
+                        if (object != null && object.length() == 0) {
+                            post(CODE.URL_OK, basePath, 0, "OK");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Exception e) {
+                        post(CODE.URL_NOT_VALID, basePath, ERROR_DELAY_MILLIS, e.getMessage());
+                    }
+                });
             } catch (MalformedURLException e) {
-                post(CODE.URL_NOT_VALID, url, ERROR_DELAY_MILLIS, e.getMessage());
-            } catch (IOException e) {
-                post(CODE.COULD_NOT_REACH_HOST, url, ERROR_DELAY_MILLIS, e.getMessage());
+                post(CODE.URL_NOT_VALID, basePath, ERROR_DELAY_MILLIS, e.getMessage());
             }
 
         }

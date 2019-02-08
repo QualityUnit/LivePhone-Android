@@ -1,19 +1,10 @@
 package com.qualityunit.android.liveagentphone.ui.home;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,13 +15,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
-import com.qualityunit.android.liveagentphone.acc.LaAccount;
-import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
+import com.qualityunit.android.liveagentphone.net.PaginationList;
 import com.qualityunit.android.liveagentphone.store.InternalStore;
 import com.qualityunit.android.liveagentphone.ui.call.InitCallActivity;
 import com.qualityunit.android.liveagentphone.ui.common.PaginationScrollListener;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,24 +104,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private void init () {
-        final AccountManager accountManager = AccountManager.get(getContext());
-        final Account account = LaAccount.get();
-        final Handler handler = new Handler(Looper.myLooper());
-        accountManager.getAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, null, getActivity(), new AccountManagerCallback<Bundle>() {
-
-            @Override
-            public void run(AccountManagerFuture<Bundle> future) {
-                try {
-                    String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
-                    String token = future.getResult().getString(AccountManager.KEY_AUTHTOKEN);
-                    store.init(basePath, token, PaginationList.InitFlag.LOAD);
-                } catch (AuthenticatorException | OperationCanceledException | IOException e) {
-                    Log.e(TAG, "", e);
-                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-
-            }
-        }, handler);
+        store.init(getActivity(), PaginationList.InitFlag.LOAD);
     }
 
     private InternalListAdapter getAdapter() {
@@ -161,14 +133,13 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
         swipeRefreshLayout.setRefreshing(true);
         pbLoading.setVisibility(View.GONE);
         if (store != null) {
-            store.refresh();
+            store.refresh(getActivity());
         }
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         InitCallActivity.initInternalCall(getContext(), getAdapter().getItem(position));
-//        CallingCommands.makeCall(getContext(), item.number, "", remoteName);
     }
 
     @Override
@@ -179,7 +150,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
         swipeRefreshLayout.setRefreshing(true);
         pbLoading.setVisibility(View.GONE);
         if (store != null) {
-            store.nextPage();
+            store.nextPage(getActivity());
         }
     }
 

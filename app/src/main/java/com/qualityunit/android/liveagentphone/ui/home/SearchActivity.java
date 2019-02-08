@@ -21,7 +21,7 @@ import android.widget.ExpandableListView;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
-import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
+import com.qualityunit.android.liveagentphone.net.PaginationList;
 import com.qualityunit.android.liveagentphone.store.ContactsStore;
 import com.qualityunit.android.liveagentphone.store.InternalStore;
 import com.qualityunit.android.liveagentphone.ui.call.InitCallActivity;
@@ -37,7 +37,6 @@ import java.util.List;
 
 public class SearchActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
-    private static final String TAG = SearchActivity.class.getSimpleName();
     private static final int INDEX_INTERNAL = 0;
     private static final int INDEX_CONTACTS = 1;
     private SearchParentAdapter adapter;
@@ -164,7 +163,6 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
         @Override
         public boolean onChildClick(InternalItem item) {
             InitCallActivity.initInternalCall(getApplicationContext(), item);
-//            CallingCommands.makeCall(getApplicationContext(), item.number, "", remoteName);
             return true;
         }
     }
@@ -217,5 +215,6 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
             }
             return true;
         }
+
     }
 }

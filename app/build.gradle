@@ -6,8 +6,8 @@ android {
         applicationId "com.qualityunit.android.liveagentphone"
         minSdkVersion 21
         targetSdkVersion 27
-        versionCode 33
-        versionName "1.4.2"
+        versionCode 34
+        versionName "1.4.3"
         ndk {
             abiFilters "armeabi", "armeabi-v7a", "x86"
         }
@@ -34,7 +34,6 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
     implementation project(path: ':pjsua')
-    implementation project(path: ':restful')
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:support-v4:27.1.1'
     implementation 'com.android.support:design:27.1.1'

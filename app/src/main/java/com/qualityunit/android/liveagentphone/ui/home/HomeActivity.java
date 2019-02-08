@@ -56,14 +56,14 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
         });
         FragmentStatePagerAdapter sectionsPagerAdapter;
         sectionsPagerAdapter = new SectionsPagerAdapter();
-        ViewPager viewPager = (ViewPager) findViewById(R.id.container);
+        ViewPager viewPager = findViewById(R.id.container);
         viewPager.setOffscreenPageLimit(1);
         viewPager.setAdapter(sectionsPagerAdapter);
 
         SectionsPageChangeListener sectionsPageChangeListener = new SectionsPageChangeListener(sectionsPagerAdapter);
         viewPager.addOnPageChangeListener(sectionsPageChangeListener);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        TabLayout tabLayout = findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
         tabLayout.getTabAt(0).setIcon(R.drawable.ic_home_white_24dp);
@@ -71,7 +71,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
 
         store = StatusStore.getInstance(this);
         store.addCallBacks(this);
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_dialpad);
+        FloatingActionButton fab = findViewById(R.id.fab_dialpad);
         if (fab != null) {
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -144,25 +144,6 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             return;
         }
-//        if (isFinishing) {
-//            isFinishing = false;
-//            final AccountManager accountManager = AccountManager.get(this);
-//            final Handler handler = new Handler(Looper.myLooper());
-//            final AccountManagerCallback accountManagerCallback = new AccountManagerCallback() {
-//                @Override
-//                public void run(AccountManagerFuture future) {
-//                    finish();
-//                    startActivity(new Intent(HomeActivity.this, InitActivity.class));
-//                }
-//            };
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-//                accountManager.removeAccount(LaAccount.get(), this, accountManagerCallback, handler);
-//            } else {
-//                accountManager.removeAccount(LaAccount.get(), accountManagerCallback, handler);
-//            }
-//            return;
-//        }
-
         int phoneStatus = Math.max(mobilePhoneStatus, browserPhoneStatus);
         switch (phoneStatus) {
             case StatusStore.PHONE_STATUS_NULL:

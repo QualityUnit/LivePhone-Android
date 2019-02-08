@@ -11,9 +11,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
-import com.qualityunit.android.liveagentphone.net.Api;
+import com.qualityunit.android.liveagentphone.net.Client;
 
 import java.util.List;
+
+import static com.qualityunit.android.liveagentphone.Const.OnlineStatus.STATUS_ONLINE_FLAG;
 
 /**
  * Created by rasto on 15.12.15.
@@ -43,22 +45,24 @@ public class StatusListAdapter extends ArrayAdapter<DepartmentStatusItem> {
         final DepartmentStatusItem item = getItem(position);
         if(item != null) {
             viewHolder.nameView.setText(item.departmentName);
-            viewHolder.switchView.setChecked(item.onlineStatus);
+            viewHolder.switchView.setChecked(STATUS_ONLINE_FLAG.equals(item.onlineStatus));
             viewHolder.switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
-                    Api.updateDepartmentStatus(activity, item, isChecked, new Api.DepartmetStatusCallback() {
-
+                    Client.updateDepartmentStatus(activity, item, isChecked, new Client.Callback<String>() {
                         @Override
-                        public void onResponse(DepartmentStatusItem departmentStatusItem, Exception e) {
-                            if (e != null) {
-                                Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
-                                viewHolder.switchView.setChecked(departmentStatusItem.onlineStatus);
-                            }
-                            // we do not care about successful response in SwitchView
+                        public void onSuccess(String statusFlag) {
+                            item.onlineStatus = statusFlag;
+                            item.presetStatus = statusFlag;
+                            // UI switch is already moved, do nothing
                         }
 
+                        @Override
+                        public void onFailure(Exception e) {
+                            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
+                            viewHolder.switchView.setChecked(STATUS_ONLINE_FLAG.equals(item.onlineStatus));
+                        }
                     });
                 }
 

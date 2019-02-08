@@ -1,1 +1,1 @@
-include ':app', ':pjsua', ':restful'
+include ':app', ':pjsua'

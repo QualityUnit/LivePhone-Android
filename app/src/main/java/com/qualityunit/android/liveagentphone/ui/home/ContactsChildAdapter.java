@@ -11,7 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.qualityunit.android.liveagentphone.R;
-import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
+import com.qualityunit.android.liveagentphone.net.PaginationList;
 import com.qualityunit.android.liveagentphone.ui.common.CircleTransform;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.squareup.picasso.Callback;

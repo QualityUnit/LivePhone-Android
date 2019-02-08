@@ -1,31 +1,19 @@
 package com.qualityunit.android.liveagentphone.ui.home;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.app.Activity;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.widget.Toast;
 
-import com.qualityunit.android.liveagentphone.acc.LaAccount;
-import com.qualityunit.android.liveagentphone.net.loader.PaginationList;
+import com.qualityunit.android.liveagentphone.net.PaginationList;
 import com.qualityunit.android.liveagentphone.ui.common.Store;
 
-import java.io.IOException;
 import java.util.List;
 
 public abstract class SearchSection<T> implements PaginationList.CallbackListener<T> {
 
     private static final String TAG = SearchSection.class.getSimpleName();
-    private Activity activity;
-    private Store<T> store;
+    protected Activity activity;
+    protected Store<T> store;
     private SearchParentAdapter adapter;
     private int indexInParentAdapter;
 
@@ -56,7 +44,7 @@ public abstract class SearchSection<T> implements PaginationList.CallbackListene
     protected abstract void onShowError(List<T> list, PaginationList.State listState, SearchParentAdapter adapter, int indexInParentAdapter);
 
     public void search(String searchTerm) {
-        store.search(searchTerm);
+        store.search(activity, searchTerm);
     }
 
     @Override
@@ -77,28 +65,11 @@ public abstract class SearchSection<T> implements PaginationList.CallbackListene
     }
 
     public void init() {
-        final AccountManager accountManager = AccountManager.get(activity);
-        final Account account = LaAccount.get();
-        final Handler handler = new Handler(Looper.myLooper());
-        accountManager.getAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, null, activity, new AccountManagerCallback<Bundle>() {
-
-            @Override
-            public void run(AccountManagerFuture<Bundle> future) {
-                try {
-                    String basePath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
-                    String token = future.getResult().getString(AccountManager.KEY_AUTHTOKEN);
-                    store.init(basePath, token, PaginationList.InitFlag.INSTANCE);
-                } catch (AuthenticatorException | OperationCanceledException | IOException e) {
-                    Log.e(TAG, "", e);
-                    Toast.makeText(activity, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-
-            }
-        }, handler);
+        store.init(activity, PaginationList.InitFlag.INSTANCE);
     }
 
     public void reload() {
-        store.reload();
+        store.reload(activity);
     }
 
     public void clear() {

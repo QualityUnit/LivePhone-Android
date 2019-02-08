@@ -5,10 +5,8 @@ import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.PorterDuff;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputLayout;
@@ -17,7 +15,6 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,28 +26,15 @@ import android.widget.TextView;
 
 import com.qualityunit.android.liveagentphone.App;
 import com.qualityunit.android.liveagentphone.Const;
-import com.qualityunit.android.liveagentphone.ErrorCode;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
-import com.qualityunit.android.liveagentphone.net.rest.Client;
+import com.qualityunit.android.liveagentphone.net.Client;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
-import com.qualityunit.android.restful.method.RestPostBuilder;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
 
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * Created by rasto on 19.12.15.
@@ -191,7 +175,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
     public void onResume() {
         super.onResume();
         if (urlTester == null) {
-            urlTester = new ApiUrlTester(getContext());
+            urlTester = new ApiUrlTester(getActivity());
         }
         testUrl(etUrl.getText().toString().trim());
         preFillFields();
@@ -208,6 +192,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
     }
 
     private void setErrorLogin(@Nullable final String errorMessage) {
+        showProgress(false);
         if (TextUtils.isEmpty(errorMessage)) {
             tvError.setVisibility(View.GONE);
             tvError.setText("");
@@ -295,62 +280,32 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         final String typedUrl = etUrl.getText().toString().trim();
         final String userName = etEmail.getText().toString().trim();
         final String userPass = etPassword.getText().toString().trim();
-        new AsyncTask<Void, Void, GetTokenResult>() {
+        Client.login(activity, apiUrl, userName, userPass, new Client.Callback<JSONObject>() {
             @Override
-            protected GetTokenResult doInBackground(Void... params) {
-                try {
-                    final Client client = Client.getInstance();
-                    JSONObject jsonBody = new JSONObject();
-                    jsonBody.put("login", userName);
-                    jsonBody.put("password", userPass);
-                    jsonBody.put("type", "P");
-                    TimeZone tz = TimeZone.getTimeZone("UTC");
-                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss'Z'");
-                    df.setTimeZone(tz);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(new Date());
-                    cal.add(Calendar.YEAR, 1);
-                    String validToDate = df.format(cal.getTime());
-                    jsonBody.put("valid_to_date", validToDate);
-                    jsonBody.put("name", Tools.getDeviceName());
-                    String jsonBodyString = jsonBody.toString();
-                    final Request request = new RestPostBuilder(apiUrl, "/apikeys/_login")
-                            .setBody(jsonBodyString)
-                            .build();
-                    Call call = client.newCall(request);
-                    Response response = call.execute();
-                    if (response.isSuccessful()) {
-                        final Intent res = new Intent();
-                        res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
-                        res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
-                        res.putExtra(AccountManager.KEY_ACCOUNT_TYPE, LaAccount.ACCOUNT_TYPE);
-                        res.putExtra(AccountManager.KEY_AUTHTOKEN, new JSONObject(response.body().string()).getString("key"));
-                        res.putExtra(LaAccount.USERDATA_URL_API, apiUrl);
-                        res.putExtra(LaAccount.USERDATA_URL_TYPED, typedUrl);
-                        res.putExtra(AuthActivity.PARAM_USER_PASS, userPass);
-                        return new GetTokenResult(res);
-                    } else {
-                        String errorMessage = new JSONObject(response.body().string()).getString("message");
-                        Log.e(TAG, errorMessage);
-                        return new GetTokenResult(errorMessage, response.code());
-                    }
-                } catch (IOException | JSONException e) {
-                    Log.e(TAG, "", e);
-                    return new GetTokenResult(e.getMessage(), ErrorCode.CANNOT_PARSE_RESPONSE);
+            public void onSuccess(JSONObject object) {
+                String apikey = object.optString("key");
+                if (TextUtils.isEmpty(apikey)) {
+                    setErrorLogin("Error: API token not found in login response");
+                    return;
                 }
+                final Intent res = new Intent();
+                res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
+                res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
+                res.putExtra(AccountManager.KEY_ACCOUNT_TYPE, LaAccount.ACCOUNT_TYPE);
+                res.putExtra(AccountManager.KEY_AUTHTOKEN, apikey);
+                res.putExtra(LaAccount.USERDATA_URL_API, apiUrl);
+                res.putExtra(LaAccount.USERDATA_URL_TYPED, typedUrl);
+                res.putExtra(AuthActivity.PARAM_USER_PASS, userPass);
+                finishLogin(res);
             }
 
             @Override
-            protected void onPostExecute(GetTokenResult result) {
-                if (result.intent != null) {
-                    finishLogin(result.intent);
-                }
-                else {
-                    showProgress(false);
-                    setErrorLogin(result.errorMessage);
-                }
+            public void onFailure(Exception e) {
+                showProgress(false);
+                setErrorLogin(e.getMessage());
             }
-        }.execute();
+        });
+
     }
 
     private void finishLogin(Intent intent) {
@@ -388,8 +343,8 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
 
     private class ApiUrlTester extends UrlTester {
 
-        public ApiUrlTester(Context context) {
-            super(context);
+        public ApiUrlTester(Activity activity) {
+            super(activity);
         }
 
         @Override
@@ -424,22 +379,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         @Override
         protected String onGetTypedUrl() {
             return etUrl.getText().toString().trim();
-        }
-    }
-
-    private class GetTokenResult {
-
-        protected Intent intent;
-        protected String errorMessage;
-        protected int errorCode;
-
-        public GetTokenResult(String errorMessage, int errorCode) {
-            this.errorMessage = errorMessage;
-            this.errorCode = errorCode;
-        }
-
-        public GetTokenResult(Intent intent) {
-            this.intent = intent;
         }
     }
 

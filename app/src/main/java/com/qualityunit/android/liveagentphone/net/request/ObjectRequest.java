@@ -15,7 +15,7 @@ import java.io.UnsupportedEncodingException;
 public class ObjectRequest extends BaseRequest<JSONObject> {
 
 
-    public ObjectRequest(int method, String url, String apikey, @Nullable String requestBody, Response.Listener<JSONObject> listener, @Nullable Response.ErrorListener errorListener) {
+    public ObjectRequest(int method, String url, @Nullable String apikey, @Nullable String requestBody, Response.Listener<JSONObject> listener, @Nullable Response.ErrorListener errorListener) {
         super(method, url, apikey, requestBody, listener, errorListener);
     }
 

@@ -10,10 +10,10 @@ public class DepartmentStatusItem {
     public String departmentId;
     public String userId;
     public String departmentName;
-    public boolean onlineStatus;
+    public String onlineStatus;
     public String presetStatus;
 
-    public DepartmentStatusItem(int deviceId, String departmentId, String userId, String departmentName, boolean onlineStatus, String presetStatus) {
+    public DepartmentStatusItem(int deviceId, String departmentId, String userId, String departmentName, String onlineStatus, String presetStatus) {
         this.deviceId = deviceId;
         this.departmentId = departmentId;
         this.userId = userId;
@@ -29,9 +29,8 @@ public class DepartmentStatusItem {
                 ", departmentId='" + departmentId + '\'' +
                 ", userId='" + userId + '\'' +
                 ", departmentName='" + departmentName + '\'' +
-                ", onlineStatus=" + onlineStatus +
+                ", onlineStatus='" + onlineStatus + '\'' +
                 ", presetStatus='" + presetStatus + '\'' +
                 '}';
     }
-
 }

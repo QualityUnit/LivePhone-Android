@@ -10,19 +10,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
-import com.qualityunit.android.liveagentphone.net.rest.Client;
+import com.qualityunit.android.liveagentphone.net.Client;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
-import com.qualityunit.android.liveagentphone.util.Logger;
-import com.qualityunit.android.restful.method.RestGetBuilder;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
 
 /**
  * Created by rasto on 22.01.16.
@@ -38,7 +29,7 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
     }
 
     @Override
-    public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options) throws NetworkErrorException {
+    public Bundle addAccount(AccountAuthenticatorResponse response, String accountType, String authTokenType, String[] requiredFeatures, Bundle options) {
         final Intent intent = new Intent(context, AuthActivity.class);
         intent.putExtra(AuthActivity.ARG_ACCOUNT_TYPE, accountType);
         intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response);
@@ -48,52 +39,51 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
     }
 
     @Override
-    public Bundle confirmCredentials(AccountAuthenticatorResponse response, Account account, Bundle options) throws NetworkErrorException {
+    public Bundle confirmCredentials(AccountAuthenticatorResponse response, Account account, Bundle options) {
         return null;
     }
 
     @Override
-    public Bundle getAuthToken(final AccountAuthenticatorResponse response, Account account, String authTokenType, Bundle options) throws NetworkErrorException {
-        // Extract the username and password from the Account Manager, and ask
-        // the server for an appropriate AuthToken.
+    public Bundle getAuthToken(final AccountAuthenticatorResponse response, final Account account, String authTokenType, Bundle options)  {
         final AccountManager am = AccountManager.get(context);
-
-        String authToken = am.peekAuthToken(account, authTokenType);
-
-        // Lets give another try to authenticate the user
-        if (TextUtils.isEmpty(authToken)) {
-            final String password = am.getPassword(account);
-            final String url = am.getUserData(account, LaAccount.USERDATA_URL_API);
-            if (!TextUtils.isEmpty(password) && !TextUtils.isEmpty(url)) {
-                try {
-                    final Client client = Client.getInstance();
-                    final Request request = new RestGetBuilder(url, "/token")
-                            .addHeader("Accept", "application/json")
-                            .addParam("username", account.name)
-                            .addParam("password", password)
-                            .build();
-                    Call call = client.newCall(request);
-                    final Response resp = call.execute();
-                    AuthRunnable runnable = new AuthRunnable(resp);
-                    Thread thread = new Thread(runnable);
-                    thread.start();
-                    thread.join();
-                    authToken = runnable.getNewToken();
-                } catch (IOException | InterruptedException e) {
-                    Logger.e(TAG, "", e);
-                }
-            }
-        }
+        final String authToken = am.peekAuthToken(account, authTokenType);
+        final String password = am.getPassword(account);
+        final String basepath = am.getUserData(account, LaAccount.USERDATA_URL_API);
 
         // If we get an authToken - we return it
         if (!TextUtils.isEmpty(authToken)) {
-            final Bundle result = new Bundle();
-            result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-            result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
-            result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
-            return result;
-        }
+            return createResult(account, authToken);
+        } else if (!TextUtils.isEmpty(password) && !TextUtils.isEmpty(basepath)) {
+            Client.login(context, basepath, account.name, password, new Client.Callback<JSONObject>() {
+                @Override
+                public void onSuccess(JSONObject object) {
+                    String authToken = object.optString("key");
+                    if (TextUtils.isEmpty(authToken)) {
+                        createLoginBundle(response, account);
+                        return;
+                    }
+                    response.onResult(createResult(account, authToken));
+                }
 
+                @Override
+                public void onFailure(Exception e) {
+                    createLoginBundle(response, account);
+                }
+            });
+            return null;
+        }
+        return createLoginBundle(response, account);
+    }
+
+    private Bundle createResult(Account account, String authToken) {
+        final Bundle result = new Bundle();
+        result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
+        result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+        result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+        return result;
+    }
+
+    private Bundle createLoginBundle(final AccountAuthenticatorResponse response, Account account) {
         // If we get here, then we couldn't access the user's password - so we
         // need to re-prompt them for their credentials. We do that by creating
         // an intent to display our AuthenticatorActivity.
@@ -103,38 +93,6 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
         final Bundle bundle = new Bundle();
         bundle.putParcelable(AccountManager.KEY_INTENT, intent);
         return bundle;
-    }
-
-    private class AuthRunnable implements Runnable {
-
-        private volatile String newToken;
-        private Response resp;
-
-        AuthRunnable(Response resp) {
-            this.resp = resp;
-        }
-
-        @Override
-        public void run() {
-            try {
-                if (resp == null) {
-                    throw new NullPointerException("Error: Response is null.");
-                }
-                ResponseBody body = resp.body();
-                if (body == null) {
-                    throw new NullPointerException("Error: Response does not contain body.");
-                }
-                JSONObject obj = new JSONObject(body.string());
-                newToken = obj.getString("key"); // message contains authToken
-            } catch (IOException | JSONException | NullPointerException e) {
-                Logger.e(TAG, "", e);
-            }
-        }
-
-        String getNewToken() {
-            return newToken;
-        }
-
     }
 
     @Override

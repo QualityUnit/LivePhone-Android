@@ -1,8 +1,7 @@
-package com.qualityunit.android.liveagentphone.net.loader;
+package com.qualityunit.android.liveagentphone.net;
 
+import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -10,8 +9,8 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.qualityunit.android.liveagentphone.net.loader.PaginationList.InitFlag.LOAD;
-import static com.qualityunit.android.liveagentphone.net.loader.PaginationList.InitFlag.RELOAD;
+import static com.qualityunit.android.liveagentphone.net.PaginationList.InitFlag.LOAD;
+import static com.qualityunit.android.liveagentphone.net.PaginationList.InitFlag.RELOAD;
 
 /**
  * Powerful list handler with features: load, next page, refresh.
@@ -21,16 +20,15 @@ import static com.qualityunit.android.liveagentphone.net.loader.PaginationList.I
  * from this list handler<br/><br/>
  * Created by rasto on 28.11.16.
  */
-public abstract class PaginationList<T> implements Handler.Callback {
+public abstract class PaginationList<T> {
 
     private static final String TAG = PaginationList.class.getSimpleName();
-    private BackgroundTaskThread thread;
-    private Handler mainHandler = new Handler(this);
     private List<T> list = new ArrayList<>();
     private CallbackListener<T> listener;
     private State currentState;
     private int firstPage;
     private int perPage;
+    private String requestTag;
 
     /**
      * <li>{@link #INSTANCE}</li>
@@ -56,11 +54,13 @@ public abstract class PaginationList<T> implements Handler.Callback {
      * Define which page is first and how many items you can set for server call
      * @param firstPage define first page. Some server APIs consider page 0 as a first page, some of them page 1
      * @param perPage define number of items in page. How many items per page you want do get from your API
+     * @param requestTag unique string tag to be used to cancel requests
      */
-    public PaginationList (int firstPage, int perPage) {
+    public PaginationList (int firstPage, int perPage, String requestTag) {
         this.firstPage = firstPage;
         this.perPage = perPage;
         this.currentState = new State(firstPage, null);
+        this.requestTag = requestTag;
     }
 
     // *********** CONTROLS *****************
@@ -70,7 +70,7 @@ public abstract class PaginationList<T> implements Handler.Callback {
      * @param initFlag @see {@link InitFlag}
      * @param args optional arguments that they are available in loadList() method
      */
-    public void init (int initFlag, @Nullable Bundle args) {
+    public void init (Activity activity, int initFlag, @Nullable Bundle args) {
         State newState = currentState.createCopy().setInitiated(true);
         if ((initFlag == LOAD  && !currentState.isInitiated()) || initFlag == RELOAD) {
             list.clear();
@@ -78,7 +78,7 @@ public abstract class PaginationList<T> implements Handler.Callback {
             newState.setInitiated(true)
                     .setLoaded(true)
                     .setLoading(true);
-            resetBackgroundTask(firstPage, args);
+            makeRequest(activity, firstPage, args);
         }
         show(newState, list);
     }
@@ -86,21 +86,21 @@ public abstract class PaginationList<T> implements Handler.Callback {
     /**
      * Clear all data and load fresh first page (to change args, you must call init() with RELOAD flag)
      */
-    public void refresh () {
+    public void refresh (Activity activity) {
         if (currentState.isRefreshing()) {
             return;
         }
         State newState = currentState.createCopy()
                 .setRefreshing(true)
                 .setLoaded(true);
-        resetBackgroundTask(firstPage, currentState.getArgs());
+        makeRequest(activity, firstPage, currentState.getArgs());
         show(newState, list);
     }
 
     /**
      * Load next page
      */
-    public void nextPage () {
+    public void nextPage (Activity activity) {
         if (currentState.isRefreshing()) {
             Log.d(TAG, "Error: Loading next page already running. Cannot fire again.");
             return;
@@ -108,7 +108,7 @@ public abstract class PaginationList<T> implements Handler.Callback {
         State newState = currentState.createCopy()
                 .setRefreshing(true)
                 .setLoaded(true);
-        resetBackgroundTask(currentState.getPage() + 1, currentState.getArgs());
+        makeRequest(activity, currentState.getPage() + 1, currentState.getArgs());
         show(newState, list);
     }
 
@@ -162,54 +162,49 @@ public abstract class PaginationList<T> implements Handler.Callback {
     // *********** ABSTRACT METHODS ****************
 
     /**
-     * Server call implementation, which returns a new list of items
-     * @param pageToLoad requested page
-     * @param args args you set in 'init' method and you can change them anytime in 'refresh' method
-     * @return new list of items
+     * Server call implementation, which sends just request
+     * @param activity
+     * @param pageToLoad
+     * @param args
      * @throws Exception when error has been occurred and callback onError will bring and exception message
      */
-    public abstract List<T> loadList (int pageToLoad, Bundle args) throws Exception;
+    public abstract void requestPage(Activity activity, String requestTag, int pageToLoad, Bundle args, Client.Callback<List<T>> callback);
 
     // *********** PRIVATE METHODS **********
 
-    private void resetBackgroundTask (int pageToLoad, Bundle args) {
-        if (thread != null) {
-            thread.forget();
-        }
-        thread = new BackgroundTaskThread<> (mainHandler, new BackgroundTaskThread.LoadListTask<T>() {
-            @Override
-            public List<T> loadListInBackground (int pageToLoad, Bundle args) throws Exception {
-                return loadList(pageToLoad, args);
-            }
-        }, pageToLoad, args);
-        thread.start();
-    }
+    private void makeRequest(Activity activity, final int pageToLoad, Bundle args) {
+        Client.cancel(activity, requestTag);
+        requestPage(activity, requestTag, pageToLoad, args, new Client.Callback<List<T>>() {
 
-    @Override
-    public boolean handleMessage (Message msg) {
-        thread = null;
-        State newState = currentState.createCopy()
-                .setRefreshing(false)
-                .setLoading(false);
-        if (msg.what == BackgroundTaskThread.SUCCESS) {
-            if (msg.arg1 == firstPage) {
-                // refreshing list
-                list.clear();
-            }
-            newState.setPage(msg.arg1);
-            list.addAll((List<T>) msg.obj);
-            if (list.size() < perPage) {
-                newState.setLastPage(true);
-                if (list.isEmpty()) {
-                    newState.setEmpty(true);
+            @Override
+            public void onSuccess(List<T> newList) {
+                State newState = currentState.createCopy()
+                        .setRefreshing(false)
+                        .setLoading(false);
+                if (pageToLoad == firstPage) {
+                    // refreshing list
+                    list.clear();
                 }
+                newState.setPage(pageToLoad);
+                list.addAll(newList);
+                if (list.size() < perPage) {
+                    newState.setLastPage(true);
+                    if (list.isEmpty()) {
+                        newState.setEmpty(true);
+                    }
+                }
+                show(newState, list);
             }
-            show(newState, list);
-        } else if (msg.what == BackgroundTaskThread.FAILURE) {
-            String errorMsg = (String) msg.obj;
-            showError(newState, errorMsg);
-        }
-        return true;
+
+            @Override
+            public void onFailure(Exception e) {
+                State newState = currentState.createCopy()
+                        .setRefreshing(false)
+                        .setLoading(false);
+                showError(newState, e.getMessage());
+            }
+
+        });
     }
 
     // ************* INNER CLASSES ******************
@@ -342,56 +337,6 @@ public abstract class PaginationList<T> implements Handler.Callback {
 
         public Bundle getArgs() {
             return args;
-        }
-    }
-
-    private static class BackgroundTaskThread<T> extends Thread {
-
-        private static final int SUCCESS = 0;
-        private static final int FAILURE = 1;
-        private volatile Handler handler;
-        private LoadListTask<T> loadListTask;
-        private int pageToLoad;
-        private Bundle args;
-
-        private BackgroundTaskThread(Handler handler, LoadListTask<T> loadListTask, int pageToLoad, Bundle args) {
-            this.handler = handler;
-            this.loadListTask = loadListTask;
-            this.pageToLoad = pageToLoad;
-            this.args = args;
-        }
-
-        private interface LoadListTask<T> {
-            List<T> loadListInBackground(int pageToLoad, Bundle args) throws Exception;
-        }
-
-        @Override
-        public void run() {
-            try {
-                List<T> newList = loadListTask.loadListInBackground(this.pageToLoad, this.args);
-                if (handler != null) {
-                    if (newList == null) {
-                        throw new Exception("Empty list");
-                    }
-                    Message message = new Message();
-                    message.what = SUCCESS;
-                    message.arg1 = pageToLoad;
-                    message.obj = newList;
-                    handler.sendMessage(message);
-                }
-            } catch (Exception e) {
-                if (handler != null) {
-                    Message message = new Message();
-                    message.what = FAILURE;
-                    message.arg1 = pageToLoad;
-                    message.obj = e.getMessage();
-                    handler.sendMessage(message);
-                }
-            }
-        }
-
-        private void forget() {
-            handler = null;
         }
     }
 

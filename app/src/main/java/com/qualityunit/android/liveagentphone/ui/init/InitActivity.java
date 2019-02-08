@@ -146,7 +146,7 @@ public class InitActivity extends AppCompatActivity {
      * Make a GET /phones/_app_ call to API
      */
     private void phoneGet() {
-        Client.getPhone(this, new Client.ApiCallCallback<JSONObject>() {
+        Client.getPhone(this, new Client.Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject object) {
                 onPhoneGet(object);
