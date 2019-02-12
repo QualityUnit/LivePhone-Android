@@ -5,6 +5,8 @@ import android.accounts.AccountManager;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
@@ -33,8 +35,6 @@ import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
-
-import org.json.JSONObject;
 
 /**
  * Created by rasto on 19.12.15.
@@ -267,11 +267,11 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
             isError = true;
         }
         if (!isError) {
-            login();
+            login(null);
         }
     }
 
-    private void login() {
+    private void login(@Nullable final String verificationCode) {
         if (!Tools.isNetworkConnected(getContext())) {
             setErrorLogin(getString(R.string.no_connection));
             return;
@@ -280,14 +280,10 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         final String typedUrl = etUrl.getText().toString().trim();
         final String userName = etEmail.getText().toString().trim();
         final String userPass = etPassword.getText().toString().trim();
-        Client.login(activity, apiUrl, userName, userPass, new Client.Callback<JSONObject>() {
+        Client.login(activity, apiUrl, userName, userPass, verificationCode, new Client.LoginCallback() {
+
             @Override
-            public void onSuccess(JSONObject object) {
-                String apikey = object.optString("key");
-                if (TextUtils.isEmpty(apikey)) {
-                    setErrorLogin("Error: API token not found in login response");
-                    return;
-                }
+            public void onSuccess(final String apikey) {
                 final Intent res = new Intent();
                 res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
                 res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
@@ -304,8 +300,51 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                 showProgress(false);
                 setErrorLogin(e.getMessage());
             }
+
+            @Override
+            public void onVerificationCodeRequired() {
+                requestVerificationCode();
+            }
+
+            @Override
+            public void onVerificationCodeFailure() {
+                setErrorLogin(getString(R.string.invalid_verification_code));
+            }
+
+            @Override
+            public void onTooManyLogins() {
+                setErrorLogin(getString(R.string.too_many_logins));
+            }
         });
 
+    }
+
+    public void requestVerificationCode() {
+        showProgress(true);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle(R.string.verification_code);
+        View viewInflated = LayoutInflater.from(getActivity()).inflate(R.layout.input_two_factor, null);
+        final EditText input = (EditText) viewInflated.findViewById(R.id.et_twofactortoken);
+        builder.setView(viewInflated);
+        builder.setPositiveButton(R.string.login, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                showProgress(true);
+                String twofactortoken = input.getText().toString().trim();
+                if (TextUtils.isEmpty(twofactortoken)) {
+                    requestVerificationCode();
+                    return;
+                }
+                login(twofactortoken);
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                showProgress(false);
+            }
+        });
+        builder.show();
     }
 
     private void finishLogin(Intent intent) {

@@ -8,13 +8,11 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.LruCache;
 import android.text.TextUtils;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -24,7 +22,6 @@ import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 import com.qualityunit.android.liveagentphone.BuildConfig;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
@@ -62,28 +59,28 @@ public class Client {
 
     private static Client instance;
     private RequestQueue queue;
-    private ImageLoader imageLoader;
+//    private ImageLoader imageLoader;
     private static Context context;
 
     private Client(Context context) {
         Client.context = context;
         VolleyLog.DEBUG = BuildConfig.DEBUG;
         queue = getQueue();
-        imageLoader = new ImageLoader(queue,
-                new ImageLoader.ImageCache() {
-                    private final LruCache<String, Bitmap>
-                            cache = new LruCache<>(20);
-
-                    @Override
-                    public Bitmap getBitmap(String url) {
-                        return cache.get(url);
-                    }
-
-                    @Override
-                    public void putBitmap(String url, Bitmap bitmap) {
-                        cache.put(url, bitmap);
-                    }
-                });
+//        imageLoader = new ImageLoader(queue,
+//                new ImageLoader.ImageCache() {
+//                    private final LruCache<String, Bitmap>
+//                            cache = new LruCache<>(20);
+//
+//                    @Override
+//                    public Bitmap getBitmap(String url) {
+//                        return cache.get(url);
+//                    }
+//
+//                    @Override
+//                    public void putBitmap(String url, Bitmap bitmap) {
+//                        cache.put(url, bitmap);
+//                    }
+//                });
     }
 
     private static synchronized Client getInstance(Context context) {
@@ -106,9 +103,9 @@ public class Client {
         getQueue().add(request);
     }
 
-    public ImageLoader getImageLoader() {
-        return imageLoader;
-    }
+//    public ImageLoader getImageLoader() {
+//        return imageLoader;
+//    }
 
     private static void prepare(final Activity activity, final AuthCallback callback) {
         final AccountManager accountManager = AccountManager.get(activity.getApplicationContext());
@@ -150,27 +147,35 @@ public class Client {
         return sb.toString();
     }
 
-    private static Exception volleyError(@NonNull VolleyError e, @NonNull String tag) {
-        String message = e.getMessage();
-        if (TextUtils.isEmpty(message)) {
-            if (e.networkResponse != null) {
-                // check whether body contains "message" field
-                if (e.networkResponse.data != null) {
-                    try {
-                        String bodyString = new String(e.networkResponse.data, "UTF-8");
-                        JSONObject body = new JSONObject(bodyString);
-                        message = body.getString("message");
-                        return new Exception(message, e.getCause());
-                    } catch (UnsupportedEncodingException | JSONException ex) {
-                        // do nothing
-                    }
+    private static Exception processFailure(@Nullable Context context, final String token, @NonNull VolleyError e, @NonNull String tag, @Nullable AuthFallback fallback) {
+        if (e.networkResponse != null) {
+            int code = e.networkResponse.statusCode;
+            if ((code == 401 || code == 403) && context != null) {
+                AccountManager accountManager = AccountManager.get(context);
+                Account account = LaAccount.get();
+                accountManager.invalidateAuthToken(account.type, token);
+                if (fallback != null) {
+                    fallback.onFallback();
                 }
+            }
+            return new Exception(parseMessage(e, tag), e.getCause());
+        }
+        return new Exception("Unknown error: " + tag, e.getCause());
+    }
+
+    private static String parseMessage(VolleyError e, String tag) {
+        String message = e.getMessage();
+        if (e.networkResponse.data != null) {
+            try {
+                String bodyString = new String(e.networkResponse.data, "UTF-8");
+                JSONObject body = new JSONObject(bodyString);
+                message = body.getString("message");
+                return message;
+            } catch (UnsupportedEncodingException | JSONException ex) {
                 message = "Network error: '" + e.networkResponse.statusCode + "' while " + tag;
-            } else {
-                message = "Unknown error: " + tag;
             }
         }
-        return new Exception(message, e.getCause());
+        return message;
     }
 
     public static void cancel(Activity activity, String tag) {
@@ -182,16 +187,26 @@ public class Client {
     private interface AuthCallback {
         void onAuthData(Client client, String basepath, String apikey);
         void onException(Exception e);
-
     }
+
+    private interface AuthFallback {
+        void onFallback();
+    }
+
     public interface Callback<T> {
         void onSuccess(T object);
         void onFailure(Exception e);
     }
 
+    public interface LoginCallback extends Callback<String> {
+        void onVerificationCodeRequired();
+        void onVerificationCodeFailure();
+        void onTooManyLogins();
+    }
+
     /////////////////////// API ///////////////////////
 
-    public static void ping(Activity activity, @NonNull String basepath, final Callback<JSONObject> callback) {
+    public static void ping(final Activity activity, @NonNull String basepath, final Callback<JSONObject> callback) {
         if (TextUtils.isEmpty(basepath)) {
             return;
         }
@@ -205,13 +220,13 @@ public class Client {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError e) {
-                callback.onFailure(volleyError(e, tag));
+                callback.onFailure(new Exception(parseMessage(e, tag)));
             }
         });
         getInstance(activity.getApplicationContext()).addToQueue(request, tag);
     }
 
-    public static void login(final Context context, final String basepath, final String username, final String password, final Callback<JSONObject> callback) {
+    public static void login(final Context context, final String basepath, final String username, final String password, @Nullable final String verificationCode, final LoginCallback callback) {
         try {
             JSONObject body = new JSONObject();
             body.put("login", username);
@@ -227,18 +242,48 @@ public class Client {
             body.put("valid_to_date", validToDate);
             body.put("name", Tools.getDeviceName());
             body.put("installid", Tools.getDeviceUniqueId());
+            if (!TextUtils.isEmpty(verificationCode)) {
+                body.put("two_factor_token", verificationCode);
+            }
             String bodyString = body.toString();
             String url = createUrl(basepath, "/apikeys/_login");
             final String tag = "POST " + url;
             ObjectRequest request = new ObjectRequest(POST, url, null, bodyString, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject object) {
-                    callback.onSuccess(object);
+                    // Bad server implementation - temporary FIX
+                    final String message = object.optString("message");
+                    if (!TextUtils.isEmpty(message)) {
+                        if ("Two-factor authentication required.".equals(message)) {
+                            callback.onVerificationCodeRequired();
+                        } else if ("Two-factor authentication failed.".equals(message)) {
+                            callback.onVerificationCodeFailure();
+                        }
+                        return;
+                    }
+                    String apikey = object.optString("key");
+                    if (TextUtils.isEmpty(apikey)) {
+                        callback.onFailure(new Exception("Error: API token not found in login response"));
+                        return;
+                    }
+                    callback.onSuccess(apikey);
                 }
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError e) {
-                    callback.onFailure(volleyError(e, tag));
+                    int code = e.networkResponse.statusCode;
+                    switch (code) {
+                        case 424:
+                            callback.onVerificationCodeRequired();
+                            return;
+                        case 425:
+                            callback.onVerificationCodeFailure();
+                            return;
+                        case 429:
+                            callback.onTooManyLogins();
+                            return;
+                    }
+                    callback.onFailure(new Exception(parseMessage(e, tag)));
                 }
             }) {
                 @Override
@@ -257,10 +302,10 @@ public class Client {
      * @param activity
      * @param callback
      */
-    public static void getPhone(Activity activity, final Callback<JSONObject> callback) {
+    public static void getPhone(final Activity activity, final Callback<JSONObject> callback) {
         prepare(activity, new AuthCallback() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
+            public void onAuthData(Client client, String basepath, final String apikey) {
                 final String url = createUrl(basepath, "/phones/_app_");
                 final String tag = "GET " + url;
                 ObjectRequest request = new ObjectRequest(GET, url, apikey, null, new Response.Listener<JSONObject>() {
@@ -271,7 +316,12 @@ public class Client {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError e) {
-                        callback.onFailure(volleyError(e, tag));
+                        callback.onFailure(processFailure(context, apikey, e, tag, new AuthFallback() {
+                            @Override
+                            public void onFallback() {
+                                getPhone(activity, callback);
+                            }
+                        }));
                     }
                 });
                 client.addToQueue(request, tag);
@@ -305,14 +355,14 @@ public class Client {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError e) {
-                callback.onFailure(volleyError(e, tag));
+                callback.onFailure(processFailure(context, apikey, e, tag, new AuthFallback() {
+                    @Override
+                    public void onFallback() {
+                        updatePhoneParams(context, basepath, phoneId, apikey, params, callback);
+                    }
+                }));
             }
-        }) {
-            @Override
-            public RetryPolicy getRetryPolicy() {
-                return new DefaultRetryPolicy(30000, 0, 1);
-            }
-        };
+        });
         getInstance(context.getApplicationContext()).addToQueue(request, tag);
     }
 
@@ -321,10 +371,10 @@ public class Client {
      * @param activity
      * @param callback
      */
-    public static void getPhoneNumbers(Activity activity, final Callback<List<DialerFragment.OutgoingNumberItem>> callback) {
+    public static void getPhoneNumbers(final Activity activity, final Callback<List<DialerFragment.OutgoingNumberItem>> callback) {
         prepare(activity, new AuthCallback() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
+            public void onAuthData(Client client, String basepath, final String apikey) {
                 try {
                     final JSONObject filters = new JSONObject() {{
                         put("type", "S");
@@ -357,7 +407,12 @@ public class Client {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError e) {
-                            callback.onFailure(volleyError(e, tag));
+                            callback.onFailure(processFailure(activity, apikey, e, tag, new AuthFallback() {
+                                @Override
+                                public void onFallback() {
+                                    getPhoneNumbers(activity, callback);
+                                }
+                            }));
                         }
                     });
                     client.addToQueue(request, tag);
@@ -434,7 +489,12 @@ public class Client {
                                 }, new Response.ErrorListener() {
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
-                                        callback.onFailure(volleyError(error, postDeviceTag));
+                                        callback.onFailure(processFailure(activity, apikey, error, postDeviceTag, new AuthFallback() {
+                                            @Override
+                                            public void onFallback() {
+                                                getDevicesPhoneStatus(activity, phoneId, callback);
+                                            }
+                                        }));
                                     }
                                 });
                                 client.addToQueue(postDeviceRequest, postDeviceTag);
@@ -445,7 +505,12 @@ public class Client {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError e) {
-                            callback.onFailure(volleyError(e, getDevicesTag));
+                            callback.onFailure(processFailure(activity, apikey, e, getDevicesTag, new AuthFallback() {
+                                @Override
+                                public void onFallback() {
+                                    getDevicesPhoneStatus(activity, phoneId, callback);
+                                }
+                            }));
                         }
                     });
                     client.addToQueue(getDevicesRequest, getDevicesTag);
@@ -471,7 +536,7 @@ public class Client {
     public static void updateDevicePhoneStatus(final Activity activity, final JSONObject deviceJsonObject, final boolean requestedStatus, final Callback<JSONObject> callback) {
         prepare(activity, new AuthCallback() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
+            public void onAuthData(Client client, String basepath, final String apikey) {
                 try {
                     final String deviceId = deviceJsonObject.getString("id");
                     deviceJsonObject.put("device_status", requestedStatus ? STATUS_ONLINE_FLAG : STATUS_OFFLINE_FLAG);
@@ -486,7 +551,12 @@ public class Client {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            callback.onFailure(volleyError(error, tag));
+                            callback.onFailure(processFailure(activity, apikey, error, tag, new AuthFallback() {
+                                @Override
+                                public void onFallback() {
+                                    updateDevicePhoneStatus(activity, deviceJsonObject, requestedStatus, callback);
+                                }
+                            }));
                         }
                     });
                     client.addToQueue(request, tag);
@@ -511,7 +581,7 @@ public class Client {
     public static void getDepartmentStatusList(final Activity activity, final String deviceId, final Callback<List<DepartmentStatusItem>> callback) {
         prepare(activity, new AuthCallback() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
+            public void onAuthData(Client client, String basepath, final String apikey) {
                 final String url = createUrl(basepath, "/devices/" + deviceId + "/departments", new HashMap<String, Object>(){{
                     put("_page", 0);
                     put("_perPage", 9999);
@@ -543,7 +613,12 @@ public class Client {
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        callback.onFailure(volleyError(error, tag));
+                        callback.onFailure(processFailure(activity, apikey, error, tag, new AuthFallback() {
+                            @Override
+                            public void onFallback() {
+                                getDepartmentStatusList(activity, deviceId, callback);
+                            }
+                        }));
                     }
                 });
                 client.addToQueue(request, tag);
@@ -566,7 +641,7 @@ public class Client {
     public static void updateDepartmentStatus(final Activity activity, final DepartmentStatusItem item, final boolean requestedStatus, final Callback<String> callback) {
         prepare(activity, new AuthCallback() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
+            public void onAuthData(Client client, String basepath, final String apikey) {
                 try {
                     final String onlineFlag = requestedStatus ? STATUS_ONLINE_FLAG : STATUS_OFFLINE_FLAG;
                     JSONObject body = new JSONObject();
@@ -586,7 +661,12 @@ public class Client {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            callback.onFailure(volleyError(error, tag));
+                            callback.onFailure(processFailure(activity, apikey, error, tag, new AuthFallback() {
+                                @Override
+                                public void onFallback() {
+                                    updateDepartmentStatus(activity, item, requestedStatus, callback);
+                                }
+                            }));
                         }
                     });
                     client.addToQueue(request, tag);
@@ -605,7 +685,7 @@ public class Client {
     public static void getExtensions(final Activity activity, final String requestTag, @Nullable final String searchTerm, final int page, final int perPage, final Callback<List<InternalItem>> callback) {
         prepare(activity, new AuthCallback() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
+            public void onAuthData(Client client, String basepath, final String apikey) {
                 try {
                     final JSONObject filters = new JSONObject() {{
                         put("computed_status", "A,E"); // default: show only Active and Enabled internals
@@ -657,7 +737,12 @@ public class Client {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            callback.onFailure(volleyError(error, requestTag));
+                            callback.onFailure(processFailure(activity, apikey, error, requestTag, new AuthFallback() {
+                                @Override
+                                public void onFallback() {
+                                    getExtensions(activity, requestTag, searchTerm, page, perPage, callback);
+                                }
+                            }));
                         }
                     });
                     client.addToQueue(request, requestTag);
@@ -677,7 +762,7 @@ public class Client {
     public static void getContacts(final Activity activity, final String requestTag, @Nullable final String searchTerm, final int page, final int perPage, final String sortDirection, final String sortField, final Callback<List<ContactsItem>> callback) {
         prepare(activity, new AuthCallback() {
             @Override
-            public void onAuthData(Client client, String basepath, String apikey) {
+            public void onAuthData(Client client, String basepath, final String apikey) {
                 try {
                     final JSONObject filters = new JSONObject() {{
                         put("type", "V"); // default
@@ -717,7 +802,12 @@ public class Client {
                     }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            callback.onFailure(volleyError(error, requestTag));
+                            callback.onFailure(processFailure(activity, apikey, error, requestTag, new AuthFallback() {
+                                @Override
+                                public void onFallback() {
+                                    getContacts(activity, requestTag, searchTerm, page, perPage, sortDirection, sortField, callback);
+                                }
+                            }));
                         }
                     });
                     client.addToQueue(request, requestTag);

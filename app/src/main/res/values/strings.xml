@@ -67,4 +67,8 @@
     <string name="permission_reason_write_external_storage">LivePhone needs this permission to log anonymous data you can send them anytime to help improve this app</string>
     <string name="permission_reason_record_audio">LivePhone needs this permission to handle ongoing call</string>
     <string name="permission_reason_read_phone_state">LivePhone needs this permission to handle GSM calls properly while calling using this app</string>
+    <string name="verification_code">Verification code</string>
+    <string name="invalid_verification_code">Invalid verification code</string>
+    <string name="google_autenticator">Enter 6-digit number from Google Authenticator application.</string>
+    <string name="too_many_logins">* Login declined. Wait few minutes before retrying.</string>
 </resources>

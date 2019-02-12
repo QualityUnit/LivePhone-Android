@@ -13,8 +13,6 @@ import android.text.TextUtils;
 import com.qualityunit.android.liveagentphone.net.Client;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 
-import org.json.JSONObject;
-
 /**
  * Created by rasto on 22.01.16.
  */
@@ -54,20 +52,30 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
         if (!TextUtils.isEmpty(authToken)) {
             return createResult(account, authToken);
         } else if (!TextUtils.isEmpty(password) && !TextUtils.isEmpty(basepath)) {
-            Client.login(context, basepath, account.name, password, new Client.Callback<JSONObject>() {
+            Client.login(context, basepath, account.name, password, null, new Client.LoginCallback() {
                 @Override
-                public void onSuccess(JSONObject object) {
-                    String authToken = object.optString("key");
-                    if (TextUtils.isEmpty(authToken)) {
-                        createLoginBundle(response, account);
-                        return;
-                    }
-                    response.onResult(createResult(account, authToken));
+                public void onVerificationCodeRequired() {
+                    response.onResult(createLoginBundle(response, account));
+                }
+
+                @Override
+                public void onVerificationCodeFailure() {
+                    response.onResult(createLoginBundle(response, account));
+                }
+
+                @Override
+                public void onTooManyLogins() {
+                    response.onResult(createLoginBundle(response, account));
+                }
+
+                @Override
+                public void onSuccess(String apikey) {
+                    response.onResult(createResult(account, apikey));
                 }
 
                 @Override
                 public void onFailure(Exception e) {
-                    createLoginBundle(response, account);
+                    response.onResult(createLoginBundle(response, account));
                 }
             });
             return null;

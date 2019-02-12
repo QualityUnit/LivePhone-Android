@@ -170,6 +170,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
 
     @Override
     public void onError(@NonNull List<InternalItem> list, @Nullable String errorMessage, @NonNull PaginationList.State listState) {
+        swipeRefreshLayout.setEnabled(true);
         Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
     }
 }
