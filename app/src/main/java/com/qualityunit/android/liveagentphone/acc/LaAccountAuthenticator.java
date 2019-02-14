@@ -53,6 +53,12 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
             return createResult(account, authToken);
         } else if (!TextUtils.isEmpty(password) && !TextUtils.isEmpty(basepath)) {
             Client.login(context, basepath, account.name, password, null, new Client.LoginCallback() {
+
+                @Override
+                public void onInvalidPassword() {
+                    response.onResult(createLoginBundle(response, account));
+                }
+
                 @Override
                 public void onVerificationCodeRequired() {
                     response.onResult(createLoginBundle(response, account));

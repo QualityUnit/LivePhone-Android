@@ -296,6 +296,12 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
             }
 
             @Override
+            public void onInvalidPassword() {
+                showProgress(false);
+                setErrorLogin(getString(R.string.invalid_credentials));
+            }
+
+            @Override
             public void onFailure(Exception e) {
                 showProgress(false);
                 setErrorLogin(e.getMessage());
@@ -389,7 +395,6 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         @Override
         protected void onUrlCallback(int code, String typedUrl, String apiUrl, String message) {
             setErrorUrl(null);
-            setErrorLogin(null);
             switch (code) {
                 case CODE.URL_BLANK:
                     setErrorUrl(null);

@@ -163,16 +163,19 @@ public class Client {
         return new Exception("Unknown error: " + tag, e.getCause());
     }
 
-    private static String parseMessage(VolleyError e, String tag) {
+    private static String parseMessage(Exception e, String tag) {
         String message = e.getMessage();
-        if (e.networkResponse.data != null) {
-            try {
-                String bodyString = new String(e.networkResponse.data, "UTF-8");
-                JSONObject body = new JSONObject(bodyString);
-                message = body.getString("message");
-                return message;
-            } catch (UnsupportedEncodingException | JSONException ex) {
-                message = "Network error: '" + e.networkResponse.statusCode + "' while " + tag;
+        if (e instanceof VolleyError) {
+            VolleyError volleyError = (VolleyError) e;
+            if (volleyError.networkResponse != null && volleyError.networkResponse.data != null) {
+                try {
+                    String bodyString = new String(volleyError.networkResponse.data, "UTF-8");
+                    JSONObject body = new JSONObject(bodyString);
+                    message = body.getString("message");
+                    return message;
+                } catch (UnsupportedEncodingException | JSONException ex) {
+                    message = "Network error: '" + volleyError.networkResponse.statusCode + "' while " + tag;
+                }
             }
         }
         return message;
@@ -199,6 +202,7 @@ public class Client {
     }
 
     public interface LoginCallback extends Callback<String> {
+        void onInvalidPassword();
         void onVerificationCodeRequired();
         void onVerificationCodeFailure();
         void onTooManyLogins();
@@ -256,7 +260,7 @@ public class Client {
                     if (!TextUtils.isEmpty(message)) {
                         if ("Two-factor authentication required.".equals(message)) {
                             callback.onVerificationCodeRequired();
-                        } else if ("Two-factor authentication failed.".equals(message)) {
+                        } else if ("Invalid two-factor verification code.".equals(message)) {
                             callback.onVerificationCodeFailure();
                         }
                         return;
@@ -271,8 +275,16 @@ public class Client {
             }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError e) {
+                    if (e.networkResponse == null) {
+                        callback.onFailure(new Exception(parseMessage(e, tag)));
+                        return;
+                    }
                     int code = e.networkResponse.statusCode;
                     switch (code) {
+                        case 401:
+                        case 403:
+                            callback.onInvalidPassword();
+                            return;
                         case 424:
                             callback.onVerificationCodeRequired();
                             return;
@@ -599,9 +611,9 @@ public class Client {
                                         obj.getInt("device_id"),
                                         obj.getString("department_id"),
                                         obj.optString("user_id"),
-                                        obj.getString("department_name"),
-                                        obj.getString("online_status"),
-                                        obj.getString("preset_status")
+                                        obj.optString("department_name"),
+                                        obj.optString("online_status"),
+                                        obj.optString("preset_status")
                                 ));
                             } catch (JSONException e) {
                                 callback.onFailure(e);

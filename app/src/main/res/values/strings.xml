@@ -70,5 +70,6 @@
     <string name="verification_code">Verification code</string>
     <string name="invalid_verification_code">Invalid verification code</string>
     <string name="google_autenticator">Enter 6-digit number from Google Authenticator application.</string>
-    <string name="too_many_logins">* Login declined. Wait few minutes before retrying.</string>
+    <string name="too_many_logins">Login declined. Wait few minutes before retrying.</string>
+    <string name="invalid_credentials">Invalid email or password</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.app.Activity;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,28 +46,33 @@ public class StatusListAdapter extends ArrayAdapter<DepartmentStatusItem> {
         final DepartmentStatusItem item = getItem(position);
         if(item != null) {
             viewHolder.nameView.setText(item.departmentName);
-            viewHolder.switchView.setChecked(STATUS_ONLINE_FLAG.equals(item.onlineStatus));
-            viewHolder.switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            if (!TextUtils.isEmpty(item.onlineStatus)) {
+                viewHolder.switchView.setChecked(STATUS_ONLINE_FLAG.equals(item.onlineStatus));
+                viewHolder.switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
-                    Client.updateDepartmentStatus(activity, item, isChecked, new Client.Callback<String>() {
-                        @Override
-                        public void onSuccess(String statusFlag) {
-                            item.onlineStatus = statusFlag;
-                            item.presetStatus = statusFlag;
-                            // UI switch is already moved, do nothing
-                        }
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
+                        Client.updateDepartmentStatus(activity, item, isChecked, new Client.Callback<String>() {
+                            @Override
+                            public void onSuccess(String statusFlag) {
+                                item.onlineStatus = statusFlag;
+                                item.presetStatus = statusFlag;
+                                // UI switch is already moved, do nothing
+                            }
 
-                        @Override
-                        public void onFailure(Exception e) {
-                            Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
-                            viewHolder.switchView.setChecked(STATUS_ONLINE_FLAG.equals(item.onlineStatus));
-                        }
-                    });
-                }
+                            @Override
+                            public void onFailure(Exception e) {
+                                Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
+                                viewHolder.switchView.setChecked(STATUS_ONLINE_FLAG.equals(item.onlineStatus));
+                            }
+                        });
+                    }
 
-            });
+                });
+                viewHolder.switchView.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.switchView.setVisibility(View.INVISIBLE);
+            }
         }
         return convertView;
     }
