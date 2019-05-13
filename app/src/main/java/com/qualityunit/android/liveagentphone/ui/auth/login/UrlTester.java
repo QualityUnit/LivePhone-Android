@@ -128,20 +128,20 @@ public abstract class UrlTester implements Handler.Callback {
                 post(CODE.URL_BLANK, typedUrl, 0, null);
                 return;
             }
-            String fixedUrl = typedUrl;
-            if (!App.ALLOW_HTTP && !fixedUrl.startsWith("https://")) {
-                post(CODE.API_ERROR, fixedUrl, ERROR_DELAY_MILLIS, "URL does not loop with 'https://'");
+            if (!App.ALLOW_HTTP && !typedUrl.startsWith("https://")) {
+                post(CODE.API_ERROR, typedUrl, ERROR_DELAY_MILLIS, "URL does not loop with 'https://'");
                 return;
             }
             // do not do this while debug
+            String fixedUrl = typedUrl;
             if (fixedUrl.endsWith("/")) {
-                fixedUrl = fixedUrl.substring(0, typedUrl.length() - 1);
+                fixedUrl = fixedUrl.substring(0, fixedUrl.length() - 1);
             }
             if (fixedUrl.endsWith("/index.php")) {
-                fixedUrl = fixedUrl.substring(0, typedUrl.length() - "/index.php".length());
+                fixedUrl = fixedUrl.substring(0, fixedUrl.length() - "/index.php".length());
             }
             if (fixedUrl.endsWith("/agent")) {
-                fixedUrl = fixedUrl.substring(0, typedUrl.length() - "/agent".length());
+                fixedUrl = fixedUrl.substring(0, fixedUrl.length() - "/agent".length());
             }
             if (!fixedUrl.endsWith(Const.Api.API_POSTFIX)) {
                 fixedUrl = fixedUrl + Const.Api.API_POSTFIX;

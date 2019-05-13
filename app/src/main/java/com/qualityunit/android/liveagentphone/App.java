@@ -9,7 +9,7 @@ import android.content.SharedPreferences;
  */
 public class App extends Application {
 
-    public static final boolean ALLOW_HTTP = false; //BuildConfig.DEBUG;
+    public static final boolean ALLOW_HTTP = BuildConfig.DEBUG;
     private static final String SHAREDPREFERENCES_NAME = "com.qualityunit.android.liveagentphone";
     private static Context context;
 

@@ -47,6 +47,7 @@ public class StatusListAdapter extends ArrayAdapter<DepartmentStatusItem> {
         if(item != null) {
             viewHolder.nameView.setText(item.departmentName);
             if (!TextUtils.isEmpty(item.onlineStatus)) {
+                viewHolder.switchView.setOnCheckedChangeListener(null);
                 viewHolder.switchView.setChecked(STATUS_ONLINE_FLAG.equals(item.onlineStatus));
                 viewHolder.switchView.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
@@ -56,7 +57,6 @@ public class StatusListAdapter extends ArrayAdapter<DepartmentStatusItem> {
                             @Override
                             public void onSuccess(String statusFlag) {
                                 item.onlineStatus = statusFlag;
-                                item.presetStatus = statusFlag;
                                 // UI switch is already moved, do nothing
                             }
 

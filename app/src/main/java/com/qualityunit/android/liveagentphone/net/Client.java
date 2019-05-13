@@ -612,8 +612,7 @@ public class Client {
                                         obj.getString("department_id"),
                                         obj.optString("user_id"),
                                         obj.optString("department_name"),
-                                        obj.optString("online_status"),
-                                        obj.optString("preset_status")
+                                        obj.optString("online_status")
                                 ));
                             } catch (JSONException e) {
                                 callback.onFailure(e);
@@ -661,7 +660,6 @@ public class Client {
                     body.put("department_id", item.departmentId);
                     body.put("department_name", item.departmentName);
                     body.put("user_id", item.userId);
-                    body.put("preset_status", onlineFlag);
                     body.put("online_status", onlineFlag);
                     final String url = createUrl(basepath, "/devices/" + item.deviceId + "/departments/" + item.departmentId);
                     final String tag = "PUT " + url;
