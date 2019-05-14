@@ -408,7 +408,7 @@ public class Client {
                                             obj.optString("number"),
                                             obj.optString("name"),
                                             obj.optString("departmentid"),
-                                            obj.getString("dial_out_prefix")
+                                            obj.has("dial_out_prefix_formatted") ? obj.getString("dial_out_prefix_formatted") : obj.getString("dial_out_prefix") // TODO remove 'dial_out_prefix' later
                                     ));
                                 }
                                 callback.onSuccess(list);

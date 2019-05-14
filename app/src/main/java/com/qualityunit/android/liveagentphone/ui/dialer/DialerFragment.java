@@ -153,7 +153,7 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
             String phoneNumber = etDialInput.getText().toString().trim();
             if (TextUtils.isEmpty(phoneNumber)) throw new CallingException(getString(R.string.callee_empty));
             String contactName = getActivity().getIntent().getStringExtra("contactName");
-            CallingCommands.makeCall(activity, phoneNumber, outGoingNumber.dial_out_prefix, contactName);
+            CallingCommands.makeCall(activity, phoneNumber, outGoingNumber.dialPrefix, contactName);
         } catch (CallingException e) {
             Toast.makeText(activity, e.getMessage(), Toast.LENGTH_LONG).show();
         }
@@ -228,19 +228,19 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
 
     public static class OutgoingNumberItem {
 
-        public OutgoingNumberItem(String id, String number, String name, String departmentid, String dial_out_prefix) {
+        public OutgoingNumberItem(String id, String number, String name, String departmentid, String dialPrefix) {
             this.id = id;
             this.number = number;
             this.name = name;
             this.departmentid = departmentid;
-            this.dial_out_prefix = dial_out_prefix;
+            this.dialPrefix = dialPrefix;
         }
 
         protected String id;
         protected String number;
         protected String name;
         protected String departmentid;
-        protected String dial_out_prefix;
+        protected String dialPrefix;
     }
 
 }
