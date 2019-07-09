@@ -596,7 +596,7 @@ public class Client {
             public void onAuthData(Client client, String basepath, final String apikey) {
                 final String url = createUrl(basepath, "/devices/" + deviceId + "/departments", new HashMap<String, Object>(){{
                     put("_page", 0);
-                    put("_perPage", 9999);
+                    put("_perPage", 999);
                 }});
                 final String tag = "GET " + url;
                 ArrayRequest request = new ArrayRequest(GET, url, apikey, null, new Response.Listener<JSONArray>() {

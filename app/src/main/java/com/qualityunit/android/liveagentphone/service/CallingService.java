@@ -807,14 +807,16 @@ public class CallingService extends Service implements SipAppObserver {
 
     private void setError(final String errorMessage, @Nullable Throwable e) {
         Logger.e(TAG, errorMessage, e);
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(INTENT_FILTER_CALLBACK)
-                        .putExtra(KEY_CALLBACK, CALLBACKS.ERROR)
-                        .putExtra("errorMessage", errorMessage));
-            }
-        });
+        if (mainHandler != null) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(INTENT_FILTER_CALLBACK)
+                            .putExtra(KEY_CALLBACK, CALLBACKS.ERROR)
+                            .putExtra("errorMessage", errorMessage));
+                }
+            });
+        }
     }
 
     private void sendUpdateDurationBroadcast() {

@@ -72,4 +72,6 @@
     <string name="google_autenticator">Enter 6-digit number from Google Authenticator application.</string>
     <string name="too_many_logins">Login declined. Wait few minutes before retrying.</string>
     <string name="invalid_credentials">Invalid email or password</string>
+    <string name="permission_reason_manage_overlay">LivePhone needs this permission to show incoming call screen</string>
+    <string name="manage_overlay_go_to_settings">Go to setting</string>
 </resources>
