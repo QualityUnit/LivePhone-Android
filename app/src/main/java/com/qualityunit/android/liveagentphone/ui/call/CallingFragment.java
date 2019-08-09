@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
@@ -26,8 +27,6 @@ import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
-import net.frakbot.glowpadbackport.GlowPadView;
-
 /**
  * A placeholder fragment containing a simple view.
  * PORTRAIT ONLY!!!
@@ -46,8 +45,9 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     private TextView tvState;
     private LinearLayout llCallState;
     private Chronometer chTimer;
-    private GlowPadView glowPad;
     private TextView tvRemoteName;
+    private FloatingActionButton fabAnswer;
+    private FloatingActionButton fabDecline;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -63,6 +63,20 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         String nameToShow = TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName;
         nameToShow = TextUtils.isEmpty(nameToShow) ? getString(R.string.unknown) : nameToShow;
         setText(tvRemoteName, nameToShow);
+        fabAnswer = activity.findViewById(R.id.fab_answerCall);
+        fabAnswer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                answer();
+            }
+        });
+        fabDecline = activity.findViewById(R.id.fab_declineCall);
+        fabDecline.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                decline();
+            }
+        });
         registerSipEventsReceiver();
     }
 
@@ -110,45 +124,6 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
             }
 
         });
-        glowPad = (GlowPadView) view.findViewById(R.id.glowPad);
-        glowPad.setPointsMultiplier(8);
-        glowPad.setOnTriggerListener(new GlowPadView.OnTriggerListener() {
-
-            @Override
-            public void onGrabbed(View v, int handle) {
-            }
-
-            @Override
-            public void onReleased(View v, int handle) {
-            }
-
-            @Override
-            public void onTrigger(View v, int target) {
-                if (target == 0) {
-                    // answer
-                    Logger.logToFile("Call UI: Answer call triggered.");
-                    glowPad.setVisibility(View.GONE);
-                    llCallState.setVisibility(View.VISIBLE);
-                    activity.getFabHangupCall().setVisibility(View.VISIBLE);
-                    activity.receiveCall();
-                } else if (target == 2) {
-                    // decline
-                    Logger.logToFile("Call UI: Decline call triggered.");
-                    glowPad.setVisibility(View.GONE);
-                    llCallState.setVisibility(View.VISIBLE);
-                    activity.declineCall();
-                }
-            }
-
-            @Override
-            public void onGrabbedStateChange(View v, int handle) {
-            }
-
-            @Override
-            public void onFinishFinalAnimation() {
-            }
-
-        });
         llCallState = (LinearLayout) view.findViewById(R.id.ll_callState);
     }
 
@@ -164,6 +139,32 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         chTimer.stop();
         unregisterSipEventsReceiver();
         super.onStop();
+    }
+
+    private void showIncomingButtons(boolean isShowing) {
+        if (isShowing) {
+            fabAnswer.show();
+            fabDecline.show();
+        } else {
+            fabAnswer.hide();
+            fabDecline.hide();
+        }
+    }
+
+    private void answer() {
+        Logger.logToFile("Call UI: Answer call triggered.");
+        showIncomingButtons(false);
+        llCallState.setVisibility(View.VISIBLE);
+        activity.getFabHangupCall().show();
+        activity.receiveCall();
+    }
+
+    private void decline() {
+        Logger.logToFile("Call UI: Decline call triggered.");
+        showIncomingButtons(false);
+        llCallState.setVisibility(View.VISIBLE);
+        activity.getFabHangupCall().show();
+        activity.declineCall();
     }
 
     private void setText(TextView textView, String text) {
@@ -205,8 +206,8 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     break;
                 case CallingService.CALLBACKS.RINGING:
                     llCallState.setVisibility(View.GONE);
-                    activity.getFabHangupCall().setVisibility(View.GONE);
-                    glowPad.setVisibility(View.VISIBLE);
+                    activity.getFabHangupCall().hide();
+                    showIncomingButtons(true);
                     break;
                 case CallingService.CALLBACKS.CALLING:
                     setText(tvState, getString(R.string.call_state_calling));
@@ -216,7 +217,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     break;
                 case CallingService.CALLBACKS.CALL_ESTABLISHED:
                     setText(tvState, getString(R.string.call_state_established));
-                    activity.getFabHangupCall().setVisibility(View.VISIBLE);
+                    activity.getFabHangupCall().show();
                     ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
                     ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
                     CallingCommands.updateAll(getContext());
@@ -256,8 +257,8 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     ((View)ibDialpad.getParent()).setVisibility(View.GONE);
                     ((View)ibHold.getParent()).setVisibility(View.GONE);
                     llCallState.setVisibility(View.VISIBLE);
-                    activity.getFabHangupCall().setVisibility(View.VISIBLE);
-                    glowPad.setVisibility(View.GONE);
+                    activity.getFabHangupCall().show();
+                    showIncomingButtons(false);
                     setText(tvState, getString(R.string.call_state_call_ended));
                     break;
                 case CallingService.CALLBACKS.ERROR:

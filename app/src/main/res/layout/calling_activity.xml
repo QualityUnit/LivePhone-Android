@@ -38,11 +38,41 @@
         android:id="@+id/fab_hangCall"
         android:layout_width="@dimen/fab_action_size"
         android:layout_height="@dimen/fab_action_size"
+        app:fabCustomSize="@dimen/fab_action_size"
+        app:elevation="4dp"
         android:scaleType="center"
         android:visibility="gone"
         app:backgroundTint="@color/callButtonRed"
         android:layout_gravity="bottom|center_horizontal"
         android:layout_margin="@dimen/fab_action_margin"
         android:src="@drawable/ic_call_end_24dp"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_declineCall"
+        android:layout_width="@dimen/fab_action_size"
+        android:layout_height="@dimen/fab_action_size"
+        app:fabCustomSize="@dimen/fab_action_size"
+        android:elevation="@dimen/fab_action_elevation"
+        android:scaleType="center"
+        android:visibility="gone"
+        app:backgroundTint="@color/callButtonRed"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="@dimen/fab_action_margin"
+        android:layout_marginRight="@dimen/fab_action_margin_between"
+        android:src="@drawable/ic_call_end_24dp"/>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab_answerCall"
+        android:layout_width="@dimen/fab_action_size"
+        android:layout_height="@dimen/fab_action_size"
+        app:fabCustomSize="@dimen/fab_action_size"
+        android:elevation="@dimen/fab_action_elevation"
+        android:scaleType="center"
+        android:visibility="gone"
+        app:backgroundTint="@color/callButtonGreen"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="@dimen/fab_action_margin"
+        android:layout_marginLeft="@dimen/fab_action_margin_between"
+        android:src="@drawable/ic_call_24dp"/>
 
 </android.support.design.widget.CoordinatorLayout>

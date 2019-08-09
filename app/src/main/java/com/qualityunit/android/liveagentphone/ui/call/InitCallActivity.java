@@ -21,7 +21,6 @@ import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
 import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
-import com.qualityunit.android.liveagentphone.util.Logger;
 
 /**
  * Created by rasto on 18.10.16.
@@ -149,6 +148,7 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
     public static void initInternalCall(Context context, InternalItem item) {
         String remoteName = item.agent == null ? item.department.departmentName : item.agent.name;
         Intent intent = new Intent(context, InitCallActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         Bundle bundle = new Bundle();
         bundle.putString(InitCallActivity.EXTRA_DIAL_STRING, item.number);
         bundle.putString(InitCallActivity.EXTRA_REMOTE_NUMBER, item.number);
