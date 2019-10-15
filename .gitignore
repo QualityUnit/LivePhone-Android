@@ -14,3 +14,4 @@ google-services.json
 cfg.properties
 pjsua/.externalNativeBuild
 push_notifications
+pjsua/.cxx
