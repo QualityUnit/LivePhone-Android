@@ -44,7 +44,7 @@ public class SipCore {
     // Maintain reference to log writer to avoid premature cleanup by GC
     private SipLogWriter logWriter;
 
-    private final int SIP_PORT = 6001;
+    private final int SIP_PORT = 5080;
     private final int LOG_LEVEL = 4;
 
     public SipCore() {
