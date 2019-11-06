@@ -29,7 +29,7 @@ public class PushMessagingService extends FirebaseMessagingService {
         if (remoteMessageData.size() > 0) {
             String infoMsg = "=============================================================================================\n" +
                     "PUSH NOTIFICATION: type:'" + remoteMessageData.get("type") + "' - " + remoteMessageData.get("title");
-            Logger.logToFile(infoMsg);
+            Logger.logToFile(getApplicationContext(), infoMsg);
         }
         Bundle data = new Bundle();
         for (Map.Entry<String, String> entry : remoteMessageData.entrySet()) {
@@ -40,15 +40,15 @@ public class PushMessagingService extends FirebaseMessagingService {
             String time = data.getString("time");
             if (TextUtils.isEmpty(time)) {
                 String errMsg = "PUSH: Error: Push notification value 'time' is empty";
-                Logger.logToFile(errMsg);
+                Logger.logToFile(getApplicationContext(), errMsg);
                 throw new CallingException(errMsg);
             }
             Date datePush = Iso8601Deserializer.toDate(time);
             Date dateSystem = new Date();
             long delta = (dateSystem.getTime() - datePush.getTime());
-            Logger.logToFile("PUSH: Push delayed: " + delta + " millis");
+            Logger.logToFile(getApplicationContext(), "PUSH: Push delayed: " + delta + " millis");
             if (delta > Const.Push.MAX_INCOMING_CALL_PUSH_DELAY) {
-                Logger.logToFile("PUSH: Late push (" + delta + " millis) Cancelling SIP registration.");
+                Logger.logToFile(getApplicationContext(), "PUSH: Late push (" + delta + " millis) Cancelling SIP registration.");
                 return;
             }
 
@@ -64,7 +64,7 @@ public class PushMessagingService extends FirebaseMessagingService {
             }
             switch (type) {
                 case Const.Push.PUSH_TYPE_INCOMING_CALL:
-                    Logger.logToFile("PUSH: Starting CallingService...");
+                    Logger.logToFile(getApplicationContext(), "PUSH: Starting CallingService...");
                     CallingCommands.incomingCall(getApplicationContext());
                     break;
                 case Const.Push.PUSH_TYPE_INIT_CALL:
@@ -80,7 +80,7 @@ public class PushMessagingService extends FirebaseMessagingService {
                     throw new CallingException("Error: Unknown push type: '" + type + "'");
             }
         } catch (Exception e) {
-            Logger.logToFile(e.getMessage());
+            Logger.logToFile(getApplicationContext(), e.getMessage());
             Logger.e(TAG, e);
         }
     }

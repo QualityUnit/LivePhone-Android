@@ -61,7 +61,7 @@ public class CallingActivity extends ToolbarActivity {
                 }
             });
         }
-        Logger.logToFile("Info: UI is showed");
+        Logger.logToFile(getApplicationContext() ,"Info: UI is showed");
     }
 
     @Override

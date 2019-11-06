@@ -76,7 +76,7 @@ public abstract class Tools {
             name += " - " + bluetoothName;
         }
         if (TextUtils.isEmpty(name)) {
-            name = "Unknown mobile device";
+            name = "Unknown Android device";
         }
         return name;
     }

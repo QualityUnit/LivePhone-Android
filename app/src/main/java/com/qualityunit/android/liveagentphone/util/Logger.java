@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 
@@ -22,7 +21,6 @@ public class Logger {
     private static final String TAG = Logger.class.getSimpleName();
     private static Logger instance;
     public static String logFileName = "logfile.log";
-    public static String logFileDir = "LivePhone";
 
     private static Logger getInstance() {
         if (instance == null) {
@@ -67,18 +65,9 @@ public class Logger {
         }
     }
 
-    public static void logToFile(String text) {
+    public static void logToFile(Context context, String text) {
         Log.d(TAG, text);
-        String appDir = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir;
-        File dir = new File(appDir);
-        if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                e(TAG, "Failed to create directory: " + dir.getAbsolutePath());
-                return;
-            }
-        }
-        String fileName = String.format("%s%s%s", dir.getPath(), File.separator, logFileName);
-        File logFile = new File(fileName);
+        File logFile = new File(context.getExternalFilesDir(null), logFileName);
         try {
             if (!logFile.exists()) {
                 if (logFile.createNewFile()) {
@@ -97,13 +86,9 @@ public class Logger {
 
     }
 
-    private static String getLogFilePath() {
-        String logFilepath = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + logFileDir + File.separator + logFileName;
-        return logFilepath;
-    }
-
     public static void sendLogFile(Context context) {
-        File file = new File(getLogFilePath());
+        File logFile = new File(context.getExternalFilesDir(null), logFileName);
+        File file = new File(logFile.getAbsolutePath());
         Uri path = FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".provider", file);
         Intent emailIntent = new Intent(Intent.ACTION_SEND);
         emailIntent .setType("vnd.android.cursor.dir/email");

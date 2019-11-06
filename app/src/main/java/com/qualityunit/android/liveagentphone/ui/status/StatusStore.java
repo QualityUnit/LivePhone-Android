@@ -41,7 +41,7 @@ public class StatusStore {
     private void notifyOnDevices(Exception e) {
         try {
             // For mobile, we're showing STATUS_TYPE_PRESET. It should be the same as STATUS_TYPE_ONLINE
-            // For browser, we have to show STATUS_TYPE_ONLINE. STATUS_TYPE_PRESET can be true but STATUS_TYPE_ONLINE finally reflects opened Agent panel in browser
+            // For browser, we have to show SREAD_PHONE_STATETATUS_TYPE_ONLINE. STATUS_TYPE_PRESET can be true but STATUS_TYPE_ONLINE finally reflects opened Agent panel in browser
             int mobileStatus = getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET);
             int browserStatus = getDeviceStatus(DEVICE_TYPE_BROWSER, STATUS_TYPE_ONLINE);
             for (StatusCallbacks item : callbacksSet) {

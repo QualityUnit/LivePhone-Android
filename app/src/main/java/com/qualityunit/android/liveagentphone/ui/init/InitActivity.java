@@ -40,7 +40,6 @@ import org.json.JSONObject;
 import static android.Manifest.permission.GET_ACCOUNTS;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.RECORD_AUDIO;
-import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
 /**
@@ -271,12 +270,10 @@ public class InitActivity extends AppCompatActivity {
      * @return
      */
     private boolean checkAppPermissions() {
-        // Dangerous permissions: GET_ACCOUNTS, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO, READ_PHONE_STATE, MANAGE_OVERLAY_PERMISSION
-        if (!checkOnePermission(GET_ACCOUNTS, getString(R.string.permission_reason_get_accounts))) {
+        // Dangerous permissions: GET_ACCOUNTS (SDK < 23), RECORD_AUDIO, READ_PHONE_STATE, MANAGE_OVERLAY_PERMISSION
+        if (Build.VERSION.SDK_INT < 23 && !checkOnePermission(GET_ACCOUNTS, getString(R.string.permission_reason_get_accounts))) {
             return false;
-        } else if (!checkOnePermission(WRITE_EXTERNAL_STORAGE, getString(R.string.permission_reason_write_external_storage))) {
-            return false;
-        }  else if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_record_audio))) {
+        } else if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_record_audio))) {
             return false;
         } else if (!checkOnePermission(READ_PHONE_STATE, getString(R.string.permission_reason_read_phone_state))) {
             return false;

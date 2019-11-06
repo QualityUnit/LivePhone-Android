@@ -152,7 +152,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     }
 
     private void answer() {
-        Logger.logToFile("Call UI: Answer call triggered.");
+        Logger.logToFile(getContext(), "Call UI: Answer call triggered.");
         showIncomingButtons(false);
         llCallState.setVisibility(View.VISIBLE);
         activity.getFabHangupCall().show();
@@ -160,7 +160,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     }
 
     private void decline() {
-        Logger.logToFile("Call UI: Decline call triggered.");
+        Logger.logToFile(getContext(), "Call UI: Decline call triggered.");
         showIncomingButtons(false);
         llCallState.setVisibility(View.VISIBLE);
         activity.getFabHangupCall().show();

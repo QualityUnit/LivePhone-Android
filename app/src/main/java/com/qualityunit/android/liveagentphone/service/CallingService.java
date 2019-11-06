@@ -140,7 +140,7 @@ public class CallingService extends Service implements SipAppObserver {
     @Override
     public void onCreate() {
         super.onCreate();
-        Logger.logToFile("SERVICE: Start 'onCreate'");
+        Logger.logToFile(getApplicationContext(), "SERVICE: Start 'onCreate'");
         // acquire wakelock
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getSimpleName());
@@ -149,7 +149,7 @@ public class CallingService extends Service implements SipAppObserver {
             proximityWakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, getClass().getSimpleName());
             proximityWakeLock.acquire();
         }
-        Logger.logToFile("SERVICE: Wakelocks acquired");
+        Logger.logToFile(getApplicationContext(), "SERVICE: Wakelocks acquired");
         startMainThread();
         startWorkerThread();
         mainHandler.post(new Runnable() {
@@ -161,7 +161,7 @@ public class CallingService extends Service implements SipAppObserver {
                 registerReceiver(gsmStateReceiver, phoneStateFilter);
             }
         });
-        Logger.logToFile("SERVICE: Done 'onCreate'");
+        Logger.logToFile(getApplicationContext(), "SERVICE: Done 'onCreate'");
     }
 
     @Nullable
@@ -186,9 +186,9 @@ public class CallingService extends Service implements SipAppObserver {
                     info += " " + command + " ";
                     switch (command) {
                         case COMMANDS.MAKE_CALL:
-                            Logger.logToFile("=============================================================================================");
+                            Logger.logToFile(getApplicationContext(), "=============================================================================================");
                             info += "MAKE_CALL";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext(), info);
                             if (sipCurrentCall != null) throw new CallingException(getString(R.string.only_one_call));
                             prefix = intent.getStringExtra("prefix");
                             remoteNumber = intent.getStringExtra("remoteNumber");
@@ -202,18 +202,18 @@ public class CallingService extends Service implements SipAppObserver {
                         case COMMANDS.INCOMING_CALL:
                             waitingToCall = true;
                             info += "INCOMING_CALL";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             callDirection = CALL_DIRECTION.INCOMING;
                             initAndRegister();
                             break;
                         case COMMANDS.RECEIVE_CALL:
                             info += "RECEIVE_CALL";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             receiveCall();
                             break;
                         case COMMANDS.SEND_DTMF:
                             info += "SEND_DTMF";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             String character = intent.getStringExtra("character");
                             if (TextUtils.isEmpty(character)) throw new CallingException("Empty DTMF argument");
                             if (sipCurrentCall == null) throw new CallingException("Cannot send DTMF signal when calling service is not running");
@@ -221,43 +221,43 @@ public class CallingService extends Service implements SipAppObserver {
                             break;
                         case COMMANDS.HANGUP_CALL:
                             info += "HANGUP_CALL";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             hangupCallAndFinishService();
                             break;
                         case COMMANDS.ADJUST_INCALL_VOLUME:
                             info += "ADJUST_INCALL_VOLUME";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             boolean increase = intent.getBooleanExtra("increase", true);
                             adjustIncallVolume(increase);
                             break;
                         case COMMANDS.SILENCE_RINGING:
                             info += "SILENCE_RINGING";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             stopRingtone();
                             break;
                         case COMMANDS.UPDATE_STATE:
                             info += "UPDATE_STATE";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             setCallState(lastState);
                             break;
                         case COMMANDS.TOGGLE_MUTE:
                             info += "TOGGLE_MUTE";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             enableMute(!isMute);
                             break;
                         case COMMANDS.TOGGLE_SPEAKER:
                             info += "TOGGLE_SPEAKER";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             enableSpeaker(!isSpeaker);
                             break;
                         case COMMANDS.TOGGLE_HOLD:
                             info += "TOGGLE_HOLD";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             callHold(!isHold);
                             break;
                         case COMMANDS.UPDATE_ALL:
                             info += "UPDATE_ALL";
-                            Logger.logToFile(info);
+                            Logger.logToFile(getApplicationContext() ,info);
                             sendUpdateDurationBroadcast();
                             sendUpdateMuteBroadcast();
                             sendUpdateSpeakerBroadcast();
@@ -269,7 +269,7 @@ public class CallingService extends Service implements SipAppObserver {
                 } catch (Exception e) {
                     String err = "SERVICE: Error: Starting " + e.getMessage();
                     setError(err, e);
-                    Logger.logToFile(err);
+                    Logger.logToFile(getApplicationContext() ,err);
                 }
             }
         });
@@ -278,7 +278,7 @@ public class CallingService extends Service implements SipAppObserver {
 
     @Override
     public void onDestroy() {
-        Logger.logToFile("SERVICE: 'onDestroy'");
+        Logger.logToFile(getApplicationContext() ,"SERVICE: 'onDestroy'");
         stopRingtone();
         unregisterReceiver(gsmStateReceiver);
         stopWorkerThread();
@@ -291,7 +291,7 @@ public class CallingService extends Service implements SipAppObserver {
             wakeLock.release();
             wakeLock = null;
         }
-        Logger.logToFile("SERVICE: 'DESTROYED'");
+        Logger.logToFile(getApplicationContext() ,"SERVICE: 'DESTROYED'");
         super.onDestroy();
 //        android.os.Process.killProcess(android.os.Process.myPid()); // this also kills calling activity (which is running on the same PID)
     }
@@ -391,9 +391,9 @@ public class CallingService extends Service implements SipAppObserver {
                 workerThread.start();
             }
             workerHandler = new Handler(workerThread.getLooper());
-            Logger.logToFile("SERVICE: New worker thread initiated");
+            Logger.logToFile(getApplicationContext() ,"SERVICE: New worker thread initiated");
         } else {
-            Logger.logToFile("SERVICE: Previous worker thread used");
+            Logger.logToFile(getApplicationContext() ,"SERVICE: Previous worker thread used");
         }
     }
 
@@ -402,7 +402,7 @@ public class CallingService extends Service implements SipAppObserver {
             workerThread.quitSafely();
             workerThread = null;
             workerHandler = null;
-            Logger.logToFile("SERVICE: Worker thread destroyed");
+            Logger.logToFile(getApplicationContext() ,"SERVICE: Worker thread destroyed");
         }
     }
 
@@ -414,9 +414,9 @@ public class CallingService extends Service implements SipAppObserver {
                 mainThread.start();
             }
             mainHandler = new Handler(mainThread.getLooper());
-            Logger.logToFile("SERVICE: New main thread initiated");
+            Logger.logToFile(getApplicationContext() ,"SERVICE: New main thread initiated");
         } else {
-            Logger.logToFile("SERVICE: Previous main thread used");
+            Logger.logToFile(getApplicationContext() ,"SERVICE: Previous main thread used");
         }
 
     }
@@ -426,13 +426,13 @@ public class CallingService extends Service implements SipAppObserver {
             mainThread.quitSafely();
             mainThread = null;
             mainHandler = null;
-            Logger.logToFile("SERVICE: Main thread destroyed");
+            Logger.logToFile(getApplicationContext() ,"SERVICE: Main thread destroyed");
         }
     }
 
     private void initAndRegister() {
         try {
-            Logger.logToFile("SERVICE: Initialization of SIP lib...");
+            Logger.logToFile(getApplicationContext() ,"SERVICE: Initialization of SIP lib...");
             // unmute and turn off speaker from previous sessions
             enableMute(false);
             enableSpeaker(false);
@@ -453,10 +453,10 @@ public class CallingService extends Service implements SipAppObserver {
                         sipCore = new SipCore();
                         try {
                             sipCore.init(CallingService.this, workerThread.getName());
-                            Logger.logToFile("SERVICE: SIP initialized successfully");
+                            Logger.logToFile(getApplicationContext() ,"SERVICE: SIP initialized successfully");
                         } catch (final Exception e) {
                             String errMsg = "Error while initializing: SIP lib: " + e.getMessage();
-                            Logger.logToFile("SERVICE: " + errMsg);
+                            Logger.logToFile(getApplicationContext() ,"SERVICE: " + errMsg);
                             setError(errMsg, e);
                             finishService(true);
                         }
@@ -468,10 +468,10 @@ public class CallingService extends Service implements SipAppObserver {
                         try {
                             sipAccount = new SipAccount(sipAccountConfig, sipCore);
                             sipAccount.create(sipAccountConfig, true);
-                            Logger.logToFile("SERVICE: Account registration sent");
+                            Logger.logToFile(getApplicationContext() ,"SERVICE: Account registration sent");
                         } catch (final Exception e) {
                             String errMsg = "Error while creating and registering sipAccount" + e.getMessage();
-                            Logger.logToFile("SERVICE: " + errMsg);
+                            Logger.logToFile(getApplicationContext() ,"SERVICE: " + errMsg);
                             setError(errMsg, e);
                             finishService(true);
                         }
@@ -481,7 +481,7 @@ public class CallingService extends Service implements SipAppObserver {
             });
         } catch (final Exception e) {
             String errMsg = "Error while initializing SIP lib: " + e.getMessage();
-            Logger.logToFile("SERVICE: " + errMsg);
+            Logger.logToFile(getApplicationContext() ,"SERVICE: " + errMsg);
             setError(errMsg, e);
             finishService(true);
         }
@@ -511,7 +511,7 @@ public class CallingService extends Service implements SipAppObserver {
             @Override
             public void run() {
                 if (sipCurrentCall != null) {
-                    Logger.logToFile("Warning: Make call: Only one call at anytime!");
+                    Logger.logToFile(getApplicationContext() ,"Warning: Make call: Only one call at anytime!");
                     return;
                 }
                 setCallState(CALLBACKS.STARTING_CALL);
@@ -526,12 +526,12 @@ public class CallingService extends Service implements SipAppObserver {
                     String sipCalleeUri = Tools.Sip.createCalleeUri(prefix, cleanedRemoteNumber, sipHost);
                     call.makeCall(sipCalleeUri, prm);
                     sipCurrentCall = call;
-                    Logger.logToFile("SERVICE: Call started successfully");
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: Call started successfully");
                 } catch (final Exception e) {
                     call.delete();
                     String errMsg = "Error while making SIP call:" + e.getMessage();
                     setError(errMsg, e);
-                    Logger.logToFile("SERVICE: " + errMsg);
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: " + errMsg);
                     finishService(true);
                 }
             }
@@ -539,14 +539,14 @@ public class CallingService extends Service implements SipAppObserver {
     }
 
     private void waitForIncomingCall() {
-        Logger.logToFile("SERVICE: Waiting to incoming call...");
+        Logger.logToFile(getApplicationContext() ,"SERVICE: Waiting to incoming call...");
         setCallState(CALLBACKS.WAITING_TO_CALL);
         mainHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 if (waitingToCall) {
                     waitingToCall = false;
-                    Logger.logToFile("SERVICE: Hanging up call because waiting reached " + WAITING_TO_CALL_MILLIS + " seconds");
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: Hanging up call because waiting reached " + WAITING_TO_CALL_MILLIS + " seconds");
                     finishService();
                 }
             }
@@ -566,7 +566,7 @@ public class CallingService extends Service implements SipAppObserver {
                     CallOpParam prm = new CallOpParam();
                     prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
                     sipCurrentCall.answer(prm);
-                    Logger.logToFile("SERVICE: Call successfully received");
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: Call successfully received");
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -576,7 +576,7 @@ public class CallingService extends Service implements SipAppObserver {
                     setCallState(CALLBACKS.CALL_ESTABLISHED);
                 } catch (Exception e) {
                     String err = "SERVICE: Error while receiving call: " + e.getMessage();
-                    Logger.logToFile(err);
+                    Logger.logToFile(getApplicationContext() ,err);
                     Logger.e(TAG, e);
                 }
             }
@@ -604,17 +604,17 @@ public class CallingService extends Service implements SipAppObserver {
                         CallOpParam prm = new CallOpParam();
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
                         sipCurrentCall.hangup(prm);
-                        Logger.logToFile("SERVICE: Hang up call: Call successfully hanged up");
+                        Logger.logToFile(getApplicationContext() ,"SERVICE: Hang up call: Call successfully hanged up");
                         // finishing of service is then called from "notifyCallState"
                     } catch (final Exception e) {
                         String err = "Error while hanging up call: " + e.getMessage();
                         setError(err, e);
-                        Logger.logToFile("SERVICE: " + err);
+                        Logger.logToFile(getApplicationContext() ,"SERVICE: " + err);
                         finishService(true);
                     }
                 } else {
                     String err = "No call to hang up";
-                    Logger.logToFile("SERVICE: " + err);
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: " + err);
                     setError(err, null);
                     finishService(true);
                 }
@@ -633,10 +633,10 @@ public class CallingService extends Service implements SipAppObserver {
                 try {
                     CallOpParam param = new CallOpParam();
                     if (hold) {
-                        Logger.logToFile("SERVICE: Holding...");
+                        Logger.logToFile(getApplicationContext() ,"SERVICE: Holding...");
                         sipCurrentCall.setHold(param);
                     } else {
-                        Logger.logToFile("SERVICE: Unholding...");
+                        Logger.logToFile(getApplicationContext() ,"SERVICE: Unholding...");
                         CallSetting opt = param.getOpt();
                         opt.setAudioCount(1);
                         opt.setVideoCount(0);
@@ -648,7 +648,7 @@ public class CallingService extends Service implements SipAppObserver {
                     runAsForeground(); // update status bar icon
                 } catch (Exception e) {
                     String errMsg = "Error while trying to hold a call: " + e.getMessage();
-                    Logger.logToFile(errMsg);
+                    Logger.logToFile(getApplicationContext() ,errMsg);
                     setError(errMsg, null);
                 }
             }
@@ -688,7 +688,7 @@ public class CallingService extends Service implements SipAppObserver {
             @Override
             public void run() {
                 if (!ignoreWaitingToCall && waitingToCall) {
-                    Logger.logToFile("SERVICE: Stop destroying service when another call is coming ");
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: Stop destroying service when another call is coming ");
                     return;
                 }
                 workerHandler.post(new Runnable() {
@@ -704,14 +704,14 @@ public class CallingService extends Service implements SipAppObserver {
                         }
                         if (sipCore != null) {
                             sipCore.deinit();
-                            Logger.logToFile("SERVICE: Finishing service: Library deinitialized");
+                            Logger.logToFile(getApplicationContext() ,"SERVICE: Finishing service: Library deinitialized");
                             sipCore = null;
                         }
                         mainHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 if (!ignoreWaitingToCall && waitingToCall) {
-                                    Logger.logToFile("SERVICE: Rerunning service because another call is coming");
+                                    Logger.logToFile(getApplicationContext() ,"SERVICE: Rerunning service because another call is coming");
                                     CallingCommands.incomingCall(CallingService.this);
                                     return;
                                 }
@@ -793,7 +793,7 @@ public class CallingService extends Service implements SipAppObserver {
     }
 
     private void setCallState(final String callback) {
-        Logger.logToFile("SERVICE: CALL STATE: " + callback);
+        Logger.logToFile(getApplicationContext() ,"SERVICE: CALL STATE: " + callback);
         runAsForeground();
         mainHandler.post(new Runnable() {
             @Override
@@ -893,7 +893,7 @@ public class CallingService extends Service implements SipAppObserver {
                             Log.d(TAG, "SERVICE: Remote name not found.");
                         }
                     }
-                    Logger.logToFile("SERVICE: Ringing...");
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: Ringing...");
                     startRingtone();
                     setCallState(CALLBACKS.RINGING);
                     sipCurrentCall = call;
@@ -906,7 +906,7 @@ public class CallingService extends Service implements SipAppObserver {
                     });
                 } catch (Exception e) {
                     String errMsg = "Error while notifying incoming call: " + e.getMessage();
-                    Logger.logToFile(errMsg);
+                    Logger.logToFile(getApplicationContext() ,errMsg);
                     setError(errMsg, e);
                     finishService(true);
                 }
@@ -920,7 +920,7 @@ public class CallingService extends Service implements SipAppObserver {
             @Override
             public void run() {
                 if (sipCurrentCall != null) {
-                    Logger.logToFile("SERVICE: Registration: Only one call at anytime!");
+                    Logger.logToFile(getApplicationContext() ,"SERVICE: Registration: Only one call at anytime!");
                     return;
                 }
                 try {
@@ -930,7 +930,7 @@ public class CallingService extends Service implements SipAppObserver {
                             if (callDirection == CALL_DIRECTION.OUTGOING) {
                                 makeCall();
                             } else if (callDirection == CALL_DIRECTION.INCOMING) {
-                                Logger.logToFile("SERVICE: Successfully registered to SIP");
+                                Logger.logToFile(getApplicationContext() ,"SERVICE: Successfully registered to SIP");
                                 Log.d(TAG, "THREAD: notifyRegState: " + workerHandler.getLooper().getThread().getId());
                                 waitForIncomingCall();
                             } else {
@@ -939,12 +939,12 @@ public class CallingService extends Service implements SipAppObserver {
                         }
                     } else {
                         String errMsg = "SERVICE: Error while SIP registration: Asterisk returned code '" + returnCode + "'";
-                        Logger.logToFile(errMsg);
+                        Logger.logToFile(getApplicationContext() ,errMsg);
                         setError(errMsg, null);
                         finishService(true);
                     }
                 } catch (CallingException e) {
-                    Logger.logToFile(e.getMessage());
+                    Logger.logToFile(getApplicationContext() ,e.getMessage());
                     Logger.e(TAG, e);
                     finishService(true);
                 }
@@ -955,7 +955,7 @@ public class CallingService extends Service implements SipAppObserver {
     @Override
     public void notifyCallState(SipCall call) {
         try {
-            Logger.logToFile("SERVICE: CALL STATE: " + call.getInfo().getStateText());
+            Logger.logToFile(getApplicationContext() ,"SERVICE: CALL STATE: " + call.getInfo().getStateText());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -995,7 +995,7 @@ public class CallingService extends Service implements SipAppObserver {
     @Override
     public void notifyCallMediaState(SipCall call) {
         try {
-            Logger.logToFile("SERVICE: MEDIA STATE: " + call.getInfo().getStateText());
+            Logger.logToFile(getApplicationContext() ,"SERVICE: MEDIA STATE: " + call.getInfo().getStateText());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1006,14 +1006,14 @@ public class CallingService extends Service implements SipAppObserver {
         public void onReceive(Context context, Intent intent) {
             String extraState = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
             if (TelephonyManager.EXTRA_STATE_RINGING.equals(extraState) || TelephonyManager.EXTRA_STATE_OFFHOOK.equals(extraState)) {
-                Logger.logToFile("SERVICE: GSM call is coming");
+                Logger.logToFile(getApplicationContext() ,"SERVICE: GSM call is coming");
                 isGsmIdle = false;
                 if (isHold) {
                     return;
                 }
                 CallingCommands.toggleHold(getApplicationContext());
             } else if (TelephonyManager.EXTRA_STATE_IDLE.equals(extraState)) {
-                Logger.logToFile("SERVICE: GSM call ended");
+                Logger.logToFile(getApplicationContext() ,"SERVICE: GSM call ended");
                 isGsmIdle = true;
             }
         }
