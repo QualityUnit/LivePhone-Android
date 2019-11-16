@@ -7,10 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -37,7 +34,6 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static android.Manifest.permission.GET_ACCOUNTS;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -51,7 +47,6 @@ public class InitActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_LOGIN = 0;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final int MAX_RETRY_NUMBER = 3;
-    private static int REQUEST_CODE_MANAGE_OVERLAY_PERMISSION = 5469;
     private TextView tvLoading;
     private LinearLayout pbLoading;
     private View llButtons;
@@ -116,8 +111,6 @@ public class InitActivity extends AppCompatActivity {
             } else if (resultCode == RESULT_OK) {
                 startInit(true);
             }
-        } else if (Build.VERSION.SDK_INT >= 29 && requestCode == REQUEST_CODE_MANAGE_OVERLAY_PERMISSION) {
-            checkAppPermissions();
         }
     }
 
@@ -270,27 +263,10 @@ public class InitActivity extends AppCompatActivity {
      * @return
      */
     private boolean checkAppPermissions() {
-        // Dangerous permissions: GET_ACCOUNTS (SDK < 23), RECORD_AUDIO, READ_PHONE_STATE, MANAGE_OVERLAY_PERMISSION
-        if (Build.VERSION.SDK_INT < 23 && !checkOnePermission(GET_ACCOUNTS, getString(R.string.permission_reason_get_accounts))) {
-            return false;
-        } else if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_record_audio))) {
+        // Dangerous permissions: RECORD_AUDIO, READ_PHONE_STATE
+        if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_record_audio))) {
             return false;
         } else if (!checkOnePermission(READ_PHONE_STATE, getString(R.string.permission_reason_read_phone_state))) {
-            return false;
-        } else if (Build.VERSION.SDK_INT >= 29 && !Settings.canDrawOverlays(this)) {
-            AlertDialog alertDialog = new AlertDialog.Builder(InitActivity.this).create();
-            alertDialog.setTitle("MANAGE_OVERLAY_PERMISSION");
-            alertDialog.setMessage(getString(R.string.permission_reason_manage_overlay));
-            alertDialog.setCancelable(false);
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.manage_overlay_go_to_settings),
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                            startActivityForResult(intent, REQUEST_CODE_MANAGE_OVERLAY_PERMISSION);
-                        }
-                    });
-            alertDialog.show();
             return false;
         }
         return true;

@@ -1,18 +1,15 @@
 package com.qualityunit.android.sip;
 
 import org.pjsip.pjsua2.Account;
-import org.pjsip.pjsua2.AccountConfig;
 import org.pjsip.pjsua2.OnIncomingCallParam;
 import org.pjsip.pjsua2.OnInstantMessageParam;
 import org.pjsip.pjsua2.OnRegStateParam;
 
 public class SipAccount extends Account {
-    public AccountConfig cfg;
     private SipCore sipCore;
 
-    public SipAccount(AccountConfig config, SipCore sipCore) {
+    public SipAccount(SipCore sipCore) {
         super();
-        cfg = config;
         this.sipCore = sipCore;
     }
 

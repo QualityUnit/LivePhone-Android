@@ -69,6 +69,6 @@
         android:layout_gravity="bottom|center_horizontal"
         android:layout_marginBottom="@dimen/fab_action_margin"
         android:elevation="@dimen/fab_action_elevation"
-        android:src="@drawable/ic_call_green_24dp"/>
+        android:src="@drawable/ic_call_24dp"/>
 
 </android.support.design.widget.CoordinatorLayout>

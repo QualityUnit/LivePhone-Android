@@ -5,7 +5,6 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -18,22 +17,21 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.Vibrator;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
+import android.telecom.ConnectionService;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.call.CallingActivity;
-import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 import com.qualityunit.android.sip.SipAccount;
@@ -50,20 +48,19 @@ import org.pjsip.pjsua2.pjsip_inv_state;
 import org.pjsip.pjsua2.pjsip_status_code;
 import org.pjsip.pjsua2.pjsua_call_flag;
 
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Created by rasto on 17.10.16.
  */
-
-public class CallingService extends Service implements SipAppObserver {
+public class CallingService extends ConnectionService implements SipAppObserver {
 
     private static final String TAG = CallingService.class.getSimpleName();
     private static final String SIP_THREAD_NAME_MAIN = "SipThrdMain";
     private static final String SIP_THREAD_NAME_WORKER = "SipThrdWorker";
     private static final int ONGOING_NOTIFICATION_ID = 1;
+    private static final int INCOMING_NOTIFICATION_ID = 2;
     private static final long[] VIBRATOR_PATTERN = {0, 1000, 1000};
     private static final long WAITING_TO_CALL_MILLIS = 5000;
     public static final String KEY_COMMAND = "KEY_COMMAND";
@@ -109,7 +106,6 @@ public class CallingService extends Service implements SipAppObserver {
     private boolean isMute;
     private boolean isSpeaker;
     private boolean isHold;
-    private boolean isMissedCall;
     private long startTime = -1;
     private String lastState = "";
     private String notificationContentText;
@@ -119,13 +115,13 @@ public class CallingService extends Service implements SipAppObserver {
     private HandlerThread workerThread;
     private Handler workerHandler;
     private volatile boolean waitingToCall;
+    private int callDirection;
     private String sipUser;
     private String sipHost;
     private String prefix;
     private String remoteNumber;
     private String remoteName;
     private String sipPassword;
-    private int callDirection;
     private static PowerManager.WakeLock wakeLock;
     private static PowerManager.WakeLock proximityWakeLock;
     private MediaPlayer ringTone;
@@ -145,11 +141,6 @@ public class CallingService extends Service implements SipAppObserver {
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getSimpleName());
         wakeLock.acquire();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            proximityWakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, getClass().getSimpleName());
-            proximityWakeLock.acquire();
-        }
-        Logger.logToFile(getApplicationContext(), "SERVICE: Wakelocks acquired");
         startMainThread();
         startWorkerThread();
         mainHandler.post(new Runnable() {
@@ -162,12 +153,6 @@ public class CallingService extends Service implements SipAppObserver {
             }
         });
         Logger.logToFile(getApplicationContext(), "SERVICE: Done 'onCreate'");
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
     @Override
@@ -196,7 +181,9 @@ public class CallingService extends Service implements SipAppObserver {
                             remoteName = intent.getStringExtra("remoteName");
                             callDirection = CALL_DIRECTION.OUTGOING;
                             notificationContentText = TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName ;
-                            startActivity(createCallingActivityIntent());
+                            Intent i = createCallingActivityIntent();
+                            i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(i);
                             initAndRegister();
                             break;
                         case COMMANDS.INCOMING_CALL:
@@ -317,8 +304,7 @@ public class CallingService extends Service implements SipAppObserver {
         return new Intent(CallingService.this, CallingActivity.class)
                 .putExtra(KEY_CALL_DIRECTION, callDirection)
                 .putExtra("remoteNumber", remoteNumber)
-                .putExtra("remoteName", remoteName)
-                .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                .putExtra("remoteName", remoteName);
     }
 
     private void runAsForeground() {
@@ -351,17 +337,18 @@ public class CallingService extends Service implements SipAppObserver {
                     // else do not change notification
                     return;
                 }
-                PendingIntent pendingNotificationIntent = PendingIntent.getActivity(CallingService.this, 0,
-                        createCallingActivityIntent(), PendingIntent.FLAG_UPDATE_CURRENT);
+                Intent i = createCallingActivityIntent();
+                i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                PendingIntent pendingNotificationIntent = PendingIntent.getActivity(CallingService.this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
                 PendingIntent pendingHangupIntent = PendingIntent.getService(CallingService.this, 0,
                         new Intent(CallingService.this, CallingService.class).putExtra(KEY_COMMAND, COMMANDS.HANGUP_CALL),
                         PendingIntent.FLAG_UPDATE_CURRENT);
                 Notification.Builder builder;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     String channelId = "calling_service";
-                    NotificationChannel channel = new NotificationChannel(channelId, "Calling Service" , NotificationManager.IMPORTANCE_NONE);
+                    NotificationChannel channel = new NotificationChannel(channelId, "Calling Service" , NotificationManager.IMPORTANCE_LOW);
+                    channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
                     channel.setLightColor(Color.GREEN);
-                    channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
                     builder = new Notification.Builder(getApplicationContext(), channelId);
                     NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                     notificationManager.createNotificationChannel(channel);
@@ -370,6 +357,8 @@ public class CallingService extends Service implements SipAppObserver {
                     // https://developer.android.com/reference/android/support/v4/app/NotificationCompat.Builder.html#NotificationCompat.Builder(android.content.Context)
                     builder = new Notification.Builder(getApplicationContext());
                 }
+
+                Notification.Action hangupAction = new Notification.Action(0, getString(R.string.hangup), pendingHangupIntent);
                 Notification notification = builder
                         .setSmallIcon(icon)
                         .setTicker(titleText)
@@ -377,7 +366,7 @@ public class CallingService extends Service implements SipAppObserver {
                         .setContentText(notificationContentText)
                         .setWhen(notificationWhen)
                         .setContentIntent(pendingNotificationIntent)
-                        .addAction(0, getString(R.string.hangup), pendingHangupIntent)
+                        .addAction(hangupAction)
                         .build();
                 startForeground(ONGOING_NOTIFICATION_ID, notification);
             }
@@ -464,10 +453,9 @@ public class CallingService extends Service implements SipAppObserver {
 
                     if (sipAccount == null) {
                         setCallState(CALLBACKS.REGISTERING_SIP_USER);
-                        AccountConfig sipAccountConfig = createAccountConfig();
                         try {
-                            sipAccount = new SipAccount(sipAccountConfig, sipCore);
-                            sipAccount.create(sipAccountConfig, true);
+                            sipAccount = new SipAccount(sipCore);
+                            sipAccount.create(createAccountConfig(), true);
                             Logger.logToFile(getApplicationContext() ,"SERVICE: Account registration sent");
                         } catch (final Exception e) {
                             String errMsg = "Error while creating and registering sipAccount" + e.getMessage();
@@ -570,7 +558,11 @@ public class CallingService extends Service implements SipAppObserver {
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            isMissedCall = false;
+                            // acquire wakelock
+                            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                            proximityWakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, getClass().getSimpleName());
+                            proximityWakeLock.acquire();
+                            Logger.logToFile(getApplicationContext(), "SERVICE: Wakelocks acquired");
                         }
                     });
                     setCallState(CALLBACKS.CALL_ESTABLISHED);
@@ -728,8 +720,11 @@ public class CallingService extends Service implements SipAppObserver {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                vibrator.vibrate(VIBRATOR_PATTERN, 0);
+                AudioManager am = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
+                if (am.getRingerMode() != AudioManager.RINGER_MODE_SILENT) {
+                    vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                    vibrator.vibrate(VIBRATOR_PATTERN, 0);
+                }
                 try {
                     Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(), RingtoneManager.TYPE_RINGTONE);
                     ringTone = new MediaPlayer();
@@ -765,31 +760,6 @@ public class CallingService extends Service implements SipAppObserver {
                 }
             }
         });
-    }
-
-    private void showMissedCall(String remoteNumber, String remoteName) {
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getApplicationContext());
-        String missedCallStr = getString(R.string.missed_call);
-        notificationBuilder.setContentTitle(missedCallStr);
-        notificationBuilder.setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName);
-        notificationBuilder.setTicker(missedCallStr);
-        notificationBuilder.setSmallIcon(R.drawable.ic_phone_missed_black_24dp);
-        notificationBuilder.setAutoCancel(true);
-
-        Intent notificationIntent = new Intent(getApplicationContext(), DialerActivity.class);
-        notificationIntent.putExtra("number", remoteNumber);
-        if (!TextUtils.isEmpty(remoteName)) {
-            notificationIntent.putExtra("remoteName", remoteName);
-        }
-        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
-        stackBuilder.addParentStack(DialerActivity.class);
-        stackBuilder.addNextIntent(notificationIntent);
-        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_CANCEL_CURRENT);
-        notificationBuilder.setContentIntent(resultPendingIntent);
-        NotificationManager notificationManager;
-        notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(new Random().nextInt(), notificationBuilder.build());
     }
 
     private void setCallState(final String callback) {
@@ -900,8 +870,44 @@ public class CallingService extends Service implements SipAppObserver {
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            isMissedCall = true;
-                            startActivity(createCallingActivityIntent());
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                Intent i = createCallingActivityIntent();
+                                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                PendingIntent fullScreenPendingIntent =
+                                        PendingIntent.getActivity(CallingService.this, 1, i, PendingIntent.FLAG_UPDATE_CURRENT);
+                                String channelId = "incoming_call";
+                                NotificationChannel channel = new NotificationChannel(channelId, "Incoming call" , NotificationManager.IMPORTANCE_HIGH);
+                                channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+                                channel.setLightColor(Color.GREEN);
+                                RemoteViews notificationLayoutExpanded = new RemoteViews(getPackageName(), R.layout.notification_view);
+                                notificationLayoutExpanded.setTextViewText(R.id.text, remoteName);
+                                Intent intentAccept = createCallingActivityIntent();
+                                intentAccept.putExtra("accept", true);
+                                PendingIntent pendingIntentAccept = PendingIntent.getActivity(CallingService.this, 2, intentAccept, PendingIntent.FLAG_UPDATE_CURRENT);
+                                notificationLayoutExpanded.setOnClickPendingIntent(R.id.accept, pendingIntentAccept);
+                                PendingIntent pendingIntentDecline = PendingIntent.getService(CallingService.this, 3,
+                                        new Intent(CallingService.this, CallingService.class).putExtra(KEY_COMMAND, COMMANDS.HANGUP_CALL),
+                                        PendingIntent.FLAG_UPDATE_CURRENT);
+                                notificationLayoutExpanded.setOnClickPendingIntent(R.id.decline, pendingIntentDecline);
+                                NotificationCompat.Builder notificationBuilder =
+                                        new NotificationCompat.Builder(CallingService.this, channelId)
+                                                .setSmallIcon(R.drawable.ic_call_24dp)
+                                                .setCustomBigContentView(notificationLayoutExpanded)
+                                                .setCustomContentView(notificationLayoutExpanded)
+                                                .setCustomHeadsUpContentView(notificationLayoutExpanded)
+                                                .setContentTitle(getString(R.string.incoming_call))
+                                                .setContentText(remoteNumber)
+                                                .setOngoing(true)
+                                                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                                .setCategory(NotificationCompat.CATEGORY_CALL)
+                                                .setFullScreenIntent(fullScreenPendingIntent, true);
+                                NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                notificationManager.createNotificationChannel(channel);
+                                Notification notification = notificationBuilder.build();
+                                startForeground(INCOMING_NOTIFICATION_ID, notification);
+                            } else {
+                                startActivity(createCallingActivityIntent());
+                            }
                         }
                     });
                 } catch (Exception e) {
@@ -977,14 +983,6 @@ public class CallingService extends Service implements SipAppObserver {
             }
             else if (state == pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED) {
                 setCallState(CALLBACKS.CALL_ENDED);
-//                mainHandler.post(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        if (isMissedCall) {
-//                            showMissedCall(remoteNumber, remoteName); // uncomment to enable missed call notification
-//                        }
-//                    }
-//                });
                 finishService();
             }
         } catch (Exception e) {

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#fff"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginRight="10dp"
+        android:src="@mipmap/ic_launcher" />
+
+    <TextView
+        android:id="@+id/title"
+        style="@style/TextAppearance.Compat.Notification.Title"
+        android:textColor="?android:attr/textColorPrimary"
+        android:text="@string/incoming_call"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/image" />
+    <TextView
+        android:text="@string/unknown"
+        style="@style/TextAppearance.Compat.Notification"
+        android:textColor="?android:attr/textColorPrimary"
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/image"
+        android:layout_below="@id/title" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@id/image">
+
+        <ImageButton
+            android:id="@+id/decline"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_weight="1.0"
+            android:backgroundTint="@color/callButtonRed"
+            android:src="@drawable/ic_call_end_24dp"/>
+
+        <ImageButton
+            android:id="@+id/accept"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_weight="1.0"
+            android:backgroundTint="@color/callButtonGreen"
+            android:src="@drawable/ic_call_24dp"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

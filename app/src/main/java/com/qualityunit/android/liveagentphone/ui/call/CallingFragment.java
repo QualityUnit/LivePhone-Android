@@ -64,20 +64,25 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         nameToShow = TextUtils.isEmpty(nameToShow) ? getString(R.string.unknown) : nameToShow;
         setText(tvRemoteName, nameToShow);
         fabAnswer = activity.findViewById(R.id.fab_answerCall);
-        fabAnswer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                answer();
-            }
-        });
         fabDecline = activity.findViewById(R.id.fab_declineCall);
-        fabDecline.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                decline();
-            }
-        });
+        if (intent.getBooleanExtra("accept", false)) {
+            answer();
+        } else {
+            fabAnswer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    answer();
+                }
+            });
+            fabDecline.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    decline();
+                }
+            });
+        }
         registerSipEventsReceiver();
+
     }
 
     @Override
@@ -218,6 +223,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                 case CallingService.CALLBACKS.CALL_ESTABLISHED:
                     setText(tvState, getString(R.string.call_state_established));
                     activity.getFabHangupCall().show();
+                    showIncomingButtons(false);
                     ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
                     ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
                     CallingCommands.updateAll(getContext());

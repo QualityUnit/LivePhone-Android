@@ -28,6 +28,7 @@ import java.util.TimerTask;
 
 public class CallingActivity extends ToolbarActivity {
 
+    private final String TAG = CallingActivity.class.getSimpleName();
     private FloatingActionButton fabHangupCall;
     private boolean isSipEventsReceiverRegistered;
     private boolean isRinging;
