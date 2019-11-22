@@ -65,7 +65,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         setText(tvRemoteName, nameToShow);
         fabAnswer = activity.findViewById(R.id.fab_answerCall);
         fabDecline = activity.findViewById(R.id.fab_declineCall);
-        if (intent.getBooleanExtra("accept", false)) {
+        if (intent.getBooleanExtra("answer", false)) {
             answer();
         } else {
             fabAnswer.setOnClickListener(new View.OnClickListener() {
@@ -77,7 +77,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
             fabDecline.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    decline();
+                    hangup();
                 }
             });
         }
@@ -161,10 +161,10 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         showIncomingButtons(false);
         llCallState.setVisibility(View.VISIBLE);
         activity.getFabHangupCall().show();
-        activity.receiveCall();
+        activity.answerCall();
     }
 
-    private void decline() {
+    private void hangup() {
         Logger.logToFile(getContext(), "Call UI: Decline call triggered.");
         showIncomingButtons(false);
         llCallState.setVisibility(View.VISIBLE);
@@ -201,7 +201,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                 Logger.e(TAG, "Intent cannot be null in 'onReceive' method!");
                 return;
             }
-            final String callback = intent.getStringExtra(CallingService.KEY_CALLBACK);
+            final String callback = intent.getStringExtra("callback");
             switch (callback) {
                 case CallingService.CALLBACKS.INITIALIZING:
                     setText(tvState, getString(R.string.call_state_initializing));

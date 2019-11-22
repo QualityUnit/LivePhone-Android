@@ -20,8 +20,9 @@ public class SipAccount extends Account {
 
     @Override
     public void onIncomingCall(OnIncomingCallParam prm) {
-        System.out.println("======== Incoming call ======== ");
-        SipCall call = new SipCall(this, prm.getCallId(), sipCore);
+        int callId = prm.getCallId();
+        System.out.println("======== Incoming call - call id: " + callId +  " ======== ");
+        SipCall call = new SipCall(this, callId, sipCore);
         sipCore.observer.notifyIncomingCall(call);
     }
 

@@ -22,18 +22,21 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.CALL_ENDED;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.CALL_ESTABLISHED;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.HANGING_UP_CALL;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.RINGING;
+
 /**
  * Created by rasto on 18.10.16.
  */
 
 public class CallingActivity extends ToolbarActivity {
 
-    private final String TAG = CallingActivity.class.getSimpleName();
     private FloatingActionButton fabHangupCall;
-    private boolean isSipEventsReceiverRegistered;
     private boolean isRinging;
     private boolean isCallEstablished;
-    private SipBroadcastReceiver sipBroadcastReceiver = new SipBroadcastReceiver();
+    private SipBroadcastReceiver sipBroadcastReceiver;
     private Timer finishTimer;
 
     @Override
@@ -49,7 +52,10 @@ public class CallingActivity extends ToolbarActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        registerSipEventsReceiver();
+        if (sipBroadcastReceiver == null) {
+            sipBroadcastReceiver = new SipBroadcastReceiver();
+            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(sipBroadcastReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALLBACK));
+        }
         if (savedInstanceState == null) {
             addFragment(new CallingFragment(), CallingFragment.TAG);
         }
@@ -67,7 +73,10 @@ public class CallingActivity extends ToolbarActivity {
 
     @Override
     protected void onDestroy() {
-        unregisterSipEventsReceiver();
+        if (sipBroadcastReceiver != null) {
+            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(sipBroadcastReceiver);
+            sipBroadcastReceiver = null;
+        }
         cancelDelayedFinish();
         super.onDestroy();
     }
@@ -108,8 +117,8 @@ public class CallingActivity extends ToolbarActivity {
         finishDelayed();
     }
 
-    public void receiveCall() {
-        CallingCommands.receiveCall(CallingActivity.this);
+    public void answerCall() {
+        CallingCommands.answerCall(CallingActivity.this);
     }
 
     public FloatingActionButton getFabHangupCall() {
@@ -136,20 +145,6 @@ public class CallingActivity extends ToolbarActivity {
         }
     }
 
-    private void registerSipEventsReceiver() {
-        if (!isSipEventsReceiverRegistered) {
-            isSipEventsReceiverRegistered = true;
-            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(sipBroadcastReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALLBACK));
-        }
-    }
-
-    private void unregisterSipEventsReceiver() {
-        if (isSipEventsReceiverRegistered) {
-            isSipEventsReceiverRegistered = false;
-            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(sipBroadcastReceiver);
-        }
-    }
-
     private class SipBroadcastReceiver extends BroadcastReceiver {
 
         private final String TAG = CallingActivity.class.getSimpleName() + "." + CallingActivity.SipBroadcastReceiver.class.getSimpleName();
@@ -160,19 +155,19 @@ public class CallingActivity extends ToolbarActivity {
                 Logger.e(TAG, "Intent cannot be null in 'onReceive' method!");
                 return;
             }
-            final String callback = intent.getStringExtra(CallingService.KEY_CALLBACK);
+            final String callback = intent.getStringExtra("callback");
             switch (callback) {
-                case CallingService.CALLBACKS.RINGING:
+                case RINGING:
                     isRinging = true;
                     break;
-                case CallingService.CALLBACKS.CALL_ESTABLISHED:
+                case CALL_ESTABLISHED:
                     isRinging = false;
                     isCallEstablished = true;
                     break;
-                case CallingService.CALLBACKS.HANGING_UP_CALL:
+                case HANGING_UP_CALL:
                     isCallEstablished = false;
                     break;
-                case CallingService.CALLBACKS.CALL_ENDED:
+                case CALL_ENDED:
                     isCallEstablished = false;
                     popToFragment(CallingFragment.TAG);
                     finishDelayed();
