@@ -53,6 +53,10 @@ import java.util.regex.Pattern;
 
 import static android.app.NotificationManager.IMPORTANCE_HIGH;
 import static android.app.NotificationManager.IMPORTANCE_LOW;
+import static com.qualityunit.android.liveagentphone.Const.ChannelId.INCOMING_CHANNEL_ID;
+import static com.qualityunit.android.liveagentphone.Const.ChannelId.SERVICE_CHANNEL_ID;
+import static com.qualityunit.android.liveagentphone.Const.NotificationId.INCOMING_NOTIFICATION_ID;
+import static com.qualityunit.android.liveagentphone.Const.NotificationId.ONGOING_NOTIFICATION_ID;
 
 /**
  * Created by rasto on 17.10.16.
@@ -62,10 +66,6 @@ public class CallingService extends ConnectionService implements SipAppObserver 
     private static final String TAG = CallingService.class.getSimpleName();
     private static final String SIP_THREAD_NAME_MAIN = "SipThrdMain";
     private static final String SIP_THREAD_NAME_WORKER = "SipThrdWorker";
-    private static final String SERVICE_CHANNEL_ID = "livephone_service";
-    private static final String INCOMING_CHANNEL_ID = "livephone_incoming";
-    private static final int ONGOING_NOTIFICATION_ID = 1;
-    private static final int INCOMING_NOTIFICATION_ID = 2;
     private static final long[] VIBRATOR_PATTERN = {0, 1000, 0, 1000};
     private static final long WAITING_TO_CALL_MILLIS = 5000;
     public static final String INTENT_FILTER_CALLBACK = "com.qualityunit.android.liveagentphone.SIPEVENTS";
@@ -862,7 +862,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                                 startActivity(createCallingActivityIntent(false));
                                 return;
                             }
-                            RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_view);
+                            RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
                             headUpLayout.setTextViewText(R.id.text, remoteName);
                             headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true));
                             headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());

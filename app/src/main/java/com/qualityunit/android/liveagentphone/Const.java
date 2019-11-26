@@ -34,4 +34,16 @@ public class Const {
         public static final String STATUS_OFFLINE_FLAG = "F";
     }
 
+    public static class NotificationId {
+        public static final int ONGOING_NOTIFICATION_ID = 1;
+        public static final int INCOMING_NOTIFICATION_ID = 2;
+        public static final int INIT_CALL_NOTIFICATION_ID = 3;
+    }
+
+    public static class ChannelId {
+        public static final String SERVICE_CHANNEL_ID = "livephone_service";
+        public static final String INCOMING_CHANNEL_ID = "livephone_incoming";
+        public static final String MAKE_CALL_CHANNEL_ID = "livephone_make_call";
+    }
+
 }
