@@ -22,7 +22,7 @@ import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
 import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
 
-import static com.qualityunit.android.liveagentphone.fcm.PushMessagingService.INIT_CALL_NOTIFICATION_ID;
+import static com.qualityunit.android.liveagentphone.Const.NotificationId.INIT_CALL_NOTIFICATION_ID;
 
 /**
  * Created by rasto on 18.10.16.
