@@ -860,6 +860,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                         public void run() {
                             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
                                 startActivity(createCallingActivityIntent(false));
+                                startRingtone();
                                 return;
                             }
                             RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
