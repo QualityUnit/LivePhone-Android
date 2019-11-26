@@ -23,6 +23,13 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
 
+        <receiver
+            android:name=".ui.call.InitCallDismissReceiver">
+            <intent-filter>
+                <action android:name="com.qualityunit.android.liveagentphone.INITCALL_DISMISS" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".fcm.PushMessagingService">
             <intent-filter>

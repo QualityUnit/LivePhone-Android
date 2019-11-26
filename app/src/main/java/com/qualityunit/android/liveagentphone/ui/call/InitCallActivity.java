@@ -1,5 +1,6 @@
 package com.qualityunit.android.liveagentphone.ui.call;
 
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,10 +18,11 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
 import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
+
+import static com.qualityunit.android.liveagentphone.fcm.PushMessagingService.INIT_CALL_NOTIFICATION_ID;
 
 /**
  * Created by rasto on 18.10.16.
@@ -28,7 +30,7 @@ import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
 
 public class InitCallActivity extends AppCompatActivity implements FragmentManager.OnBackStackChangedListener {
 
-    public static final String INTENT_FILTER_INIT_CALL = "com.qualityunit.android.liveagentphone.INITCALL";
+    public static final String INTENT_FILTER_INITCALL_DISMISS = "com.qualityunit.android.liveagentphone.INITCALL_DISMISS";
     public static final String EXTRA_DIAL_STRING = "dialString";
     public static final String EXTRA_CONTACT_NAME = "contactName";
     public static final String EXTRA_REMOTE_NUMBER = "number";
@@ -37,18 +39,7 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
     private String dialString;
     private String remoteNumber;
     private PowerManager.WakeLock wakeLock;
-    private boolean isReceiverRegistered;
-    private BroadcastReceiver initCallReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle bundle = intent.getExtras();
-            if (bundle != null) {
-                if (Const.Push.PUSH_TYPE_CANCEL_INIT_CALL.equals(bundle.getString("type"))) {
-                    finish();
-                }
-            }
-        }
-    };
+    private BroadcastReceiver initCallDissmissReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +70,12 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
         }
         onBackStackChanged();
         fillUi();
+        dismissNotification();
+    }
+
+    private void dismissNotification() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(INIT_CALL_NOTIFICATION_ID);
     }
 
     private void fillUi() {
@@ -132,16 +129,16 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
     }
 
     private void registerReceiver() {
-        if (!isReceiverRegistered) {
-            isReceiverRegistered = true;
-            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(initCallReceiver, new IntentFilter(INTENT_FILTER_INIT_CALL));
+        if (initCallDissmissReceiver == null) {
+            initCallDissmissReceiver = new InitCallDismissReceiver();
+            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(initCallDissmissReceiver, new IntentFilter(INTENT_FILTER_INITCALL_DISMISS));
         }
     }
 
     private void unregisterReceiver() {
-        if (isReceiverRegistered) {
-            isReceiverRegistered = false;
-            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(initCallReceiver);
+        if (initCallDissmissReceiver != null) {
+            initCallDissmissReceiver = null;
+            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(initCallDissmissReceiver);
         }
     }
 
@@ -155,5 +152,14 @@ public class InitCallActivity extends AppCompatActivity implements FragmentManag
         bundle.putString(InitCallActivity.EXTRA_CONTACT_NAME, remoteName);
         intent.putExtras(bundle);
         context.startActivity(intent);
+    }
+
+    private class InitCallDismissReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            finish();
+        }
+
     }
 }
