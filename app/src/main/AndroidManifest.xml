@@ -23,6 +23,15 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
 
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.qualityunit.android.liveagentphone.provider"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
+
         <receiver
             android:name=".ui.call.InitCallDismissReceiver">
             <intent-filter>
