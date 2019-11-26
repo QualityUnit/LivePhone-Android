@@ -5,10 +5,8 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -24,7 +22,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telecom.ConnectionService;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -104,7 +101,6 @@ public class CallingService extends ConnectionService implements SipAppObserver 
         public static final int OUTGOING = 1;
         public static final int INCOMING = 2;
     }
-    private boolean isGsmIdle;
     private boolean isMute;
     private boolean isSpeaker;
     private boolean isHold;
@@ -127,7 +123,6 @@ public class CallingService extends ConnectionService implements SipAppObserver 
     private static PowerManager.WakeLock proximityWakeLock;
     private MediaPlayer ringTone;
     private Vibrator vibrator;
-    private BroadcastReceiver gsmStateReceiver;
     // pjsua objects
     private SipCore sipCore;
     private SipCall sipCurrentCall;
@@ -142,16 +137,6 @@ public class CallingService extends ConnectionService implements SipAppObserver 
         wakeLock.acquire();
         startMainThread();
         startWorkerThread();
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                TelephonyManager telephonyManager = (TelephonyManager) getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-                isGsmIdle = telephonyManager.getCallState() == TelephonyManager.CALL_STATE_IDLE;
-                IntentFilter phoneStateFilter = new IntentFilter(TelephonyManager.ACTION_PHONE_STATE_CHANGED);
-                gsmStateReceiver = new GsmStateChangedReceiver();
-                registerReceiver(gsmStateReceiver, phoneStateFilter);
-            }
-        });
         Logger.logToFile(getApplicationContext(), "SERVICE: Done 'onCreate'");
     }
 
@@ -264,7 +249,6 @@ public class CallingService extends ConnectionService implements SipAppObserver 
     public void onDestroy() {
         Logger.logToFile(getApplicationContext() ,"SERVICE: 'onDestroy'");
         stopRingtone();
-        unregisterReceiver(gsmStateReceiver);
         stopWorkerThread();
         stopMainThread();
         if (proximityWakeLock != null) {
@@ -814,13 +798,10 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                     opt.setAudioCount(1);
                     opt.setVideoCount(0);
                     opt.setFlag(0);
-                    if (sipCurrentCall != null || !isGsmIdle) {
+                    if (sipCurrentCall != null) {
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_BUSY_HERE);
                         call.hangup(prm);
                         call.delete();
-                        if (!isGsmIdle) {
-                            finishService(true);
-                        }
                         return;
                     }
                     prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
@@ -970,26 +951,6 @@ public class CallingService extends ConnectionService implements SipAppObserver 
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private class GsmStateChangedReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String extraState = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
-            if (TelephonyManager.EXTRA_STATE_RINGING.equals(extraState) || TelephonyManager.EXTRA_STATE_OFFHOOK.equals(extraState)) {
-                Logger.logToFile(getApplicationContext() ,"SERVICE: GSM call is coming");
-                isGsmIdle = false;
-                if (isHold) {
-                    return;
-                }
-                CallingCommands.toggleHold(getApplicationContext());
-            } else if (TelephonyManager.EXTRA_STATE_IDLE.equals(extraState)) {
-                Logger.logToFile(getApplicationContext() ,"SERVICE: GSM call ended");
-                isGsmIdle = true;
-            }
-        }
-
     }
 
 }
