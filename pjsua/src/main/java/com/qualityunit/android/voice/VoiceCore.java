@@ -1,7 +1,5 @@
 package com.qualityunit.android.voice;
 
-import com.qualityunit.android.sip.SipLogWriter;
-
 import org.pjsip.pjsua2.Endpoint;
 import org.pjsip.pjsua2.EpConfig;
 import org.pjsip.pjsua2.LogConfig;
@@ -25,7 +23,7 @@ public class VoiceCore {
     private TransportConfig sipTpConfig = new TransportConfig();
 
     // Maintain reference to log writer to avoid premature cleanup by GC
-    private SipLogWriter logWriter;
+    private VoiceLogWriter logWriter;
 
     private final int SIP_PORT = 5080;
     private final int LOG_LEVEL = 4;
@@ -49,7 +47,7 @@ public class VoiceCore {
 
         // Set log config
         LogConfig log_cfg = epConfig.getLogConfig();
-        logWriter = new SipLogWriter();
+        logWriter = new VoiceLogWriter();
         log_cfg.setWriter(logWriter);
         log_cfg.setDecor(log_cfg.getDecor() &
                 ~(pj_log_decoration.PJ_LOG_HAS_CR.swigValue() |

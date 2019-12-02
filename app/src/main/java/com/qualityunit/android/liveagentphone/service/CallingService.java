@@ -21,7 +21,10 @@ import android.os.Vibrator;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.telecom.Connection;
+import android.telecom.ConnectionRequest;
 import android.telecom.ConnectionService;
+import android.telecom.PhoneAccountHandle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -31,10 +34,9 @@ import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.call.CallingActivity;
 import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
-import com.qualityunit.android.sip.SipAccount;
-import com.qualityunit.android.sip.SipAppObserver;
-import com.qualityunit.android.sip.SipCall;
-import com.qualityunit.android.sip.SipCore;
+import com.qualityunit.android.voice.VoiceAccount;
+import com.qualityunit.android.voice.VoiceCall;
+import com.qualityunit.android.voice.VoiceCore;
 
 import org.pjsip.pjsua2.AccountConfig;
 import org.pjsip.pjsua2.AuthCredInfo;
@@ -58,7 +60,7 @@ import static com.qualityunit.android.liveagentphone.Const.NotificationId.ONGOIN
 /**
  * Created by rasto on 17.10.16.
  */
-public class CallingService extends ConnectionService implements SipAppObserver {
+public class CallingService extends ConnectionService implements VoiceAccount.Callbacks {
 
     private static final String TAG = CallingService.class.getSimpleName();
     private static final String SIP_THREAD_NAME_MAIN = "SipThrdMain";
@@ -66,6 +68,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
     private static final long[] VIBRATOR_PATTERN = {0, 1000, 0, 1000};
     private static final long WAITING_TO_CALL_MILLIS = 5000;
     public static final String INTENT_FILTER_CALLBACK = "com.qualityunit.android.liveagentphone.SIPEVENTS";
+
     public static final class COMMANDS {
         public static final int MAKE_CALL = 1;
         public static final int INCOMING_CALL = 2;
@@ -124,9 +127,9 @@ public class CallingService extends ConnectionService implements SipAppObserver 
     private MediaPlayer ringTone;
     private Vibrator vibrator;
     // pjsua objects
-    private SipCore sipCore;
-    private SipCall sipCurrentCall;
-    private SipAccount sipAccount;
+    private VoiceCore voiceCore;
+    private VoiceCall activeVoiceCall;
+    private VoiceAccount voiceAccount;
 
     @Override
     public void onCreate() {
@@ -158,7 +161,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                             Logger.logToFile(getApplicationContext(), "=============================================================================================");
                             info += "MAKE_CALL";
                             Logger.logToFile(getApplicationContext(), info);
-                            if (sipCurrentCall != null) throw new CallingException(getString(R.string.only_one_call));
+                            if (activeVoiceCall != null) throw new CallingException(getString(R.string.only_one_call));
                             prefix = intent.getStringExtra("prefix");
                             remoteNumber = intent.getStringExtra("remoteNumber");
                             if (TextUtils.isEmpty(remoteNumber)) throw new CallingException("Argument 'remoteNumber' is empty");
@@ -185,7 +188,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                             Logger.logToFile(getApplicationContext(), info);
                             String character = intent.getStringExtra("character");
                             if (TextUtils.isEmpty(character)) throw new CallingException("Empty DTMF argument");
-                            if (sipCurrentCall == null) throw new CallingException("Cannot send DTMF signal when calling service is not running");
+                            if (activeVoiceCall == null) throw new CallingException("Cannot send DTMF signal when calling service is not running");
                             sendDtfm(character);
                             break;
                         case COMMANDS.HANGUP_CALL:
@@ -264,13 +267,118 @@ public class CallingService extends ConnectionService implements SipAppObserver 
 //        android.os.Process.killProcess(android.os.Process.myPid()); // this also kills calling activity (which is running on the same PID)
     }
 
+    /** PJSIP callbacks **/
+
+    @Override
+    public void onSipRegistrationSuccess() {
+
+    }
+
+    @Override
+    public void onSipRegistrationFailure(String errorMessage) {
+
+    }
+
+    @Override
+    public VoiceCall onIncomingVoiceCall(int callId) {
+        return null;
+    }
+
+    /** Telephony callbacks **/
+
+    @Override
+    public Connection onCreateOutgoingConnection(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
+        Log.d(TAG, "onCreateOutgoingConnection: ####");
+        return super.onCreateOutgoingConnection(connectionManagerPhoneAccount, request);
+    }
+
+    @Override
+    public void onCreateOutgoingConnectionFailed(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
+        Log.d(TAG, "onCreateOutgoingConnectionFailed: ####");
+        super.onCreateOutgoingConnectionFailed(connectionManagerPhoneAccount, request);
+    }
+
+    @Override
+    public Connection onCreateIncomingConnection(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
+        Log.d(TAG, "onCreateIncomingConnection: ####");
+        return super.onCreateIncomingConnection(connectionManagerPhoneAccount, request);
+    }
+
+    @Override
+    public void onCreateIncomingConnectionFailed(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
+        Log.d(TAG, "onCreateIncomingConnectionFailed: ####");
+        super.onCreateIncomingConnectionFailed(connectionManagerPhoneAccount, request);
+    }
+
+    final class VoiceConnection extends Connection implements VoiceCall.Callbacks {
+
+        int callDirection;
+        ConnectionRequest request;
+
+        VoiceConnection (int callDirection, ConnectionRequest request) {
+            this.callDirection = callDirection;
+            this.request = request;
+            int capabilities = getConnectionCapabilities();
+            capabilities |= CAPABILITY_MUTE;
+            capabilities |= CAPABILITY_SUPPORT_HOLD;
+            capabilities |= CAPABILITY_HOLD;
+            capabilities |= CAPABILITY_SUPPORT_HOLD;
+            setConnectionCapabilities(capabilities);
+        }
+
+        /** PJSIP callbacks **/
+
+        @Override
+        public void onCallEstablished() {
+
+        }
+
+        @Override
+        public void onCallEnded() {
+
+        }
+
+        /** Telephony callbacks **/
+
+        @Override
+        public void onHold() {
+            super.onHold();
+        }
+
+        @Override
+        public void onAbort() {
+            super.onAbort();
+        }
+
+        @Override
+        public void onAnswer() {
+            super.onAnswer();
+        }
+
+        @Override
+        public void onDisconnect() {
+            super.onDisconnect();
+        }
+
+        @Override
+        public void onReject() {
+            super.onReject();
+        }
+
+        @Override
+        public void onShowIncomingCallUi() {
+            super.onShowIncomingCallUi();
+        }
+    }
+
+
     private void sendDtfm(final String character) {
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (sipCurrentCall != null && sipCurrentCall.isActive()) {
-                        sipCurrentCall.dialDtmf(character);
+                    if (activeVoiceCall != null && activeVoiceCall.isActive()) {
+                        activeVoiceCall.dialDtmf(character);
                     } else {
                         setError("Cannot send DTMF signal while call is not active", null);
                     }
@@ -411,11 +519,11 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                 @Override
                 public void run() {
                     // init sip lib
-                    if (sipCore == null) {
+                    if (voiceCore == null) {
                         setCallState(CALLBACKS.INITIALIZING);
-                        sipCore = new SipCore();
+                        voiceCore = new VoiceCore();
                         try {
-                            sipCore.init(CallingService.this, workerThread.getName());
+                            voiceCore.init(workerThread.getName());
                             Logger.logToFile(getApplicationContext() ,"SERVICE: SIP initialized successfully");
                         } catch (final Exception e) {
                             String errMsg = "Error while initializing: SIP lib: " + e.getMessage();
@@ -425,14 +533,14 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                         }
                     }
 
-                    if (sipAccount == null) {
+                    if (voiceAccount == null) {
                         setCallState(CALLBACKS.REGISTERING_SIP_USER);
                         try {
-                            sipAccount = new SipAccount(sipCore);
-                            sipAccount.create(createAccountConfig(), true);
+                            voiceAccount = new VoiceAccount(CallingService.this);
+                            voiceAccount.create(createAccountConfig(), true);
                             Logger.logToFile(getApplicationContext() ,"SERVICE: Account registration sent");
                         } catch (final Exception e) {
-                            String errMsg = "Error while creating and registering sipAccount" + e.getMessage();
+                            String errMsg = "Error while creating and registering voiceAccount" + e.getMessage();
                             Logger.logToFile(getApplicationContext() ,"SERVICE: " + errMsg);
                             setError(errMsg, e);
                             finishService(true);
@@ -453,7 +561,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
         // create URIs
         String sipRegisterUri = Tools.Sip.createRegisterUri(sipHost);
         String sipAccountUri = Tools.Sip.createAccountUri(sipUser, sipHost);
-        // set sipAccount config
+        // set voiceAccount config
         AccountConfig sipAccountConfig = new AccountConfig();
         sipAccountConfig.getRegConfig().setRegistrarUri(sipRegisterUri);
         sipAccountConfig.getRegConfig().setRegisterOnAdd(true);
@@ -472,12 +580,12 @@ public class CallingService extends ConnectionService implements SipAppObserver 
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (sipCurrentCall != null) {
+                if (activeVoiceCall != null) {
                     Logger.logToFile(getApplicationContext() ,"Warning: Make call: Only one call at anytime!");
                     return;
                 }
                 setCallState(CALLBACKS.STARTING_CALL);
-                SipCall call = new SipCall(sipAccount, -1, sipCore);
+                VoiceCall call = new VoiceCall(voiceAccount, -1, voiceCore);
                 CallOpParam prm = new CallOpParam();
                 CallSetting opt = prm.getOpt();
                 opt.setAudioCount(1);
@@ -487,7 +595,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                     String cleanedRemoteNumber = Tools.Sip.cleanNumber(remoteNumber);
                     String sipCalleeUri = Tools.Sip.createCalleeUri(prefix, cleanedRemoteNumber, sipHost);
                     call.makeCall(sipCalleeUri, prm);
-                    sipCurrentCall = call;
+                    activeVoiceCall = call;
                     Logger.logToFile(getApplicationContext() ,"SERVICE: Call started successfully");
                 } catch (final Exception e) {
                     call.delete();
@@ -520,13 +628,13 @@ public class CallingService extends ConnectionService implements SipAppObserver 
             @Override
             public void run() {
                 try {
-                    if (sipCurrentCall == null) {
+                    if (activeVoiceCall == null) {
                         throw new Exception("No ringing call now");
                     }
                     stopRingtone();
                     CallOpParam prm = new CallOpParam();
                     prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
-                    sipCurrentCall.answer(prm);
+                    activeVoiceCall.answer(prm);
                     Logger.logToFile(getApplicationContext() ,"SERVICE: Call successfully received");
                     mainHandler.post(new Runnable() {
                         @Override
@@ -564,11 +672,11 @@ public class CallingService extends ConnectionService implements SipAppObserver 
             @Override
             public void run() {
                 setCallState(CALLBACKS.HANGING_UP_CALL);
-                if (sipCurrentCall != null) {
+                if (activeVoiceCall != null) {
                     try {
                         CallOpParam prm = new CallOpParam();
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
-                        sipCurrentCall.hangup(prm);
+                        activeVoiceCall.hangup(prm);
                         Logger.logToFile(getApplicationContext() ,"SERVICE: Hang up call: Call successfully hanged up");
                         // finishing of service is then called from "notifyCallState"
                     } catch (final Exception e) {
@@ -591,7 +699,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (sipCurrentCall == null) {
+                if (activeVoiceCall == null) {
                     setError("There is no any ongoing call.", null);
                     return;
                 }
@@ -599,14 +707,14 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                     CallOpParam param = new CallOpParam();
                     if (hold) {
                         Logger.logToFile(getApplicationContext() ,"SERVICE: Holding...");
-                        sipCurrentCall.setHold(param);
+                        activeVoiceCall.setHold(param);
                     } else {
                         Logger.logToFile(getApplicationContext() ,"SERVICE: Unholding...");
                         CallSetting opt = param.getOpt();
                         opt.setAudioCount(1);
                         opt.setVideoCount(0);
                         opt.setFlag(pjsua_call_flag.PJSUA_CALL_UNHOLD.swigValue());
-                        sipCurrentCall.reinvite(param);
+                        activeVoiceCall.reinvite(param);
                     }
                     isHold = hold;
                     sendUpdateHoldBroadcast();
@@ -659,18 +767,18 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                 workerHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (sipCurrentCall != null) {
-                            sipCurrentCall.delete();
-                            sipCurrentCall = null;
+                        if (activeVoiceCall != null) {
+                            activeVoiceCall.delete();
+                            activeVoiceCall = null;
                         }
-                        if (sipAccount != null) {
-                            sipAccount.delete();
-                            sipAccount = null;
+                        if (voiceAccount != null) {
+                            voiceAccount.delete();
+                            voiceAccount = null;
                         }
-                        if (sipCore != null) {
-                            sipCore.deinit();
+                        if (voiceCore != null) {
+                            voiceCore.deinit();
                             Logger.logToFile(getApplicationContext() ,"SERVICE: Finishing service: Library deinitialized");
-                            sipCore = null;
+                            voiceCore = null;
                         }
                         mainHandler.post(new Runnable() {
                             @Override
@@ -798,7 +906,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                     opt.setAudioCount(1);
                     opt.setVideoCount(0);
                     opt.setFlag(0);
-                    if (sipCurrentCall != null) {
+                    if (activeVoiceCall != null) {
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_BUSY_HERE);
                         call.hangup(prm);
                         call.delete();
@@ -835,7 +943,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
                     }
                     Logger.logToFile(getApplicationContext() ,"SERVICE: Ringing...");
                     setCallState(CALLBACKS.RINGING);
-                    sipCurrentCall = call;
+                    activeVoiceCall = call;
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -880,7 +988,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
         workerHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (sipCurrentCall != null) {
+                if (activeVoiceCall != null) {
                     Logger.logToFile(getApplicationContext() ,"SERVICE: Registration: Only one call at anytime!");
                     return;
                 }
@@ -920,7 +1028,7 @@ public class CallingService extends ConnectionService implements SipAppObserver 
             e.printStackTrace();
         }
         try {
-            if (sipCurrentCall == null || call.getId() != sipCurrentCall.getId()) {
+            if (activeVoiceCall == null || call.getId() != activeVoiceCall.getId()) {
                 // get rid of states from all calls except current call
                 return;
             }
