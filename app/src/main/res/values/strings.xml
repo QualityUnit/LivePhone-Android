@@ -41,10 +41,10 @@
     <string name="call_state_initializing">Initializing</string>
     <string name="call_state_registering">Registering</string>
     <string name="call_state_ringing">Ringing</string>
-    <string name="call_state_calling">Calling</string>
+    <string name="call_state_dialing">Dialing</string>
     <string name="call_state_connecting">Connecting</string>
-    <string name="call_state_established">Call established</string>
-    <string name="call_state_call_ended">Call ended</string>
+    <string name="call_state_active">Active</string>
+    <string name="call_state_call_ended">Ended</string>
     <string name="no_number_in_contact">There is no any phone number in contact</string>
     <string name="call_hold">Call hold</string>
     <string name="call">Call</string>
@@ -63,7 +63,7 @@
     <string name="browser_phone_message">You are logged in into browser app and calls will be redirected into this LivePhone</string>
     <string name="send_log_file">Send log</string>
     <string name="permission_reason_get_accounts">LivePhone needs this permission to manage your login account.</string>
-    <string name="permission_reason_record_audio">LivePhone needs this permission to handle ongoing call</string>
+    <string name="permission_reason_handle_calls_properly">LivePhone needs this permission to handle in-app calls properly</string>
     <string name="permission_reason_read_phone_state">LivePhone needs this permission to handle GSM calls properly while calling using this app</string>
     <string name="verification_code">Verification code</string>
     <string name="invalid_verification_code">Invalid verification code</string>

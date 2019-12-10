@@ -28,20 +28,20 @@ import java.util.UUID;
 
 public abstract class Tools {
 
-	/**
-	 * Get App version name
-	 * 
-	 * @return
-	 */
-	public static String getVersionName(Context context) {
-		try {
-			return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
-		} catch (NameNotFoundException e) {
+    /**
+     * Get App version name
+     *
+     * @return
+     */
+    public static String getVersionName(Context context) {
+        try {
+            return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+        } catch (NameNotFoundException e) {
             String msg = "Error while retrieving data about versionName from manifest file.";
             Log.e(Tools.class.getSimpleName(), msg);
-		}
-		return null;
-	}
+        }
+        return null;
+    }
 
     /**
      * Get device unique ID
@@ -72,7 +72,7 @@ public abstract class Tools {
         }
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         String bluetoothName = bluetoothAdapter.getName();
-        if(!TextUtils.isEmpty(bluetoothName)) {
+        if (!TextUtils.isEmpty(bluetoothName)) {
             name += " - " + bluetoothName;
         }
         if (TextUtils.isEmpty(name)) {
@@ -93,18 +93,18 @@ public abstract class Tools {
         }
     }
 
-	/**
-	 * @return Application's version code from the {@code PackageManager}.
-	 */
-	public static int getVersionCode(Context context) {
-	    try {
-	        PackageInfo packageInfo = context.getPackageManager()
-	                .getPackageInfo(context.getPackageName(), 0);
-	        return packageInfo.versionCode;
-	    } catch (NameNotFoundException e) {
-	        throw new RuntimeException("Could not get package name: " + e);
-	    }
-	}
+    /**
+     * @return Application's version code from the {@code PackageManager}.
+     */
+    public static int getVersionCode(Context context) {
+        try {
+            PackageInfo packageInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return packageInfo.versionCode;
+        } catch (NameNotFoundException e) {
+            throw new RuntimeException("Could not get package name: " + e);
+        }
+    }
 
     public static boolean isNetworkConnected(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -132,19 +132,18 @@ public abstract class Tools {
         }
     }
 
-    public static String formatError (String message) {
+    public static String formatError(String message) {
         return formatError(null, message);
     }
 
-    public static String formatError (Integer code, String message) {
+    public static String formatError(Integer code, String message) {
         String resultMsg = "Error";
         if (code != null) {
             resultMsg += " '" + code + "'";
         }
         if (!TextUtils.isEmpty(message)) {
             resultMsg += ": " + message;
-        }
-        else {
+        } else {
             resultMsg += ": (no message)";
         }
         return resultMsg;
@@ -153,6 +152,7 @@ public abstract class Tools {
     /**
      * Exception free parsing<br/>
      * Get string value from json or get empty string value.
+     *
      * @param jsonItem
      * @param key
      * @return
@@ -170,6 +170,7 @@ public abstract class Tools {
     /**
      * Exception free parsing<br/>
      * Get int value from json or get -1 value.
+     *
      * @param jsonItem
      * @param key
      * @return -1 when key does not exist
@@ -178,13 +179,14 @@ public abstract class Tools {
         int value = -1;
         try {
             value = jsonItem.getInt(key);
-        } catch (JSONException e) { }
+        } catch (JSONException e) {
+        }
         return value;
     }
 
     /**
      * @param jsonItem - object where field with key has value as an array
-     * @param key - key of field
+     * @param key      - key of field
      * @return
      */
     public static List<String> getStringArrayFromJson(JSONObject jsonItem, String key) {
@@ -210,7 +212,7 @@ public abstract class Tools {
         }
         String number = String.valueOf(num);
         String newNumber = "";
-        for(int i = 0; i < count - number.length(); i++) {
+        for (int i = 0; i < count - number.length(); i++) {
             newNumber += "0";
         }
         newNumber += number;
@@ -253,14 +255,14 @@ public abstract class Tools {
 
     public static class MD5Util {
 
-        public static String md5Hex (String message) {
+        public static String md5Hex(String message) {
             try {
                 MessageDigest md = MessageDigest.getInstance("MD5");
                 byte[] array = md.digest(message.getBytes("CP1252"));
                 StringBuffer sb = new StringBuffer();
                 for (int i = 0; i < array.length; ++i) {
                     sb.append(Integer.toHexString((array[i]
-                            & 0xFF) | 0x100).substring(1,3));
+                            & 0xFF) | 0x100).substring(1, 3));
                 }
                 return sb.toString();
             } catch (NoSuchAlgorithmException e) {
@@ -271,25 +273,4 @@ public abstract class Tools {
 
     }
 
-    public static class Sip {
-
-        public static String createRegisterUri(String sipHost) {
-            return "sip:" + sipHost;
-        }
-
-        public static String createAccountUri(String sipUser, String sipHost) {
-            return "sip:" + sipUser + "@" + sipHost;
-        }
-
-        public static String createCalleeUri(String callingPrefix, String calleeNumber, String sipHost) {
-            return "sip:" + callingPrefix + calleeNumber + "@" + sipHost;
-        }
-
-        public static String cleanNumber(String number) {
-            return number
-                .replaceAll(" ", "")
-                .replaceAll("\\+", "00")
-                .replaceAll("\\/", "");
-        }
-    }
 }

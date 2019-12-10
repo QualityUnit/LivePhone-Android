@@ -69,7 +69,6 @@ public class Logger {
     }
 
     public static void logToFile(Context context, String text) {
-        Log.d(TAG, text);
         File logFile = new File(context.getExternalFilesDir(null), logFileName);
         try {
             if (!logFile.exists()) {
@@ -84,7 +83,7 @@ public class Logger {
             osw.close();
             fos.close();
         } catch (IOException e) {
-            e(TAG, "Error while 'logToFile': " + logFileName, e);
+            Log.e(TAG, "Error while 'logToFile': " + logFileName, e);
         }
 
     }

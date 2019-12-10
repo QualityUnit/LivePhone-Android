@@ -122,14 +122,12 @@
                 android:maxLines="2"
                 android:textAppearance="?android:attr/textAppearanceSmall"/>
 
-            <Chronometer
-                android:id="@+id/ch_timer"
+            <TextView
+                android:id="@+id/tv_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="15dp"
-                android:text="00:00"
-                android:format="KK:MM:SS"
-                android:visibility="invisible"
+                android:text="00:00:00"
                 android:textColor="@color/textPrimaryOnDark"
                 android:layout_gravity="center"
                 android:textAppearance="?android:attr/textAppearanceLarge"

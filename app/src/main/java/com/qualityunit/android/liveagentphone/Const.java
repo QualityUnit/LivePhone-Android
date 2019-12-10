@@ -46,4 +46,8 @@ public class Const {
         public static final String MAKE_CALL_CHANNEL_ID = "livephone_make_call";
     }
 
+    public static class Call {
+        public static final String PHONE_ACCOUNT_HANDLE_ID = "LivePhoneAccount";
+    }
+
 }

@@ -35,7 +35,7 @@
         android:layout_alignParentEnd="true" />
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_hangCall"
+        android:id="@+id/fab_hangup"
         android:layout_width="@dimen/fab_action_size"
         android:layout_height="@dimen/fab_action_size"
         app:fabCustomSize="@dimen/fab_action_size"
@@ -48,7 +48,7 @@
         android:src="@drawable/ic_call_end_24dp"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_declineCall"
+        android:id="@+id/fab_reject"
         android:layout_width="@dimen/fab_action_size"
         android:layout_height="@dimen/fab_action_size"
         app:fabCustomSize="@dimen/fab_action_size"
@@ -62,7 +62,7 @@
         android:src="@drawable/ic_call_end_24dp"/>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_answerCall"
+        android:id="@+id/fab_answer"
         android:layout_width="@dimen/fab_action_size"
         android:layout_height="@dimen/fab_action_size"
         app:fabCustomSize="@dimen/fab_action_size"

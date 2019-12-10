@@ -22,10 +22,9 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.CALL_ENDED;
-import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.CALL_ESTABLISHED;
-import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.HANGING_UP_CALL;
-import static com.qualityunit.android.liveagentphone.service.CallingService.CALLBACKS.RINGING;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_STATE.ACTIVE;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_STATE.DISCONNECTED;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_STATE.RINGING;
 
 /**
  * Created by rasto on 18.10.16.
@@ -33,11 +32,12 @@ import static com.qualityunit.android.liveagentphone.service.CallingService.CALL
 
 public class CallingActivity extends ToolbarActivity {
 
-    private FloatingActionButton fabHangupCall;
-    private boolean isRinging;
-    private boolean isCallEstablished;
-    private SipBroadcastReceiver sipBroadcastReceiver;
+    private FloatingActionButton fabHangup;
+    private FloatingActionButton fabAnswer;
+    private FloatingActionButton fabReject;
+    private CallStateReceiver callStateReceiver;
     private Timer finishTimer;
+    private String callState;
 
     @Override
     protected boolean allwaysShowHomeAsUp() {
@@ -52,30 +52,46 @@ public class CallingActivity extends ToolbarActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (sipBroadcastReceiver == null) {
-            sipBroadcastReceiver = new SipBroadcastReceiver();
-            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(sipBroadcastReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALLBACK));
+        if (callStateReceiver == null) {
+            callStateReceiver = new CallStateReceiver();
+            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(callStateReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALL_STATE));
         }
         if (savedInstanceState == null) {
             addFragment(new CallingFragment(), CallingFragment.TAG);
         }
-        fabHangupCall = findViewById(R.id.fab_hangCall);
-        if (fabHangupCall != null) {
-            fabHangupCall.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    declineCall();
-                }
-            });
+        fabHangup = findViewById(R.id.fab_hangup);
+        fabAnswer = findViewById(R.id.fab_answer);
+        fabReject = findViewById(R.id.fab_reject);
+        fabHangup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                hangupCall();
+            }
+        });
+        fabAnswer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                answerCall();
+            }
+        });
+        fabReject.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showRingingButtons(false);
+                hangupCall();
+            }
+        });
+        if (getIntent().getBooleanExtra("answer", false)) {
+            answerCall();
         }
         Logger.logToFile(getApplicationContext() ,"Info: UI is showed");
     }
 
     @Override
     protected void onDestroy() {
-        if (sipBroadcastReceiver != null) {
-            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(sipBroadcastReceiver);
-            sipBroadcastReceiver = null;
+        if (callStateReceiver != null) {
+            LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(callStateReceiver);
+            callStateReceiver = null;
         }
         cancelDelayedFinish();
         super.onDestroy();
@@ -92,12 +108,11 @@ public class CallingActivity extends ToolbarActivity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (isRinging && (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP)){
+        if (RINGING.equals(callState) && (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP)){
             CallingCommands.silenceRinging(getApplicationContext());
-            isRinging = false;
             return true;
         }
-        if (isCallEstablished) {
+        if (ACTIVE.equals(callState)) {
             if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
                 CallingCommands.adjustIncallVolume(getApplicationContext(), false);
             } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
@@ -107,8 +122,10 @@ public class CallingActivity extends ToolbarActivity {
         return super.onKeyDown(keyCode, event);
     }
 
-    public void declineCall() {
+    public void hangupCall() {
         if (finishTimer != null) {
+            // already hung up, just close the UI on second tap
+            fabHangup.setOnClickListener(null);
             cancelDelayedFinish();
             finish();
             return;
@@ -118,11 +135,20 @@ public class CallingActivity extends ToolbarActivity {
     }
 
     public void answerCall() {
+        showRingingButtons(false);
         CallingCommands.answerCall(CallingActivity.this);
     }
 
-    public FloatingActionButton getFabHangupCall() {
-        return fabHangupCall;
+    private void showRingingButtons(boolean show) {
+        if (show) {
+            fabAnswer.show();
+            fabReject.show();
+            fabHangup.hide();
+        } else {
+            fabAnswer.hide();
+            fabReject.hide();
+            fabHangup.show();
+        }
     }
 
     private void finishDelayed() {
@@ -145,37 +171,17 @@ public class CallingActivity extends ToolbarActivity {
         }
     }
 
-    private class SipBroadcastReceiver extends BroadcastReceiver {
-
-        private final String TAG = CallingActivity.class.getSimpleName() + "." + CallingActivity.SipBroadcastReceiver.class.getSimpleName();
+    private class CallStateReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent == null) {
-                Logger.e(TAG, "Intent cannot be null in 'onReceive' method!");
-                return;
+            if (intent == null) return;
+            callState = intent.getStringExtra("callState");
+            showRingingButtons(RINGING.equals(callState));
+            if (DISCONNECTED.equals(callState)) {
+                popToFragment(CallingFragment.TAG);
+                finishDelayed();
             }
-            final String callback = intent.getStringExtra("callback");
-            switch (callback) {
-                case RINGING:
-                    isRinging = true;
-                    break;
-                case CALL_ESTABLISHED:
-                    isRinging = false;
-                    isCallEstablished = true;
-                    break;
-                case HANGING_UP_CALL:
-                    isCallEstablished = false;
-                    break;
-                case CALL_ENDED:
-                    isCallEstablished = false;
-                    popToFragment(CallingFragment.TAG);
-                    finishDelayed();
-                    break;
-                default:
-                    Logger.e(TAG, "Unknown event type in 'onReceive' method!");
-            }
-
         }
 
     }

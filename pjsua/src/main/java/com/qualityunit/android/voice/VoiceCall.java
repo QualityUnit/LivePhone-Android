@@ -1,5 +1,7 @@
 package com.qualityunit.android.voice;
 
+import android.util.Log;
+
 import org.pjsip.pjsua2.AudioMedia;
 import org.pjsip.pjsua2.Call;
 import org.pjsip.pjsua2.CallInfo;
@@ -19,6 +21,7 @@ import static org.pjsip.pjsua2.pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED;
 
 public class VoiceCall extends Call {
 
+    private static final String TAG = VoiceCall.class.getSimpleName();
     private VoiceCore voiceCore;
     private Callbacks callbacks;
 
@@ -28,17 +31,26 @@ public class VoiceCall extends Call {
         this.callbacks = callbacks;
     }
 
+    public static CallOpParam createDefaultParams() {
+        CallOpParam prm = new CallOpParam();
+        CallSetting opt = prm.getOpt();
+        opt.setAudioCount(1);
+        opt.setVideoCount(0);
+        opt.setFlag(0);
+        return prm;
+    }
+
     @Override
     public void onCallState(OnCallStateParam prm) {
         try {
             CallInfo ci = getInfo();
             pjsip_inv_state callState = ci.getState();
-            ci.getCallIdString();
+            Log.d(TAG, "#### onCallState: " + callState.toString() + " ID=" + ci.getId());
             if (callState == PJSIP_INV_STATE_DISCONNECTED) {
-                callbacks.onCallEnded();
-                this.delete();
+                callbacks.onDisconnect();
+//                this.delete();
             } else if (callState == PJSIP_INV_STATE_CONFIRMED) {
-                callbacks.onCallEstablished();
+                callbacks.onAnswerCall();
             }
         } catch (Exception e) {}
     }
@@ -48,6 +60,7 @@ public class VoiceCall extends Call {
         CallInfo ci;
         try {
             ci = getInfo();
+            Log.d(TAG, "#### onCallMediaState: ID=" + ci.getId());
         } catch (Exception e) {
             return;
         }
@@ -63,6 +76,7 @@ public class VoiceCall extends Call {
 
                 // connect ports
                 try {
+                    Log.d(TAG, "#### onCallMediaState (connect ports): " + ci.toString());
                     voiceCore.getEndpoint().audDevManager().getCaptureDevMedia().startTransmit(am);
                     am.startTransmit(voiceCore.getEndpoint().audDevManager().getPlaybackDevMedia());
                 } catch (Exception e) {}
@@ -70,17 +84,8 @@ public class VoiceCall extends Call {
         }
     }
 
-    public void makeCall(String uri) throws Exception {
-        CallOpParam prm = new CallOpParam();
-        CallSetting opt = prm.getOpt();
-        opt.setAudioCount(1);
-        opt.setVideoCount(0);
-        opt.setFlag(0);
-        makeCall(uri, prm);
-    }
-
     public interface Callbacks {
-        void onCallEstablished();
-        void onCallEnded();
+        void onAnswerCall();
+        void onDisconnect();
     }
 }

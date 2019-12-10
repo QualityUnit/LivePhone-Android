@@ -5,6 +5,10 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import static com.qualityunit.android.liveagentphone.service.CallingService.VoiceConnection.EXTRA_PREFIX;
+import static com.qualityunit.android.liveagentphone.service.CallingService.VoiceConnection.EXTRA_REMOTE_NAME;
+import static com.qualityunit.android.liveagentphone.service.CallingService.VoiceConnection.EXTRA_REMOTE_NUMBER;
+
 /**
  * Created by rasto on 7.11.16.
  */
@@ -15,9 +19,9 @@ public final class CallingCommands {
         if (TextUtils.isEmpty(prefix)) prefix = "";
         context.startService(new Intent(context, CallingService.class)
                 .putExtra("command", CallingService.COMMANDS.MAKE_CALL)
-                .putExtra("prefix", prefix)
-                .putExtra("remoteNumber", remoteNumber)
-                .putExtra("remoteName", remoteName));
+                .putExtra(EXTRA_PREFIX, prefix)
+                .putExtra(EXTRA_REMOTE_NUMBER, remoteNumber)
+                .putExtra(EXTRA_REMOTE_NAME, remoteName));
     }
 
     public static void incomingCall(@NonNull  Context context) {
@@ -57,10 +61,10 @@ public final class CallingCommands {
                 .putExtra("increase", increase));
     }
 
-    public static void updateState(@NonNull Context context) {
-        context.startService(new Intent(context, CallingService.class)
-                .putExtra("command", CallingService.COMMANDS.UPDATE_STATE));
-    }
+//    public static void updateState(@NonNull Context context) {
+//        context.startService(new Intent(context, CallingService.class)
+//                .putExtra("command", CallingService.COMMANDS.UPDATE_STATE));
+//    }
 
     public static void silenceRinging(@NonNull Context context) {
         context.startService(new Intent(context, CallingService.class)

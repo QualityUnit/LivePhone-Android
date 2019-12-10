@@ -264,7 +264,7 @@ public class InitActivity extends AppCompatActivity {
      */
     private boolean checkAppPermissions() {
         // Dangerous permissions: RECORD_AUDIO, READ_PHONE_STATE
-        if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_record_audio))) {
+        if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_handle_calls_properly))) {
             return false;
         } else if (!checkOnePermission(READ_PHONE_STATE, getString(R.string.permission_reason_read_phone_state))) {
             return false;

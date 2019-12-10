@@ -19,14 +19,14 @@ public class VoiceCore {
 
     private Endpoint endpoint;
 
-    private EpConfig epConfig = new EpConfig();
-    private TransportConfig sipTpConfig = new TransportConfig();
+    private EpConfig epConfig;
+    private TransportConfig sipTpConfig;
 
     // Maintain reference to log writer to avoid premature cleanup by GC
     private VoiceLogWriter logWriter;
 
-    private final int SIP_PORT = 5080;
-    private final int LOG_LEVEL = 4;
+    private static final int SIP_PORT = 5080;
+    private static final int LOG_LEVEL = 4;
 
     public static VoiceCore create(String externalThread) throws Exception {
         VoiceCore instance = new VoiceCore();
@@ -35,6 +35,9 @@ public class VoiceCore {
     }
 
     public void init(String externalThread) throws Exception {
+        epConfig = new EpConfig();
+        sipTpConfig = new TransportConfig();
+
         endpoint = new Endpoint();
 
         // Create endpoint
