@@ -75,17 +75,18 @@ public class CallingService extends ConnectionService implements VoiceConnection
     private LocalBroadcastManager localBroadcastManager;
 
     public static final class COMMANDS {
-        public static final int MAKE_CALL = 1;
-        public static final int INCOMING_CALL = 2;
-        public static final int ANSWER_CALL = 3;
-        public static final int HANGUP_CALL = 4;
-        public static final int TOGGLE_HOLD = 5;
-        public static final int ADJUST_INCALL_VOLUME = 6;
-        public static final int SEND_DTMF = 7;
-        public static final int SILENCE_RINGING = 8;
-        public static final int TOGGLE_MUTE = 9;
-        public static final int TOGGLE_SPEAKER = 10;
-        public static final int UPDATE_ALL = 11;
+        public static final String MAKE_CALL = "MAKE_CALL";
+        public static final String INCOMING_CALL = "INCOMING_CALL";
+        public static final String ANSWER_CALL = "ANSWER_CALL";
+        public static final String HANGUP_CALL = "HANGUP_CALL";
+        public static final String TOGGLE_HOLD = "TOGGLE_HOLD";
+        public static final String ADJUST_INCALL_VOLUME = "ADJUST_INCALL_VOLUME";
+        public static final String SEND_DTMF = "SEND_DTMF";
+        public static final String SILENCE_RINGING = "SILENCE_RINGING";
+        public static final String TOGGLE_MUTE = "TOGGLE_MUTE";
+        public static final String TOGGLE_SPEAKER = "TOGGLE_SPEAKER";
+        public static final String GET_CALL_UPDATES = "GET_CALL_UPDATES";
+        public static final String GET_CALL_STATE = "GET_CALL_STATE";
     }
     public static final class CALL_STATE {
         public static final String INITIALIZING_SIP_LIBRARY = "INITIALIZING_SIP_LIBRARY";
@@ -96,7 +97,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
         public static final String CONNECTING = "CONNECTING";
         public static final String ACTIVE = "ACTIVE";
         public static final String HOLD = "HOLD";
-        public static final String UNHOLD = "UNHOLD";
         public static final String DISCONNECTED = "DISCONNECTED";
         public static final String ERROR = "ERROR";
     }
@@ -137,20 +137,15 @@ public class CallingService extends ConnectionService implements VoiceConnection
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                String info = "SERVICE: command ";
                 try {
-                    if (intent == null) {
-                        throw new CallingException("Intent is null");
-                    }
-                    int command = intent.getIntExtra("command", 0);
-                    info += " " + command + " ";
+                    if (intent == null) throw new CallingException("Intent is null");
+                    String command = intent.getStringExtra("command");
+                    Logger.logToFile(getApplicationContext(), "SERVICE: command " + command);
                     switch (command) {
                         case COMMANDS.MAKE_CALL:
-                            Logger.logToFile(getApplicationContext(), "=============================================================================================");
-                            info += "MAKE_CALL";
-                            Logger.logToFile(getApplicationContext(), info);
+                            Logger.logToFile(getApplicationContext(), "--------------------------------------------------");
                             if (activeVoiceConnection != null) throw new CallingException(getString(R.string.only_one_call));
-                            Uri outgoingUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, intent.getStringExtra(VoiceConnection.EXTRA_REMOTE_NUMBER), null); // TODO try to delete later
+                            Uri outgoingUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, intent.getStringExtra(VoiceConnection.EXTRA_REMOTE_NUMBER), null);
                             Bundle outgoingExtras = new Bundle();
                             outgoingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
                             outgoingExtras.putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, new Bundle(intent.getExtras()));
@@ -161,62 +156,44 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             }
                             break;
                         case COMMANDS.INCOMING_CALL:
+                            Logger.logToFile(getApplicationContext(), "--------------------------------------------------");
                             if (activeVoiceConnection != null) {
                                 nextCallAhead = true;
                                 return;
                             }
-                            info += "INCOMING_CALL";
-                            Logger.logToFile(getApplicationContext(), info);
-                            Uri incomingUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, "unknown", null); // TODO try to delete later
                             Bundle incomingExtras = new Bundle();
-                            incomingExtras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, incomingUri);
                             incomingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
                             getTelecomManager().addNewIncomingCall(phoneAccountHandle, incomingExtras);
                             break;
                         case COMMANDS.ANSWER_CALL:
-                            info += "ANSWER_CALL";
-                            Logger.logToFile(getApplicationContext(), info);
                             getActiveConnection().answerIncomingCall();
                             break;
                         case COMMANDS.SEND_DTMF:
-                            info += "SEND_DTMF";
-                            Logger.logToFile(getApplicationContext(), info);
                             getActiveConnection().sendDtfm(intent.getStringExtra("character"));
                             break;
                         case COMMANDS.HANGUP_CALL:
-                            info += "HANGUP_CALL";
-                            Logger.logToFile(getApplicationContext(), info);
                             getActiveConnection().hangupAndDestroy(DisconnectCause.LOCAL);
                             break;
                         case COMMANDS.ADJUST_INCALL_VOLUME:
-                            info += "ADJUST_INCALL_VOLUME";
-                            Logger.logToFile(getApplicationContext(), info);
                             getActiveConnection().adjustIncallVolume(intent.getBooleanExtra("increase", true));
                             break;
                         case COMMANDS.SILENCE_RINGING:
-                            info += "SILENCE_RINGING";
-                            Logger.logToFile(getApplicationContext(), info);
                             stopRingtone();
                             break;
                         case COMMANDS.TOGGLE_MUTE:
-                            info += "TOGGLE_MUTE";
-                            Logger.logToFile(getApplicationContext(), info);
                             getActiveConnection().toggleMute();
                             break;
                         case COMMANDS.TOGGLE_SPEAKER:
-                            info += "TOGGLE_SPEAKER";
-                            Logger.logToFile(getApplicationContext(), info);
                             getActiveConnection().toggleSpeaker();
                             break;
                         case COMMANDS.TOGGLE_HOLD:
-                            info += "TOGGLE_HOLD";
-                            Logger.logToFile(getApplicationContext(), info);
                             getActiveConnection().toggleHold();
                             break;
-                        case COMMANDS.UPDATE_ALL:
-                            info += "UPDATE_ALL";
-                            Logger.logToFile(getApplicationContext(), info);
-                            getActiveConnection().broadcastAll();
+                        case COMMANDS.GET_CALL_UPDATES:
+                            getActiveConnection().broadcastCallUpdates();
+                            break;
+                        case COMMANDS.GET_CALL_STATE:
+                            getActiveConnection().broadcastCallState();
                             break;
                         default:
                             throw new CallingException("Unknown CallingService command:" + command);
@@ -603,8 +580,13 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         finishTimer.schedule(new TimerTask() {
                             @Override
                             public void run() {
-                                Toast.makeText(CallingService.this, "Asterisk did not route the call to this device", Toast.LENGTH_LONG).show();
-                                hangupAndDestroy(DisconnectCause.ERROR);
+                                mainHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(CallingService.this, "Asterisk did not route the call to this device", Toast.LENGTH_LONG).show();
+                                        hangupAndDestroy(DisconnectCause.ERROR);
+                                    }
+                                });
                             }
                         }, WAITING_TO_CALL_MILLIS);
                     }
@@ -634,61 +616,56 @@ public class CallingService extends ConnectionService implements VoiceConnection
                     }
                 }
             });
-            workerHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        voiceCall = new VoiceCall(voiceAccount, callId, voiceCore, VoiceConnection.this);
-                        CallOpParam prm = new CallOpParam();
-                        prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
-                        voiceCall.answer(prm);
-                        // update remoteNumber and remoteName
-                        String remoteUri = voiceCall.getInfo().getRemoteUri();
-                        if (!TextUtils.isEmpty(remoteUri)) {
-                            Pattern pattern = Pattern.compile("\\<sip\\:(.+)\\@.+\\>");
-                            Matcher matcher = pattern.matcher(remoteUri);
-                            if (matcher.find()) remoteNumber = matcher.group(1);
-                            pattern = Pattern.compile("\\\"?([^\\\"]*)\\\"?");
-                            matcher = pattern.matcher(remoteUri);
-                            if (matcher.find()) remoteName = matcher.group(1);
-                        }
-                        mainHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                setInitialized();
-                                setCallState(CALL_STATE.RINGING);
-                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
-                                    startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
-                                    startRingtone();
-                                    return;
-                                }
-                                RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
-                                headUpLayout.setTextViewText(R.id.text, remoteName);
-                                headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true, remoteNumber, remoteName));
-                                headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());
-                                createNotificationChannel(INCOMING_CHANNEL_ID, R.string.incoming_call, IMPORTANCE_HIGH);
-                                NotificationCompat.Builder builder = new NotificationCompat.Builder(CallingService.this, INCOMING_CHANNEL_ID)
-                                        .setSmallIcon(R.drawable.ic_call_24dp)
-                                        .setCustomBigContentView(headUpLayout)
-                                        .setCustomContentView(headUpLayout)
-                                        .setCustomHeadsUpContentView(headUpLayout)
-                                        .setContentTitle(getString(R.string.incoming_call))
-                                        .setContentText(remoteNumber)
-                                        .setOngoing(true)
-                                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-                                        .setCategory(NotificationCompat.CATEGORY_CALL)
-                                        .setFullScreenIntent(createCallingPendingIntent(false, remoteNumber, remoteName), true);
-                                Notification notification = builder.build();
-                                startForeground(INCOMING_NOTIFICATION_ID, notification);
-                                startRingtone();
-                            }
-                        });
-                    } catch (Exception e) {
-                        callbacks.onErrorState("Error while notifying incoming call: " + e.getMessage(), e);
-                        hangupAndDestroy(DisconnectCause.ERROR);
-                    }
+            try {
+                voiceCall = new VoiceCall(voiceAccount, callId, voiceCore, VoiceConnection.this);
+                CallOpParam prm = new CallOpParam();
+                prm.setStatusCode(pjsip_status_code.PJSIP_SC_RINGING);
+                voiceCall.answer(prm);
+                // update remoteNumber and remoteName
+                String remoteUri = voiceCall.getInfo().getRemoteUri();
+                if (!TextUtils.isEmpty(remoteUri)) {
+                    Pattern pattern = Pattern.compile("\\<sip\\:(.+)\\@.+\\>");
+                    Matcher matcher = pattern.matcher(remoteUri);
+                    if (matcher.find()) remoteNumber = matcher.group(1);
+                    pattern = Pattern.compile("\\\"?([^\\\"]*)\\\"?");
+                    matcher = pattern.matcher(remoteUri);
+                    if (matcher.find()) remoteName = matcher.group(1);
                 }
-            });
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        setInitialized();
+                        setCallState(CALL_STATE.RINGING);
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
+                            startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
+                            startRingtone();
+                            return;
+                        }
+                        RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
+                        headUpLayout.setTextViewText(R.id.text, remoteName);
+                        headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true, remoteNumber, remoteName));
+                        headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());
+                        createNotificationChannel(INCOMING_CHANNEL_ID, R.string.incoming_call, IMPORTANCE_HIGH);
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(CallingService.this, INCOMING_CHANNEL_ID)
+                                .setSmallIcon(R.drawable.ic_call_24dp)
+                                .setCustomBigContentView(headUpLayout)
+                                .setCustomContentView(headUpLayout)
+                                .setCustomHeadsUpContentView(headUpLayout)
+                                .setContentTitle(getString(R.string.incoming_call))
+                                .setContentText(remoteNumber)
+                                .setOngoing(true)
+                                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                                .setCategory(NotificationCompat.CATEGORY_CALL)
+                                .setFullScreenIntent(createCallingPendingIntent(false, remoteNumber, remoteName), true);
+                        Notification notification = builder.build();
+                        startForeground(INCOMING_NOTIFICATION_ID, notification);
+                        startRingtone();
+                    }
+                });
+            } catch (Exception e) {
+                callbacks.onErrorState("Error while notifying incoming call: " + e.getMessage(), e);
+                hangupAndDestroy(DisconnectCause.ERROR);
+            }
         }
 
         /* Telephony callbacks */
@@ -727,7 +704,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         Bundle bundle = new Bundle(1);
                         bundle.putBoolean(CALL_UPDATE.UPDATE_HOLD, isHold);
                         callbacks.onCallUpdate(bundle);
-                        setCallState(CALL_STATE.UNHOLD);
+                        setCallState(CALL_STATE.ACTIVE);
                     } catch (Exception e) {
                         callbacks.onErrorState("Error while unholding a call: " + e.getMessage(), e);
                     }
@@ -771,7 +748,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         }
                     }, 0, 1000);
                     setActive();
-                    callbacks.onCallState(CALL_STATE.ACTIVE, remoteNumber, remoteName);
+                    setCallState(CALL_STATE.ACTIVE);
                 }
             });
         }
@@ -796,7 +773,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
             Log.d(TAG, "#### Connection: onShowIncomingCallUi");
         }
 
-        public void broadcastAll() {
+        public void broadcastCallUpdates() {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -806,6 +783,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
                     bundle.putBoolean(CALL_UPDATE.UPDATE_SPEAKER, isSpeaker);
                     bundle.putLong(CALL_UPDATE.UPDATE_DURATION, duration);
                     callbacks.onCallUpdate(bundle);
+                }
+            });
+        }
+
+        public void broadcastCallState() {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
                     callbacks.onCallState(lastCallState, remoteNumber, remoteName);
                 }
             });
@@ -821,7 +806,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
     }
 
     private void runAsForeground(final String callState, final String remoteNumber, final String remoteName) {
-        Log.d(TAG, "runAsForeground: " + callState);
+        Log.d(TAG, "#### runAsForeground: " + callState);
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -924,7 +909,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
     }
 
 
-
     private void startRingtone() {
         mainHandler.post(new Runnable() {
             @Override
@@ -1007,7 +991,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 stopRingtone();
                 activeVoiceConnection = null;
                 if (nextCallAhead) {
-                    // check here if another incoming call is on the way
+                    // another incoming call is on the way...
                     CallingCommands.incomingCall(getApplicationContext());
                 } else {
                     stopSelf();

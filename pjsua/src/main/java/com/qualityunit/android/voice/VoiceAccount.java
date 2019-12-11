@@ -48,7 +48,7 @@ public class VoiceAccount extends Account {
     public void onIncomingCall(OnIncomingCallParam prm) {
         int callId = prm.getCallId();
         Log.d(TAG, "#### onIncomingCall: " + callId);
-        callbacks.onIncomingVoiceCall(1);
+        callbacks.onIncomingVoiceCall(callId);
     }
 
     public static AccountConfig createAccountConfig(String sipHost, String sipUser, String sipPassword) {

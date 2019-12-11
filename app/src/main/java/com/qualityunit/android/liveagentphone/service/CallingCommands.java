@@ -61,19 +61,19 @@ public final class CallingCommands {
                 .putExtra("increase", increase));
     }
 
-//    public static void updateState(@NonNull Context context) {
-//        context.startService(new Intent(context, CallingService.class)
-//                .putExtra("command", CallingService.COMMANDS.UPDATE_STATE));
-//    }
+    public static void getCallState(@NonNull Context context) {
+        context.startService(new Intent(context, CallingService.class)
+                .putExtra("command", CallingService.COMMANDS.GET_CALL_STATE));
+    }
 
     public static void silenceRinging(@NonNull Context context) {
         context.startService(new Intent(context, CallingService.class)
                 .putExtra("command", CallingService.COMMANDS.SILENCE_RINGING));
     }
 
-    public static void updateAll(@NonNull Context context) {
+    public static void getCallUpdates(@NonNull Context context) {
         context.startService(new Intent(context, CallingService.class)
-                .putExtra("command", CallingService.COMMANDS.UPDATE_ALL));
+                .putExtra("command", CallingService.COMMANDS.GET_CALL_UPDATES));
     }
 
     public static void toggleHold(@NonNull Context context) {

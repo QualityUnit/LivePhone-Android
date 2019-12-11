@@ -52,7 +52,12 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         String remoteName = intent.getStringExtra("remoteName");
         String nameToShow = !TextUtils.isEmpty(remoteName) ? remoteName : !TextUtils.isEmpty(remoteNumber) ? remoteNumber : getString(R.string.unknown);
         setText(tvRemoteName, nameToShow);
-        registerReceivers();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        CallingCommands.getCallState(getContext());
     }
 
     @Override
@@ -98,7 +103,6 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     public void onStart() {
         super.onStart();
         registerReceivers();
-        CallingCommands.updateAll(getContext());
     }
 
     @Override
@@ -113,23 +117,25 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     }
 
     private void registerReceivers() {
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
         if (callStateReceiver == null) {
             callStateReceiver = new CallStateReceiver();
-            LocalBroadcastManager.getInstance(getContext()).registerReceiver(callStateReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALL_STATE));
+            lbm.registerReceiver(callStateReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALL_STATE));
         }
         if (callUpdateReceiver == null) {
             callUpdateReceiver = new CallUpdateReceiver();
-            LocalBroadcastManager.getInstance(getContext()).registerReceiver(callUpdateReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALL_UPDATE));
+            lbm.registerReceiver(callUpdateReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALL_UPDATE));
         }
     }
 
     private void unregisterReceivers() {
+        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(getContext());
         if (callStateReceiver != null) {
-            LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(callStateReceiver);
+            lbm.unregisterReceiver(callStateReceiver);
             callStateReceiver = null;
         }
         if (callUpdateReceiver != null) {
-            LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(callUpdateReceiver);
+            lbm.unregisterReceiver(callUpdateReceiver);
             callUpdateReceiver = null;
         }
     }
@@ -145,8 +151,11 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                         long duration = intent.getLongExtra(CallingService.CALL_UPDATE.UPDATE_DURATION, 0);
                         if (duration > 0) {
                             tvDuration.setVisibility(View.VISIBLE);
-                            String durationString = String.format("%02d:%02d:%02d", duration / 3600, (duration % 3600) / 60, duration % 60);
-                            setText(tvDuration, durationString);
+                            if (duration < 3600) {
+                                setText(tvDuration, String.format("%02d:%02d", duration / 60, duration % 60));
+                            } else {
+                                setText(tvDuration, String.format("%02d:%02d:%02d", duration / 3600, (duration % 3600) / 60, duration % 60));
+                            }
                         }
                         break;
                     case CallingService.CALL_UPDATE.UPDATE_HOLD:
@@ -200,7 +209,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     setText(tvState, getString(R.string.call_state_active));
                     ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
                     ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
-                    CallingCommands.updateAll(getContext());
+                    CallingCommands.getCallUpdates(getContext());
                     break;
                 case CallingService.CALL_STATE.DISCONNECTED:
                     setText(tvState, getString(R.string.call_state_call_ended));
