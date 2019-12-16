@@ -17,16 +17,12 @@ public class VoiceCore {
         System.out.println("Library loaded");
     }
 
-    private Endpoint endpoint;
-
-    private EpConfig epConfig;
-    private TransportConfig sipTpConfig;
-
-    // Maintain reference to log writer to avoid premature cleanup by GC
-    private VoiceLogWriter logWriter;
-
     private static final int SIP_PORT = 5080;
     private static final int LOG_LEVEL = 4;
+    private Endpoint endpoint;
+    private EpConfig epConfig;
+    private TransportConfig sipTpConfig;
+    private VoiceLogWriter logWriter;
 
     public static VoiceCore create(String externalThread) throws Exception {
         VoiceCore instance = new VoiceCore();
@@ -37,17 +33,13 @@ public class VoiceCore {
     public void init(String externalThread) throws Exception {
         epConfig = new EpConfig();
         sipTpConfig = new TransportConfig();
-
         endpoint = new Endpoint();
-
         // Create endpoint
         endpoint.libCreate();
         sipTpConfig.setPort(SIP_PORT);
-
         // Override log level setting
         epConfig.getLogConfig().setLevel(LOG_LEVEL);
         epConfig.getLogConfig().setConsoleLevel(LOG_LEVEL);
-
         // Set log config
         LogConfig log_cfg = epConfig.getLogConfig();
         logWriter = new VoiceLogWriter();
@@ -55,7 +47,6 @@ public class VoiceCore {
         log_cfg.setDecor(log_cfg.getDecor() &
                 ~(pj_log_decoration.PJ_LOG_HAS_CR.swigValue() |
                         pj_log_decoration.PJ_LOG_HAS_NEWLINE.swigValue()));
-
         // Set ua config
         UaConfig ua_cfg = epConfig.getUaConfig();
         ua_cfg.setUserAgent("Pjsua2 Android " + endpoint.libVersion().getFull());
@@ -65,21 +56,17 @@ public class VoiceCore {
         if (externalThread != null) {
             endpoint.libRegisterThread(externalThread);
         }
-
         // Init endpoint
         endpoint.libInit(epConfig);
-
         // Create UDP transport
         endpoint.transportCreate(pjsip_transport_type_e.PJSIP_TRANSPORT_UDP, sipTpConfig);
-
         // Create TCP transport (we need this to be enabled, because UDP supports requests up to 1300 bytes (e.g. hold request has more than 1300 bytes))
         endpoint.transportCreate(pjsip_transport_type_e.PJSIP_TRANSPORT_TCP, sipTpConfig);
-
         // Start sip lib
         endpoint.libStart();
     }
 
-    protected Endpoint getEndpoint() {
+    public Endpoint getEndpoint() {
         return this.endpoint;
     }
 

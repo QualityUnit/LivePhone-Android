@@ -85,7 +85,6 @@ public class PushMessagingService extends FirebaseMessagingService {
                     initCallIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
                         getApplicationContext().startActivity(initCallIntent);
-                        break;
                     } else {
                         RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_init_call);
                         String contact = data.getString(InitCallActivity.EXTRA_CONTACT_NAME, data.getString(InitCallActivity.EXTRA_REMOTE_NUMBER, getString(R.string.unknown)));

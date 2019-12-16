@@ -48,7 +48,9 @@ public class VoiceCall extends Call {
             } else if (callState == PJSIP_INV_STATE_CONFIRMED) {
                 callbacks.onAnswerCall();
             }
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            callbacks.onCallError(e);
+        }
     }
 
     @Override
@@ -57,6 +59,7 @@ public class VoiceCall extends Call {
         try {
             ci = getInfo();
         } catch (Exception e) {
+            callbacks.onCallError(e);
             return;
         }
         CallMediaInfoVector cmiv = ci.getMedia();
@@ -74,7 +77,9 @@ public class VoiceCall extends Call {
                     AudDevManager audDevManager = voiceCore.getEndpoint().audDevManager();
                     audDevManager.getCaptureDevMedia().startTransmit(am);
                     am.startTransmit(audDevManager.getPlaybackDevMedia());
-                } catch (Exception e) {}
+                } catch (Exception e) {
+                    callbacks.onCallError(e);
+                }
             }
         }
     }
@@ -82,5 +87,6 @@ public class VoiceCall extends Call {
     public interface Callbacks {
         void onAnswerCall();
         void onDisconnect();
+        void onCallError(Exception e);
     }
 }

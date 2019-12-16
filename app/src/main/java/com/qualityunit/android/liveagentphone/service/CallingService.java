@@ -156,12 +156,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             getTelecomManager().addNewIncomingCall(phoneAccountHandle, incomingExtras);
                             break;
                         case COMMANDS.ANSWER_CALL:
+                            dismissIncomingCallNotification();
                             getActiveConnection().answerIncomingCall();
                             break;
                         case COMMANDS.SEND_DTMF:
                             getActiveConnection().sendDtfm(intent.getStringExtra("character"));
                             break;
                         case COMMANDS.HANGUP_CALL:
+                            dismissIncomingCallNotification();
                             getActiveConnection().hangupAndDestroy(DisconnectCause.LOCAL);
                             break;
                         case COMMANDS.ADJUST_INCALL_VOLUME:
@@ -192,6 +194,13 @@ public class CallingService extends ConnectionService implements VoiceConnection
             }
         });
         return START_NOT_STICKY;
+    }
+
+    private void dismissIncomingCallNotification() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancel(INCOMING_NOTIFICATION_ID);
+        }
     }
 
     private VoiceConnection getActiveConnection() throws CallingException {
@@ -446,9 +455,13 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 public void run() {
                     try {
                         log("Initializing of SIP library...");
-                        if (TextUtils.isEmpty(sipHost)) throw new Exception("Argument 'sipHost' is empty or null");
-                        if (TextUtils.isEmpty(sipUser)) throw new Exception("Argument 'sipUser' is empty or null");
-                        if (TextUtils.isEmpty(sipPassword)) throw new Exception("Argument 'sipPassword' is empty or null");
+                        StringBuilder sb = new StringBuilder();
+                        if (TextUtils.isEmpty(sipHost)) sb.append(sb.length() > 0 ? ", SIP host" : "SIP host");
+                        if (TextUtils.isEmpty(sipUser)) sb.append(sb.length() > 0 ? ", SIP user" : "SIP user");
+                        if (TextUtils.isEmpty(sipPassword)) sb.append(sb.length() > 0 ? ", SIP password" : "SIP password");
+                        if (sb.length() > 0) {
+                            throw new Exception("Empty parameters: " + sb.toString());
+                        }
                         if (voiceCore == null) {
                             setCallState(CALL_STATE.INITIALIZING_SIP_LIBRARY);
                             voiceCore = new VoiceCore();
@@ -548,6 +561,20 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 public void run() {
                     lastCallState = callState;
                     callbacks.onCallState(callState, remoteNumber, remoteName);
+                    switch (callState) {
+                        case CALL_STATE.RINGING:
+                            setRingingCallState(remoteNumber, remoteName);
+                            break;
+                        case CALL_STATE.HOLD:
+                            setOtherCallState(remoteNumber, remoteName, R.string.call_hold, R.drawable.ic_call_paused_24dp);
+                            break;
+                        case CALL_STATE.DISCONNECTED:
+                            setOtherCallState(remoteNumber, remoteName, R.string.call_state_call_ended, R.drawable.ic_call_end_24dp);
+                            break;
+                        default:
+                            setOtherCallState(remoteNumber, remoteName, R.string.ongoing_call, R.drawable.ic_call_24dp);
+                    }
+
                 }
             });
         }
@@ -597,22 +624,22 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 public void run() {
                     if(isOutgoing) {
                         continueMakeCall();
-                    } else {
-                        setCallState(CALL_STATE.WAITING_TO_CALL);
-                        finishTimer = new Timer();
-                        finishTimer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                mainHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        Toast.makeText(CallingService.this, "Asterisk did not route the call to this device", Toast.LENGTH_LONG).show();
-                                        hangupAndDestroy(DisconnectCause.ERROR);
-                                    }
-                                });
-                            }
-                        }, WAITING_TO_CALL_MILLIS);
+                        return;
                     }
+                    setCallState(CALL_STATE.WAITING_TO_CALL);
+                    finishTimer = new Timer();
+                    finishTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            mainHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(CallingService.this, "Asterisk did not route the call to this device", Toast.LENGTH_LONG).show();
+                                    hangupAndDestroy(DisconnectCause.ERROR);
+                                }
+                            });
+                        }
+                    }, WAITING_TO_CALL_MILLIS);
                 }
             });
         }
@@ -701,6 +728,12 @@ public class CallingService extends ConnectionService implements VoiceConnection
         @Override
         public void onAnswer() {
             answerIncomingCall();
+        }
+
+        @Override
+        public void onCallError(Exception e) {
+            setErrorState(e.getMessage(), e);
+            hangupAndDestroy(DisconnectCause.LOCAL);
         }
 
         @Override
@@ -826,6 +859,49 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
     }
 
+    private void setOtherCallState(String remoteNumber, String remoteName, int titleRes, int iconRes) {
+        String titleText = getString(titleRes);
+        String notificationContentText = !TextUtils.isEmpty(remoteName) ? remoteName : !TextUtils.isEmpty(remoteNumber) ? remoteNumber : getString(R.string.unknown);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), SERVICE_CHANNEL_ID);
+        createNotificationChannel(SERVICE_CHANNEL_ID, R.string.ongoing_call, IMPORTANCE_LOW);
+        NotificationCompat.Action hangupAction = new NotificationCompat.Action.Builder(R.drawable.ic_call_end_24dp, getString(R.string.hangup), createHangupPendingIntent()).build();
+        Notification notification = builder
+                .setSmallIcon(iconRes)
+                .setTicker(titleText)
+                .setContentTitle(titleText)
+                .setContentText(notificationContentText)
+                .setContentIntent(createCallingPendingIntent(false, remoteNumber, remoteName))
+                .addAction(hangupAction)
+                .build();
+        startForeground(ONGOING_NOTIFICATION_ID, notification);
+    }
+
+    private void setRingingCallState(String remoteNumber, String remoteName) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
+            startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
+        } else {
+            RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
+            headUpLayout.setTextViewText(R.id.text, remoteName);
+            headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true, remoteNumber, remoteName));
+            headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());
+            createNotificationChannel(INCOMING_CHANNEL_ID, R.string.incoming_call, IMPORTANCE_HIGH);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(CallingService.this, INCOMING_CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_call_24dp)
+                    .setCustomBigContentView(headUpLayout)
+                    .setCustomContentView(headUpLayout)
+                    .setCustomHeadsUpContentView(headUpLayout)
+                    .setContentTitle(getString(R.string.incoming_call))
+                    .setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName)
+                    .setOngoing(true)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setCategory(NotificationCompat.CATEGORY_CALL)
+                    .setFullScreenIntent(createCallingPendingIntent(false, remoteNumber, remoteName), true);
+            Notification notification = builder.build();
+            startForeground(INCOMING_NOTIFICATION_ID, notification);
+        }
+        startRingtone();
+    }
+
     private void startRingtone() {
         mainHandler.post(new Runnable() {
             @Override
@@ -865,12 +941,16 @@ public class CallingService extends ConnectionService implements VoiceConnection
                     try {
                         if (ringTone.isPlaying())
                             ringTone.stop();
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        log("Error while stopping ringtone: " + e.getMessage(), e);
+                    }
                     try {
                         ringTone.reset();
                         ringTone.release();
                         ringTone = null;
-                    } catch (Exception ignored) {}
+                    } catch (Exception e) {
+                        log("Error while releasing ringtone: " + e.getMessage(), e);
+                    }
                 }
             }
         });
@@ -899,66 +979,9 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         .putExtra("remoteNumber", remoteNumber)
                         .putExtra("remoteName", remoteName)
                         .putExtra("callState", callState));
-                String titleText;
-                int icon;
-                switch (callState) {
-                    case CALL_STATE.RINGING:
-                        startRinging(remoteNumber, remoteName);
-                        return;
-                    case CALL_STATE.HOLD:
-                        titleText = getString(R.string.call_hold);
-                        icon = R.drawable.ic_call_paused_24dp;
-                        break;
-                    case CALL_STATE.DISCONNECTED:
-                        titleText = getString(R.string.call_state_call_ended);
-                        icon = R.drawable.ic_call_end_24dp;
-                        break;
-                    default:
-                        titleText = getString(R.string.ongoing_call);
-                        icon = R.drawable.ic_call_24dp;
-                }
-                String notificationContentText = !TextUtils.isEmpty(remoteName) ? remoteName : !TextUtils.isEmpty(remoteNumber) ? remoteNumber : getString(R.string.unknown);
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), SERVICE_CHANNEL_ID);
-                createNotificationChannel(SERVICE_CHANNEL_ID, R.string.ongoing_call, IMPORTANCE_LOW);
-                NotificationCompat.Action hangupAction = new NotificationCompat.Action.Builder(R.drawable.ic_call_end_24dp, getString(R.string.hangup), createHangupPendingIntent()).build();
-                Notification notification = builder
-                        .setSmallIcon(icon)
-                        .setTicker(titleText)
-                        .setContentTitle(titleText)
-                        .setContentText(notificationContentText)
-                        .setContentIntent(createCallingPendingIntent(false, remoteNumber, remoteName))
-                        .addAction(hangupAction)
-                        .build();
-                startForeground(ONGOING_NOTIFICATION_ID, notification);
+
             }
         });
-    }
-
-    private void startRinging(String remoteNumber, String remoteName) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
-            startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
-            startRingtone();
-            return;
-        }
-        RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
-        headUpLayout.setTextViewText(R.id.text, remoteName);
-        headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true, remoteNumber, remoteName));
-        headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());
-        createNotificationChannel(INCOMING_CHANNEL_ID, R.string.incoming_call, IMPORTANCE_HIGH);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(CallingService.this, INCOMING_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_call_24dp)
-                .setCustomBigContentView(headUpLayout)
-                .setCustomContentView(headUpLayout)
-                .setCustomHeadsUpContentView(headUpLayout)
-                .setContentTitle(getString(R.string.incoming_call))
-                .setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName)
-                .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(NotificationCompat.CATEGORY_CALL)
-                .setFullScreenIntent(createCallingPendingIntent(false, remoteNumber, remoteName), true);
-        Notification notification = builder.build();
-        startForeground(INCOMING_NOTIFICATION_ID, notification);
-        startRingtone();
     }
 
     private void log(String message) {

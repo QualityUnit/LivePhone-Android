@@ -20,7 +20,7 @@ public final class CallingCommands {
                 .putExtra("remoteName", remoteName));
     }
 
-    public static void incomingCall(@NonNull  Context context) {
+    public static void incomingCall(@NonNull Context context) {
         context.startService(new Intent(context, CallingService.class)
                 .putExtra("command", CallingService.COMMANDS.INCOMING_CALL));
     }
