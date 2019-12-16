@@ -8,10 +8,7 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioAttributes;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,7 +16,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.PowerManager;
 import android.os.Process;
-import android.os.Vibrator;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telecom.Connection;
@@ -66,12 +62,9 @@ import static com.qualityunit.android.liveagentphone.Const.NotificationId.ONGOIN
 public class CallingService extends ConnectionService implements VoiceConnectionCallbacks {
 
     private static final String TAG = CallingService.class.getSimpleName();
-    private static final long[] VIBRATOR_PATTERN = {0, 1000, 0, 1000};
     private static final long WAITING_TO_CALL_MILLIS = 5000;
     public static final String INTENT_FILTER_CALL_STATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_CALL_STATE";
     public static final String INTENT_FILTER_CALL_UPDATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_CALL_UPDATE";
-    private LocalBroadcastManager localBroadcastManager;
-
     public static final class COMMANDS {
         public static final String MAKE_CALL = "MAKE_CALL";
         public static final String INCOMING_CALL = "INCOMING_CALL";
@@ -103,6 +96,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         public static final String UPDATE_HOLD = "UPDATE_HOLD";
         public static final String UPDATE_DURATION = "UPDATE_DURATION";
     }
+    private LocalBroadcastManager localBroadcastManager;
     private PhoneAccountHandle phoneAccountHandle;
     private HandlerThread mainThread;
     private Handler mainHandler;
@@ -110,9 +104,8 @@ public class CallingService extends ConnectionService implements VoiceConnection
     private Handler workerHandler;
     private volatile boolean nextCallAhead;
     private static PowerManager.WakeLock wakeLock;
-    private MediaPlayer ringTone;
-    private Vibrator vibrator;
     private VoiceConnection activeVoiceConnection;
+    private Ringer ringer;
 
     @Override
     public void onCreate() {
@@ -122,6 +115,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         wakeLock.acquire();
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         phoneAccountHandle = new PhoneAccountHandle(new ComponentName(getApplicationContext(), CallingService.class), PHONE_ACCOUNT_HANDLE_ID);
+        ringer = new Ringer(getApplicationContext());
         startMainThread();
         startWorkerThread();
     }
@@ -906,25 +900,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (ringTone == null) {
-                    try {
-                        Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(), RingtoneManager.TYPE_RINGTONE);
-                        ringTone = new MediaPlayer();
-                        ringTone.setDataSource(getApplicationContext(), ringtoneUri);
-                        ringTone.setAudioStreamType(AudioManager.STREAM_RING);
-                        ringTone.setLooping(true);
-                        ringTone.prepare();
-                        ringTone.start();
-                        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                                .build();
-                        vibrator.vibrate(VIBRATOR_PATTERN, 0, audioAttributes);
-                    } catch (Exception e) {
-                        log("Error while playing ringtone: " + e.getMessage(), e);
-                    }
-                }
+                ringer.start();
             }
         });
     }
@@ -933,25 +909,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (vibrator != null) {
-                    vibrator.cancel();
-                    vibrator = null;
-                }
-                if (ringTone != null) {
-                    try {
-                        if (ringTone.isPlaying())
-                            ringTone.stop();
-                    } catch (Exception e) {
-                        log("Error while stopping ringtone: " + e.getMessage(), e);
-                    }
-                    try {
-                        ringTone.reset();
-                        ringTone.release();
-                        ringTone = null;
-                    } catch (Exception e) {
-                        log("Error while releasing ringtone: " + e.getMessage(), e);
-                    }
-                }
+                ringer.stop();
             }
         });
     }
