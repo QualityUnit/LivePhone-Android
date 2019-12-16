@@ -29,7 +29,6 @@ import com.qualityunit.android.liveagentphone.net.Client;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
-import com.qualityunit.android.liveagentphone.util.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -181,7 +180,7 @@ public class InitActivity extends AppCompatActivity {
             registerPushNotifications();
         } catch (EmptyValueException | JSONException e) {
             showError(e.getMessage());
-            Logger.e(TAG, e);
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 

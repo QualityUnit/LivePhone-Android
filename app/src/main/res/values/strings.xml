@@ -42,7 +42,6 @@
     <string name="call_state_registering">Registering</string>
     <string name="call_state_ringing">Ringing</string>
     <string name="call_state_dialing">Dialing</string>
-    <string name="call_state_connecting">Connecting</string>
     <string name="call_state_active">Active</string>
     <string name="call_state_call_ended">Ended</string>
     <string name="no_number_in_contact">There is no any phone number in contact</string>

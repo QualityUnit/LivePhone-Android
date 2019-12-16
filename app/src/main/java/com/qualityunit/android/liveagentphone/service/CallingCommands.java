@@ -5,10 +5,6 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import static com.qualityunit.android.liveagentphone.service.CallingService.VoiceConnection.EXTRA_PREFIX;
-import static com.qualityunit.android.liveagentphone.service.CallingService.VoiceConnection.EXTRA_REMOTE_NAME;
-import static com.qualityunit.android.liveagentphone.service.CallingService.VoiceConnection.EXTRA_REMOTE_NUMBER;
-
 /**
  * Created by rasto on 7.11.16.
  */
@@ -19,9 +15,9 @@ public final class CallingCommands {
         if (TextUtils.isEmpty(prefix)) prefix = "";
         context.startService(new Intent(context, CallingService.class)
                 .putExtra("command", CallingService.COMMANDS.MAKE_CALL)
-                .putExtra(EXTRA_PREFIX, prefix)
-                .putExtra(EXTRA_REMOTE_NUMBER, remoteNumber)
-                .putExtra(EXTRA_REMOTE_NAME, remoteName));
+                .putExtra("prefix", prefix)
+                .putExtra("remoteNumber", remoteNumber)
+                .putExtra("remoteName", remoteName));
     }
 
     public static void incomingCall(@NonNull  Context context) {

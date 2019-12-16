@@ -1,7 +1,6 @@
 package com.qualityunit.android.liveagentphone.service;
 
 import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -35,6 +34,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.qualityunit.android.liveagentphone.BuildConfig;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.call.CallingActivity;
@@ -66,8 +66,6 @@ import static com.qualityunit.android.liveagentphone.Const.NotificationId.ONGOIN
 public class CallingService extends ConnectionService implements VoiceConnectionCallbacks {
 
     private static final String TAG = CallingService.class.getSimpleName();
-    private static final String SIP_THREAD_NAME_MAIN = "SipThrdMain";
-    private static final String SIP_THREAD_NAME_WORKER = "SipThrdWorker";
     private static final long[] VIBRATOR_PATTERN = {0, 1000, 0, 1000};
     private static final long WAITING_TO_CALL_MILLIS = 5000;
     public static final String INTENT_FILTER_CALL_STATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_CALL_STATE";
@@ -94,7 +92,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
         public static final String DIALING = "DIALING";
         public static final String WAITING_TO_CALL = "WAITING_TO_CALL";
         public static final String RINGING = "RINGING";
-        public static final String CONNECTING = "CONNECTING";
         public static final String ACTIVE = "ACTIVE";
         public static final String HOLD = "HOLD";
         public static final String DISCONNECTED = "DISCONNECTED";
@@ -120,15 +117,13 @@ public class CallingService extends ConnectionService implements VoiceConnection
     @Override
     public void onCreate() {
         super.onCreate();
-        Logger.logToFile(getApplicationContext(), "SERVICE: Start 'onCreate'");
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getSimpleName());
         wakeLock.acquire();
+        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         phoneAccountHandle = new PhoneAccountHandle(new ComponentName(getApplicationContext(), CallingService.class), PHONE_ACCOUNT_HANDLE_ID);
-
         startMainThread();
         startWorkerThread();
-        Logger.logToFile(getApplicationContext(), "SERVICE: Done 'onCreate'");
     }
 
     @Override
@@ -138,14 +133,10 @@ public class CallingService extends ConnectionService implements VoiceConnection
             @Override
             public void run() {
                 try {
-                    if (intent == null) throw new CallingException("Intent is null");
-                    String command = intent.getStringExtra("command");
-                    Logger.logToFile(getApplicationContext(), "SERVICE: command " + command);
-                    switch (command) {
+                    switch (intent.getStringExtra("command")) {
                         case COMMANDS.MAKE_CALL:
-                            Logger.logToFile(getApplicationContext(), "--------------------------------------------------");
                             if (activeVoiceConnection != null) throw new CallingException(getString(R.string.only_one_call));
-                            Uri outgoingUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, intent.getStringExtra(VoiceConnection.EXTRA_REMOTE_NUMBER), null);
+                            Uri outgoingUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, intent.getStringExtra("remoteNumber"), null);
                             Bundle outgoingExtras = new Bundle();
                             outgoingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
                             outgoingExtras.putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, new Bundle(intent.getExtras()));
@@ -156,7 +147,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             }
                             break;
                         case COMMANDS.INCOMING_CALL:
-                            Logger.logToFile(getApplicationContext(), "--------------------------------------------------");
                             if (activeVoiceConnection != null) {
                                 nextCallAhead = true;
                                 return;
@@ -195,11 +185,9 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         case COMMANDS.GET_CALL_STATE:
                             getActiveConnection().broadcastCallState();
                             break;
-                        default:
-                            throw new CallingException("Unknown CallingService command:" + command);
                     }
                 } catch (Exception e) {
-                    onErrorState("SERVICE: Error: " + e.getMessage(), e);
+                    onErrorState(e.getMessage(), e);
                 }
             }
         });
@@ -226,7 +214,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
     @Override
     public void onDestroy() {
-        Logger.logToFile(getApplicationContext() ,"SERVICE: 'onDestroy'");
         stopRingtone();
         stopWorkerThread();
         stopMainThread();
@@ -234,18 +221,15 @@ public class CallingService extends ConnectionService implements VoiceConnection
             wakeLock.release();
             wakeLock = null;
         }
-        Logger.logToFile(getApplicationContext() ,"SERVICE: 'DESTROYED'");
+        log("Service destroyed");
         super.onDestroy();
 //        android.os.Process.killProcess(android.os.Process.myPid()); // this also kills calling activity (which is running on the same PID)
     }
-
-
 
     /** Telephony callbacks **/
 
     @Override
     public Connection onCreateOutgoingConnection(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
-        Log.d(TAG, "#### onCreateOutgoingConnection");
         activeVoiceConnection = new VoiceConnection(this);
         activeVoiceConnection.makeVoiceCall(request);
         return activeVoiceConnection;
@@ -253,14 +237,12 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
     @Override
     public void onCreateOutgoingConnectionFailed(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
-        Log.d(TAG, "#### onCreateOutgoingConnectionFailed");
         Toast.makeText(this, "Failed to create LivePhone outgoing call", Toast.LENGTH_LONG).show();
         super.onCreateOutgoingConnectionFailed(connectionManagerPhoneAccount, request);
     }
 
     @Override
     public Connection onCreateIncomingConnection(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
-        Log.d(TAG, "#### onCreateIncomingConnection");
         activeVoiceConnection = new VoiceConnection(this);
         activeVoiceConnection.incomingVoiceCall();
         return activeVoiceConnection;
@@ -268,16 +250,12 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
     @Override
     public void onCreateIncomingConnectionFailed(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
-        Log.d(TAG, "#### onCreateIncomingConnectionFailed");
         Toast.makeText(this, "Failed to create LivePhone incoming call", Toast.LENGTH_LONG).show();
         super.onCreateIncomingConnectionFailed(connectionManagerPhoneAccount, request);
     }
 
     final class VoiceConnection extends Connection implements VoiceCall.Callbacks, VoiceAccount.Callbacks {
 
-        public static final String EXTRA_REMOTE_NUMBER = "EXTRA_REMOTE_NUMBER";
-        public static final String EXTRA_REMOTE_NAME = "EXTRA_REMOTE_NAME";
-        public static final String EXTRA_PREFIX = "EXTRA_PREFIX";
         private final AudioManager audioManager;
         private final String sipHost;
         private final String sipUser;
@@ -301,10 +279,8 @@ public class CallingService extends ConnectionService implements VoiceConnection
         private VoiceConnectionCallbacks callbacks;
 
         public VoiceConnection (VoiceConnectionCallbacks callbacks) {
-            Log.d(TAG, "#### VoiceConnection: create");
             setInitializing();
             this.callbacks = callbacks;
-            durationTimer = new Timer();
             int capabilities = getConnectionCapabilities();
             capabilities |= CAPABILITY_MUTE;
             capabilities |= CAPABILITY_SUPPORT_HOLD;
@@ -322,15 +298,16 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void makeVoiceCall(final ConnectionRequest request) {
-            Log.d(TAG, "#### makeVoiceCall");
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    log("--------------------------------------------------\n");
+                    log("Make call requested...");
                     isOutgoing = true;
                     Bundle extras = request.getExtras();
-                    prefix = extras.getString(EXTRA_PREFIX);
-                    remoteNumber = extras.getString(EXTRA_REMOTE_NUMBER);
-                    remoteName = extras.getString(EXTRA_REMOTE_NAME);
+                    prefix = extras.getString("prefix");
+                    remoteNumber = extras.getString("remoteNumber");
+                    remoteName = extras.getString("remoteName");
                     startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
                     acquireProximityWakelock();
                     initAndRegister();
@@ -339,10 +316,10 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void incomingVoiceCall() {
-            Log.d(TAG, "#### incomingVoiceCall");
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    log("Incoming call requested...");
                     isOutgoing = false;
                     initAndRegister();
                 }
@@ -350,37 +327,26 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void answerIncomingCall() {
-            Log.d(TAG, "#### answerIncomingCall");
             workerHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        log("Call answering...");
                         stopRingtone();
                         CallOpParam prm = VoiceCall.createDefaultParams();
                         prm.setStatusCode(pjsip_status_code.PJSIP_SC_OK);
                         voiceCall.answer(prm);
                         acquireProximityWakelock();
-                        Logger.logToFile(getApplicationContext() ,"CONNECTION: Call successfully received");
+                        log("Call successfully answered");
                     } catch (Exception e) {
-                        callbacks.onErrorState("Error while answering call: " + e.getMessage(), e);
+                        setErrorState("Error while answering call: " + e.getMessage(), e);
                         hangupAndDestroy(DisconnectCause.ERROR);
                     }
                 }
             });
         }
 
-        public void setCallState(final String callState) {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    lastCallState = callState;
-                    callbacks.onCallState(callState, remoteNumber, remoteName);
-                }
-            });
-        }
-
         public void toggleHold() {
-            Log.d(TAG, "#### toggleHold");
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -394,10 +360,10 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void toggleSpeaker() {
-            Log.d(TAG, "#### toggleSpeaker");
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    log("Toggling loud speaker " + (!isSpeaker ? "ON" : "OFF") + "...");
                     audioManager.setSpeakerphoneOn(!isSpeaker);
                     isSpeaker = !isSpeaker;
                     Bundle keyValue = new Bundle(1);
@@ -408,10 +374,10 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void toggleMute() {
-            Log.d(TAG, "#### toggleMute");
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    log("Toggling mute " + (!isMute ? "ON" : "OFF") + "...");
                     audioManager.setMicrophoneMute(!isMute);
                     isMute = !isMute;
                     Bundle keyValue = new Bundle(1);
@@ -422,38 +388,38 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void adjustIncallVolume(final boolean increase) {
-            Log.d(TAG, "#### adjustIncallVolume: " + increase);
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    log("Adjusting in-call volume " + (increase ? "UP" : "DOWN") + "...");
                     audioManager.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, increase ? AudioManager.ADJUST_RAISE : AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
                 }
             });
         }
 
         public void sendDtfm(final String character) {
-            Log.d(TAG, "#### sendDtfm: " + character);
             workerHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    log("Sending DTMF character '" + character + "'...");
                     try {
                         if (TextUtils.isEmpty(character)) throw new CallingException("Empty DTMF character");
                         if (!voiceCall.isActive()) throw new CallingException("Cannot send DTMF signal while call is not active");
                         voiceCall.dialDtmf(character);
                     } catch (Exception e) {
-                        callbacks.onErrorState("Error while sending DTMF signal: " + e.getMessage(), e);
+                        setErrorState("Error while sending DTMF signal: " + e.getMessage(), e);
                     }
                 }
             });
         }
 
         private void continueMakeCall() {
-            Log.d(TAG, "#### continueMakeCall");
             workerHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        if (TextUtils.isEmpty(remoteNumber)) throw new CallingException("Argument 'remoteNumber' is empty");
+                        log("Making a call...");
+                        if (TextUtils.isEmpty(remoteNumber)) throw new CallingException("Argument 'remoteNumber' cannot be empty");
                         voiceCall = new VoiceCall(voiceAccount, -1, voiceCore, activeVoiceConnection);
                         String cleanedRemoteNumber = remoteNumber.replaceAll(" ", "").replaceAll("\\+", "00").replaceAll("\\/", ""); // cleaning number
                         String sipCalleeUri = "sip:" + prefix + cleanedRemoteNumber + "@" + sipHost;
@@ -465,9 +431,9 @@ public class CallingService extends ConnectionService implements VoiceConnection
                                 setInitialized();
                             }
                         });
-//                        Logger.logToFile(getApplicationContext() ,"SERVICE: Call started successfully");
+                        log("Call started successfully");
                     } catch (final Exception e) {
-                        callbacks.onErrorState("Error while making SIP call:" + e.getMessage(), e);
+                        setErrorState("Error while making SIP call:" + e.getMessage(), e);
                         hangupAndDestroy(DisconnectCause.ERROR);
                     }
                 }
@@ -475,12 +441,11 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         private void initAndRegister() {
-            Log.d(TAG, "#### initAndRegister");
             workerHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
-//                        Logger.logToFile(getApplicationContext() ,"CONNECTION: Initialization of SIP lib...");
+                        log("Initializing of SIP library...");
                         if (TextUtils.isEmpty(sipHost)) throw new Exception("Argument 'sipHost' is empty or null");
                         if (TextUtils.isEmpty(sipUser)) throw new Exception("Argument 'sipUser' is empty or null");
                         if (TextUtils.isEmpty(sipPassword)) throw new Exception("Argument 'sipPassword' is empty or null");
@@ -488,17 +453,17 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             setCallState(CALL_STATE.INITIALIZING_SIP_LIBRARY);
                             voiceCore = new VoiceCore();
                             voiceCore.init(workerThread.getName());
-//                            Logger.logToFile(getApplicationContext() ,"CONNECTION: SIP initialized successfully");
+                            log("SIP library initialized successfully");
                         }
                         if (voiceAccount == null || !voiceAccount.isRegistered()) {
                             setCallState(CALL_STATE.REGISTERING_SIP_USER);
                             voiceAccount = new VoiceAccount(VoiceConnection.this);
                             voiceAccount.register(sipHost, sipUser, sipPassword);
-//                            Logger.logToFile(getApplicationContext() ,"CONNECTION: Account registration sent");
+                            // now wait for registration callback and continue in flow
+                            log("Account registration sent");
                         }
-                        // wait for registration callback and continue in flow
                     } catch (final Exception e) {
-                        callbacks.onErrorState("Error while initializing SIP lib: " + e.getMessage(), e);
+                        setErrorState("Error while initializing SIP lib: " + e.getMessage(), e);
                         hangupAndDestroy(DisconnectCause.ERROR);
                     }
                 }
@@ -507,10 +472,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void hangupAndDestroy(final int cause) {
-            Log.d(TAG, "#### hangupAndDestroy");
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
+                    log("Hanging up and destroying...");
+                    if (durationTimer != null) {
+                        durationTimer.cancel();
+                        durationTimer = null;
+                    }
                     if (finishTimer != null) {
                         finishTimer.cancel();
                         finishTimer = null;
@@ -540,14 +509,12 @@ public class CallingService extends ConnectionService implements VoiceConnection
                                     }
                                     if (voiceCore != null) {
                                         voiceCore.deinit();
-                                        Logger.logToFile(getApplicationContext() ,"CONNECTION: Library deinitialed");
+                                        log("Library deinitialed");
                                         voiceCore = null;
                                     }
-                                    Logger.logToFile(getApplicationContext() ,"CONNECTION: Hang up call: Call successfully hanged up");
+                                    log("Call successfully hanged up");
                                 } catch (final Exception e) {
-                                    String err = "Error while hanging up call: " + e.getMessage();
-                                    callbacks.onErrorState(err, e);
-                                    Logger.logToFile(getApplicationContext() ,"CONNECTION: " + err);
+                                    setErrorState("Error while hanging up call: " + e.getMessage(), e);
                                 } finally {
                                     mainHandler.post(new Runnable() {
                                         @Override
@@ -561,6 +528,62 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             }
                         });
                     }
+                }
+            });
+        }
+
+        private void setErrorState(final String errorMessage, final Exception e) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    lastCallState = CALL_STATE.ERROR;
+                    callbacks.onErrorState(errorMessage, e);
+                }
+            });
+        }
+
+        private void setCallState(final String callState) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    lastCallState = callState;
+                    callbacks.onCallState(callState, remoteNumber, remoteName);
+                }
+            });
+        }
+
+        private void acquireProximityWakelock() {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+                    if (proximityWakeLock == null && pm != null) {
+                        proximityWakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, getClass().getSimpleName());
+                        proximityWakeLock.acquire();
+                    }
+                }
+            });
+        }
+
+        public void broadcastCallUpdates() {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Bundle bundle = new Bundle(4);
+                    bundle.putBoolean(CALL_UPDATE.UPDATE_MUTE, isMute);
+                    bundle.putBoolean(CALL_UPDATE.UPDATE_HOLD, isHold);
+                    bundle.putBoolean(CALL_UPDATE.UPDATE_SPEAKER, isSpeaker);
+                    bundle.putLong(CALL_UPDATE.UPDATE_DURATION, duration);
+                    callbacks.onCallUpdate(bundle);
+                }
+            });
+        }
+
+        public void broadcastCallState() {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    callbacks.onCallState(lastCallState, remoteNumber, remoteName);
                 }
             });
         }
@@ -599,7 +622,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    callbacks.onErrorState(errorMessage, null);
+                    setErrorState(errorMessage, null);
                     hangupAndDestroy(DisconnectCause.ERROR);
                 }
             });
@@ -624,67 +647,77 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 // update remoteNumber and remoteName
                 String remoteUri = voiceCall.getInfo().getRemoteUri();
                 if (!TextUtils.isEmpty(remoteUri)) {
-                    Pattern pattern = Pattern.compile("\\<sip\\:(.+)\\@.+\\>");
+                    Pattern pattern = Pattern.compile("\"?([^\"]*)\"? *<sip:(.+)@.+>");
                     Matcher matcher = pattern.matcher(remoteUri);
-                    if (matcher.find()) remoteNumber = matcher.group(1);
-                    pattern = Pattern.compile("\\\"?([^\\\"]*)\\\"?");
-                    matcher = pattern.matcher(remoteUri);
-                    if (matcher.find()) remoteName = matcher.group(1);
+                    if (matcher.find()) {
+                        remoteName = matcher.group(1);
+                        remoteNumber = matcher.group(2);
+                    }
                 }
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         setInitialized();
                         setCallState(CALL_STATE.RINGING);
-                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
-                            startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
-                            startRingtone();
-                            return;
-                        }
-                        RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
-                        headUpLayout.setTextViewText(R.id.text, remoteName);
-                        headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true, remoteNumber, remoteName));
-                        headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());
-                        createNotificationChannel(INCOMING_CHANNEL_ID, R.string.incoming_call, IMPORTANCE_HIGH);
-                        NotificationCompat.Builder builder = new NotificationCompat.Builder(CallingService.this, INCOMING_CHANNEL_ID)
-                                .setSmallIcon(R.drawable.ic_call_24dp)
-                                .setCustomBigContentView(headUpLayout)
-                                .setCustomContentView(headUpLayout)
-                                .setCustomHeadsUpContentView(headUpLayout)
-                                .setContentTitle(getString(R.string.incoming_call))
-                                .setContentText(remoteNumber)
-                                .setOngoing(true)
-                                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                                .setCategory(NotificationCompat.CATEGORY_CALL)
-                                .setFullScreenIntent(createCallingPendingIntent(false, remoteNumber, remoteName), true);
-                        Notification notification = builder.build();
-                        startForeground(INCOMING_NOTIFICATION_ID, notification);
-                        startRingtone();
                     }
                 });
             } catch (Exception e) {
-                callbacks.onErrorState("Error while notifying incoming call: " + e.getMessage(), e);
+                setErrorState("Error while notifying incoming call: " + e.getMessage(), e);
                 hangupAndDestroy(DisconnectCause.ERROR);
             }
         }
 
-        /* Telephony callbacks */
+        @Override
+        public void onAnswerCall() {
+            super.onAnswer();
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (durationTimer == null) {
+                        durationTimer = new Timer();
+                        durationTimer.scheduleAtFixedRate(new TimerTask() {
+                            @Override
+                            public void run() {
+                                Bundle bundle = new Bundle(1);
+                                bundle.putLong(CALL_UPDATE.UPDATE_DURATION, ++duration);
+                                callbacks.onCallUpdate(bundle);
+                            }
+                        }, 0, 1000);
+                    }
+                    setActive();
+                    setCallState(CALL_STATE.ACTIVE);
+                }
+            });
+        }
+
+        /* Telecom subsystem callbacks bellow */
+
+        @Override
+        public void onDisconnect() { // both telecom or pjsip callback
+            setCallState(CALL_STATE.DISCONNECTED);
+            hangupAndDestroy(DisconnectCause.LOCAL);
+        }
+
+        @Override
+        public void onAnswer() {
+            answerIncomingCall();
+        }
 
         @Override
         public void onHold() {
-            Log.d(TAG, "#### onHold");
             workerHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         voiceCall.setHold(VoiceCall.createDefaultParams());
+                        setOnHold();
                         isHold = true;
                         Bundle keyValue = new Bundle(1);
                         keyValue.putBoolean(CALL_UPDATE.UPDATE_HOLD, isHold);
                         callbacks.onCallUpdate(keyValue);
                         setCallState(CALL_STATE.HOLD);
                     } catch (Exception e) {
-                        callbacks.onErrorState("Error while holding a call: " + e.getMessage(), e);
+                        setErrorState("Error while holding a call: " + e.getMessage(), e);
                     }
                 }
             });
@@ -692,7 +725,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
         @Override
         public void onUnhold() {
-            Log.d(TAG, "#### onUnhold");
             workerHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -700,13 +732,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         CallOpParam param = VoiceCall.createDefaultParams();
                         param.getOpt().setFlag(pjsua_call_flag.PJSUA_CALL_UNHOLD.swigValue());
                         voiceCall.reinvite(param);
+                        setActive();
                         isHold = false;
                         Bundle bundle = new Bundle(1);
                         bundle.putBoolean(CALL_UPDATE.UPDATE_HOLD, isHold);
                         callbacks.onCallUpdate(bundle);
                         setCallState(CALL_STATE.ACTIVE);
                     } catch (Exception e) {
-                        callbacks.onErrorState("Error while unholding a call: " + e.getMessage(), e);
+                        setErrorState("Error while unholding a call: " + e.getMessage(), e);
                     }
                 }
             });
@@ -714,87 +747,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
         @Override
         public void onAbort() {
-            Log.d(TAG, "#### onAbort");
             hangupAndDestroy(DisconnectCause.UNKNOWN);
-        }
-
-        @SuppressLint("WakelockTimeout")
-        private void acquireProximityWakelock() {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-                    if (proximityWakeLock == null && pm != null) {
-                        proximityWakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, getClass().getSimpleName());
-                        proximityWakeLock.acquire();
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void onAnswerCall() {
-            Log.d(TAG, "#### onAnswerCall");
-            super.onAnswer();
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    durationTimer.scheduleAtFixedRate(new TimerTask() {
-                        @Override
-                        public void run() {
-                            Bundle bundle = new Bundle(1);
-                            bundle.putLong(CALL_UPDATE.UPDATE_DURATION, ++duration);
-                            callbacks.onCallUpdate(bundle);
-                        }
-                    }, 0, 1000);
-                    setActive();
-                    setCallState(CALL_STATE.ACTIVE);
-                }
-            });
-        }
-
-        /** Can be called from either telephony or pjsip **/
-        @Override
-        public void onDisconnect() {
-            Log.d(TAG, "#### onDisconnect");
-            setCallState(CALL_STATE.DISCONNECTED);
-            hangupAndDestroy(DisconnectCause.LOCAL);
         }
 
         @Override
         public void onReject() {
-            Log.d(TAG, "#### onReject");
             hangupAndDestroy(DisconnectCause.REJECTED);
         }
 
-        @Override
-        public void onShowIncomingCallUi() {
-            // DO NOT SHOW UI, WE SHOW IT MANUALLY
-            Log.d(TAG, "#### Connection: onShowIncomingCallUi");
-        }
-
-        public void broadcastCallUpdates() {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Bundle bundle = new Bundle(4);
-                    bundle.putBoolean(CALL_UPDATE.UPDATE_MUTE, isMute);
-                    bundle.putBoolean(CALL_UPDATE.UPDATE_HOLD, isHold);
-                    bundle.putBoolean(CALL_UPDATE.UPDATE_SPEAKER, isSpeaker);
-                    bundle.putLong(CALL_UPDATE.UPDATE_DURATION, duration);
-                    callbacks.onCallUpdate(bundle);
-                }
-            });
-        }
-
-        public void broadcastCallState() {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    callbacks.onCallState(lastCallState, remoteNumber, remoteName);
-                }
-            });
-        }
     }
 
     private Intent createCallingActivityIntent(boolean answer, String remoteNumber, String remoteName) {
@@ -805,14 +765,146 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 .putExtra("answer", answer);
     }
 
-    private void runAsForeground(final String callState, final String remoteNumber, final String remoteName) {
-        Log.d(TAG, "#### runAsForeground: " + callState);
+    private PendingIntent createCallingPendingIntent(boolean answer, String remoteNumber, String remoteName) {
+        Intent intent = createCallingActivityIntent(answer, remoteNumber, remoteName);
+        return PendingIntent.getActivity(CallingService.this, answer ? 1 : 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private PendingIntent createHangupPendingIntent() {
+        Intent intent = new Intent(CallingService.this, CallingService.class).putExtra("command", COMMANDS.HANGUP_CALL);
+        return PendingIntent.getService(CallingService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    private void createNotificationChannel(String channelId, int channelNameRes, int importance) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(channelId, getString(channelNameRes), importance);
+            channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    private void startWorkerThread() {
+        if (workerHandler == null) {
+            if (workerThread == null) {
+                workerThread = new HandlerThread("voice_thread_worker", Thread.MAX_PRIORITY);
+                workerThread.setPriority(Thread.MAX_PRIORITY);
+                workerThread.start();
+            }
+            workerHandler = new Handler(workerThread.getLooper());
+            log("New worker thread initiated");
+        }
+    }
+
+    private void stopWorkerThread() {
+        if (workerThread != null) {
+            workerThread.quitSafely();
+            workerThread = null;
+            workerHandler = null;
+            log("Worker thread destroyed");
+        }
+    }
+
+    private void startMainThread() {
+        if (mainHandler == null) {
+            if (mainThread == null) {
+                mainThread = new HandlerThread("voice_thread_main", Process.THREAD_PRIORITY_FOREGROUND);
+                mainThread.setPriority(Thread.MAX_PRIORITY);
+                mainThread.start();
+            }
+            mainHandler = new Handler(mainThread.getLooper());
+            log("New main thread initiated");
+        }
+    }
+
+    private void stopMainThread() {
+        if (mainThread != null) {
+            mainThread.quitSafely();
+            mainThread = null;
+            mainHandler = null;
+            log("Main thread destroyed");
+        }
+    }
+
+    private void startRingtone() {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
+                if (ringTone == null) {
+                    try {
+                        Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(), RingtoneManager.TYPE_RINGTONE);
+                        ringTone = new MediaPlayer();
+                        ringTone.setDataSource(getApplicationContext(), ringtoneUri);
+                        ringTone.setAudioStreamType(AudioManager.STREAM_RING);
+                        ringTone.setLooping(true);
+                        ringTone.prepare();
+                        ringTone.start();
+                        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                                .build();
+                        vibrator.vibrate(VIBRATOR_PATTERN, 0, audioAttributes);
+                    } catch (Exception e) {
+                        log("Error while playing ringtone: " + e.getMessage(), e);
+                    }
+                }
+            }
+        });
+    }
+
+    private void stopRingtone() {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (vibrator != null) {
+                    vibrator.cancel();
+                    vibrator = null;
+                }
+                if (ringTone != null) {
+                    try {
+                        if (ringTone.isPlaying())
+                            ringTone.stop();
+                    } catch (Exception ignored) {}
+                    try {
+                        ringTone.reset();
+                        ringTone.release();
+                        ringTone = null;
+                    } catch (Exception ignored) {}
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onErrorState(final String errorMessage, final Exception e) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                log("ERROR: " + errorMessage, e);
+                localBroadcastManager.sendBroadcast(new Intent(INTENT_FILTER_CALL_STATE)
+                        .putExtra("error", errorMessage)
+                        .putExtra("callState", CALL_STATE.ERROR));
+            }
+        });
+    }
+
+    @Override
+    public void onCallState(final String callState, final String remoteNumber, final String remoteName) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                log("Call state: " + callState);
+                localBroadcastManager.sendBroadcast(new Intent(INTENT_FILTER_CALL_STATE)
+                        .putExtra("remoteNumber", remoteNumber)
+                        .putExtra("remoteName", remoteName)
+                        .putExtra("callState", callState));
                 String titleText;
                 int icon;
                 switch (callState) {
+                    case CALL_STATE.RINGING:
+                        startRinging(remoteNumber, remoteName);
+                        return;
                     case CALL_STATE.HOLD:
                         titleText = getString(R.string.call_hold);
                         icon = R.drawable.ic_call_paused_24dp;
@@ -842,145 +934,58 @@ public class CallingService extends ConnectionService implements VoiceConnection
         });
     }
 
-    private PendingIntent createCallingPendingIntent(boolean answer, String remoteNumber, String remoteName) {
-        Intent intent = createCallingActivityIntent(answer, remoteNumber, remoteName);
-        return PendingIntent.getActivity(CallingService.this, answer ? 1 : 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    private PendingIntent createHangupPendingIntent() {
-        Intent intent = new Intent(CallingService.this, CallingService.class).putExtra("command", COMMANDS.HANGUP_CALL);
-        return PendingIntent.getService(CallingService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    }
-
-    private void createNotificationChannel(String channelId, int channelNameRes, int importance) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(channelId, getString(channelNameRes), importance);
-            channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.createNotificationChannel(channel);
+    private void startRinging(String remoteNumber, String remoteName) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
+            startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
+            startRingtone();
+            return;
         }
+        RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
+        headUpLayout.setTextViewText(R.id.text, remoteName);
+        headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true, remoteNumber, remoteName));
+        headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());
+        createNotificationChannel(INCOMING_CHANNEL_ID, R.string.incoming_call, IMPORTANCE_HIGH);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(CallingService.this, INCOMING_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_call_24dp)
+                .setCustomBigContentView(headUpLayout)
+                .setCustomContentView(headUpLayout)
+                .setCustomHeadsUpContentView(headUpLayout)
+                .setContentTitle(getString(R.string.incoming_call))
+                .setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setFullScreenIntent(createCallingPendingIntent(false, remoteNumber, remoteName), true);
+        Notification notification = builder.build();
+        startForeground(INCOMING_NOTIFICATION_ID, notification);
+        startRingtone();
     }
 
-    private void startWorkerThread() {
-        if (workerHandler == null) {
-            if (workerThread == null) {
-                workerThread = new HandlerThread(SIP_THREAD_NAME_WORKER, Thread.MAX_PRIORITY);
-                workerThread.setPriority(Thread.MAX_PRIORITY);
-                workerThread.start();
-            }
-            workerHandler = new Handler(workerThread.getLooper());
-            Logger.logToFile(getApplicationContext() ,"SERVICE: New worker thread initiated");
+    private void log(String message) {
+        log(message, null);
+    }
+    
+    private void log(String message, Exception e) {
+        Logger.logToFile(getApplicationContext(), message);
+        if (e != null) {
+            Log.e(TAG, message, e);
         } else {
-            Logger.logToFile(getApplicationContext() ,"SERVICE: Previous worker thread used");
+            Log.d(TAG, message);
         }
-    }
-
-    private void stopWorkerThread() {
-        if (workerThread != null) {
-            workerThread.quitSafely();
-            workerThread = null;
-            workerHandler = null;
-            Logger.logToFile(getApplicationContext() ,"SERVICE: Worker thread destroyed");
-        }
-    }
-
-    private void startMainThread() {
-        if (mainHandler == null) {
-            if (mainThread == null) {
-                mainThread = new HandlerThread(SIP_THREAD_NAME_MAIN, Process.THREAD_PRIORITY_FOREGROUND);
-                mainThread.setPriority(Thread.MAX_PRIORITY);
-                mainThread.start();
-            }
-            mainHandler = new Handler(mainThread.getLooper());
-            Logger.logToFile(getApplicationContext() ,"SERVICE: New main thread initiated");
-        } else {
-            Logger.logToFile(getApplicationContext() ,"SERVICE: Previous main thread used");
-        }
-
-    }
-
-    private void stopMainThread() {
-        if (mainThread != null) {
-            mainThread.quitSafely();
-            mainThread = null;
-            mainHandler = null;
-            Logger.logToFile(getApplicationContext() ,"SERVICE: Main thread destroyed");
-        }
-    }
-
-
-    private void startRingtone() {
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Uri ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(getApplicationContext(), RingtoneManager.TYPE_RINGTONE);
-                    ringTone = new MediaPlayer();
-                    ringTone.setDataSource(getApplicationContext(), ringtoneUri);
-                    ringTone.setAudioStreamType(AudioManager.STREAM_RING);
-                    ringTone.setLooping(true);
-                    ringTone.prepare();
-                    ringTone.start();
-                    vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                        .build();
-                    vibrator.vibrate(VIBRATOR_PATTERN, 0, audioAttributes);
-                } catch (Exception e) {
-                    Logger.e(TAG, "Error while trying to play ringtone!", e);
-                }
-            }
-        });
-    }
-
-    private void stopRingtone() {
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (vibrator != null) {
-                    vibrator.cancel();
-                    vibrator = null;
-                }
-                if (ringTone != null) {
-                    try {
-                        if (ringTone.isPlaying())
-                            ringTone.stop();
-                    } catch (Exception ignored) {}
-                    try {
-                        ringTone.reset();
-                        ringTone.release();
-                    } catch (Exception ignored) {}
-                }
-            }
-        });
-    }
-
-    @Override
-    public void onErrorState(final String error, Exception e) {
-        Log.e(TAG, error, e);
-        Logger.logToFile(getApplicationContext() ,"SERVICE: ERROR STATE: " + error);
-        broadcast(new Intent(INTENT_FILTER_CALL_STATE)
-                .putExtra("error", error)
-                .putExtra("callState", CALL_STATE.ERROR));
-    }
-
-    @Override
-    public void onCallState(final String callState, final String remoteNumber, final String remoteName) {
-        Logger.logToFile(getApplicationContext() ,"SERVICE: CALL STATE: " + callState);
-        runAsForeground(callState, remoteNumber, remoteName);
-        broadcast(new Intent(INTENT_FILTER_CALL_STATE)
-                .putExtra("remoteNumber", remoteNumber)
-                .putExtra("remoteName", remoteName)
-                .putExtra("callState", callState));
     }
 
     @Override
     public void onCallUpdate(final Bundle keyValue) {
-        for (String key : keyValue.keySet()) {
-            Logger.logToFile(getApplicationContext() ,"SERVICE: CALL UPDATE: " + key + "=" + keyValue.get(key));
-        }
-        broadcast(new Intent(INTENT_FILTER_CALL_UPDATE).putExtras(keyValue));
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                localBroadcastManager.sendBroadcast(new Intent(INTENT_FILTER_CALL_UPDATE).putExtras(keyValue));
+                if (BuildConfig.DEBUG) return;
+                for (String key : keyValue.keySet()) {
+                    Log.d(TAG, "Call update: " + key + "=" + keyValue.get(key));
+                }
+            }
+        });
     }
 
     @Override
@@ -991,28 +996,15 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 stopRingtone();
                 activeVoiceConnection = null;
                 if (nextCallAhead) {
-                    // another incoming call is on the way...
+                    nextCallAhead = false;
+                    log("Another incoming call is on the way...");
                     CallingCommands.incomingCall(getApplicationContext());
                 } else {
+                    log("Stopping self...");
                     stopSelf();
                 }
             }
         });
-    }
-
-    private void broadcast(final Intent intent) {
-        if (mainHandler != null) {
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (localBroadcastManager == null) {
-                        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-                    }
-                    localBroadcastManager.sendBroadcast(intent);
-                }
-            });
-        }
-
     }
 
 }

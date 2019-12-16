@@ -14,7 +14,6 @@ import android.util.Log;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
-import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 import org.json.JSONException;
@@ -118,12 +117,12 @@ public class PushRegistrationIntentService extends IntentService {
 
                         @Override
                         public void onFailure(Exception e) {
-                            Logger.e(TAG, e);
+                            Log.e(TAG, e.getMessage(), e);
                             sendFcmRegistraionBroadcast(false, e.getMessage());
                         }
                     });
                 } catch (Exception e) {
-                    Logger.e(TAG, e);
+                    Log.e(TAG, e.getMessage(), e);
                     sendFcmRegistraionBroadcast(false, e.getMessage());
                 }
             }

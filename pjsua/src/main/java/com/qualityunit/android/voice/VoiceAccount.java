@@ -1,7 +1,5 @@
 package com.qualityunit.android.voice;
 
-import android.util.Log;
-
 import org.pjsip.pjsua2.Account;
 import org.pjsip.pjsua2.AccountConfig;
 import org.pjsip.pjsua2.AuthCredInfo;
@@ -12,7 +10,6 @@ import org.pjsip.pjsua2.pjsip_status_code;
 
 public class VoiceAccount extends Account {
 
-    private final String TAG = VoiceAccount.class.getSimpleName();
     private Callbacks callbacks;
     private boolean isRegistered;
 
@@ -29,15 +26,12 @@ public class VoiceAccount extends Account {
             int returnCode = code.swigValue();
             if (returnCode / 100 == 2 && expiration != 0) {
                 if (!isRegistered) {
-                    Log.d(TAG, "#### onRegState: SUCCESS");
                     callbacks.onSipRegistrationSuccess();
                     isRegistered = true;
                 }
             } else {
                 isRegistered = false;
-                String errMsg = "SERVICE: Error while SIP registration: Asterisk returned code '" + returnCode + "'";
-                Log.d(TAG, "#### onRegState: FAILURE");
-                callbacks.onSipRegistrationFailure(errMsg);
+                callbacks.onSipRegistrationFailure("Asterisk returned code '" + returnCode + "' while SIP registration");
             }
         } catch (Exception e) {
             callbacks.onSipRegistrationFailure(e.getMessage());
@@ -46,9 +40,7 @@ public class VoiceAccount extends Account {
 
     @Override
     public void onIncomingCall(OnIncomingCallParam prm) {
-        int callId = prm.getCallId();
-        Log.d(TAG, "#### onIncomingCall: " + callId);
-        callbacks.onIncomingVoiceCall(callId);
+        callbacks.onIncomingVoiceCall(prm.getCallId());
     }
 
     public static AccountConfig createAccountConfig(String sipHost, String sipUser, String sipPassword) {
@@ -71,7 +63,6 @@ public class VoiceAccount extends Account {
     }
 
     public void register(String sipHost, String sipUser, String sipPassword) throws Exception {
-        Log.d(TAG, "#### register");
         create(createAccountConfig(sipHost, sipUser, sipPassword), true);
     }
 

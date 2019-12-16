@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -42,8 +43,8 @@ public class PushMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Map<String, String> remoteMessageData = remoteMessage.getData();
         if (remoteMessageData.size() > 0) {
-            String infoMsg = "=============================================================================================\n" +
-                    "PUSH NOTIFICATION: type:'" + remoteMessageData.get("type") + "' - " + remoteMessageData.get("title");
+            String infoMsg = "--------------------------------------------------\n"
+                    + "NEW PUSH NOTIFICATION: type:'" + remoteMessageData.get("type") + "' - " + remoteMessageData.get("title");
             Logger.logToFile(getApplicationContext(), infoMsg);
         }
         Bundle data = new Bundle();
@@ -54,14 +55,11 @@ public class PushMessagingService extends FirebaseMessagingService {
             // check if push is actual
             String time = data.getString("time");
             if (TextUtils.isEmpty(time)) {
-                String errMsg = "PUSH: Error: Push notification value 'time' is empty";
-                Logger.logToFile(getApplicationContext(), errMsg);
-                throw new CallingException(errMsg);
+                throw new CallingException("Push notification value 'time' is empty");
             }
             Date datePush = Iso8601Deserializer.toDate(time);
             Date dateSystem = new Date();
             long delta = (dateSystem.getTime() - datePush.getTime());
-            Logger.logToFile(getApplicationContext(), "PUSH: Push delayed: " + delta + " millis");
             if (delta > Const.Push.MAX_INCOMING_CALL_PUSH_DELAY) {
                 Logger.logToFile(getApplicationContext(), "PUSH: Late push (" + delta + " millis) Cancelling SIP registration.");
                 return;
@@ -69,17 +67,16 @@ public class PushMessagingService extends FirebaseMessagingService {
 
             // check if user is logged in app
             if (!LaAccount.isSet()) {
-                throw new CallingException("Error: Push notification received, but account is not set");
+                throw new CallingException("Push notification received, but account is not set");
             }
 
             // check type of push notification
             String type = data.getString("type");
             if (type == null) {
-                throw new CallingException("Error: Missing type field in calling push notification");
+                throw new CallingException("Missing type field in calling push notification");
             }
             switch (type) {
                 case Const.Push.PUSH_TYPE_INCOMING_CALL:
-                    Logger.logToFile(getApplicationContext(), "PUSH: Starting CallingService...");
                     CallingCommands.incomingCall(getApplicationContext());
                     break;
                 case Const.Push.PUSH_TYPE_INIT_CALL:
@@ -131,11 +128,11 @@ public class PushMessagingService extends FirebaseMessagingService {
                     LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(InitCallActivity.INTENT_FILTER_INITCALL_DISMISS));
                     break;
                 default:
-                    throw new CallingException("Error: Unknown push type: '" + type + "'");
+                    throw new CallingException("Unknown push type: '" + type + "'");
             }
         } catch (Exception e) {
-            Logger.logToFile(getApplicationContext(), e.getMessage());
-            Logger.e(TAG, e);
+            Logger.logToFile(getApplicationContext(), "PUSH ERROR: " + e.getMessage());
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 

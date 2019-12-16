@@ -1,7 +1,6 @@
 package com.qualityunit.android.voice;
 
-import android.util.Log;
-
+import org.pjsip.pjsua2.AudDevManager;
 import org.pjsip.pjsua2.AudioMedia;
 import org.pjsip.pjsua2.Call;
 import org.pjsip.pjsua2.CallInfo;
@@ -21,7 +20,6 @@ import static org.pjsip.pjsua2.pjsip_inv_state.PJSIP_INV_STATE_DISCONNECTED;
 
 public class VoiceCall extends Call {
 
-    private static final String TAG = VoiceCall.class.getSimpleName();
     private VoiceCore voiceCore;
     private Callbacks callbacks;
 
@@ -45,10 +43,8 @@ public class VoiceCall extends Call {
         try {
             CallInfo ci = getInfo();
             pjsip_inv_state callState = ci.getState();
-            Log.d(TAG, "#### onCallState: " + callState.toString() + " ID=" + ci.getId());
             if (callState == PJSIP_INV_STATE_DISCONNECTED) {
                 callbacks.onDisconnect();
-//                this.delete();
             } else if (callState == PJSIP_INV_STATE_CONFIRMED) {
                 callbacks.onAnswerCall();
             }
@@ -60,7 +56,6 @@ public class VoiceCall extends Call {
         CallInfo ci;
         try {
             ci = getInfo();
-            Log.d(TAG, "#### onCallMediaState: ID=" + ci.getId());
         } catch (Exception e) {
             return;
         }
@@ -76,9 +71,9 @@ public class VoiceCall extends Call {
 
                 // connect ports
                 try {
-                    Log.d(TAG, "#### onCallMediaState (connect ports): " + ci.toString());
-                    voiceCore.getEndpoint().audDevManager().getCaptureDevMedia().startTransmit(am);
-                    am.startTransmit(voiceCore.getEndpoint().audDevManager().getPlaybackDevMedia());
+                    AudDevManager audDevManager = voiceCore.getEndpoint().audDevManager();
+                    audDevManager.getCaptureDevMedia().startTransmit(am);
+                    am.startTransmit(audDevManager.getPlaybackDevMedia());
                 } catch (Exception e) {}
             }
         }

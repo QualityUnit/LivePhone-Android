@@ -84,7 +84,7 @@ public class CallingActivity extends ToolbarActivity {
         if (getIntent().getBooleanExtra("answer", false)) {
             answerCall();
         }
-        Logger.logToFile(getApplicationContext() ,"Info: UI is showed");
+        Logger.logToFile(getApplicationContext() ,"ACTIVITY: UI is showed");
     }
 
     @Override
@@ -118,6 +118,7 @@ public class CallingActivity extends ToolbarActivity {
             } else if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
                 CallingCommands.adjustIncallVolume(getApplicationContext(), true);
             }
+            return true;
         }
         return super.onKeyDown(keyCode, event);
     }

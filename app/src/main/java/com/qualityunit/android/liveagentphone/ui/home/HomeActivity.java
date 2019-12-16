@@ -11,6 +11,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,7 +26,6 @@ import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
 import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
 import com.qualityunit.android.liveagentphone.ui.status.StatusStore;
-import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.List;
 
@@ -166,7 +166,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
 
     private void updateStatusItem() {
         if (statusItem == null) {
-            Logger.e(TAG, "statusItem cannot be null");
+            Log.e(TAG, "statusItem cannot be null");
             return;
         }
         if (statusItemIconRes == 0) {

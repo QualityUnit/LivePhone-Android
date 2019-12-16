@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Bundle;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 
@@ -22,51 +21,7 @@ import static android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION;
 public class Logger {
 
     private static final String TAG = Logger.class.getSimpleName();
-    private static Logger instance;
     public static String logFileName = "logfile.log";
-
-    private static Logger getInstance() {
-        if (instance == null) {
-            instance = new Logger();
-        }
-        return instance;
-    }
-
-    public static void e(String TAG, Throwable e) {
-        getInstance().logError(TAG, null, e, null);
-    }
-
-    public static void e(String TAG, Throwable e, Bundle additionalInfo) {
-        getInstance().logError(TAG, null, e, additionalInfo);
-    }
-
-    public static void e(String TAG, String errMsg) {
-        getInstance().logError(TAG, errMsg, null, null);
-    }
-
-    public static void e(String TAG, String errMsg, Bundle additionalInfo) {
-        getInstance().logError(TAG, errMsg, null, additionalInfo);
-    }
-
-    public static void e(String TAG, String errMsg, Throwable e, Bundle additionalInfo) {
-        getInstance().logError(TAG, errMsg, e, additionalInfo);
-    }
-
-    public static void e(String TAG, String errMsg, Throwable e) {
-        getInstance().logError(TAG, errMsg, e, null);
-    }
-
-    public void logError(String TAG, String errMsg, Throwable e, Bundle additionalInfo) {
-        if (errMsg == null) {
-            errMsg = "";
-        }
-        if (additionalInfo != null) {
-            errMsg = errMsg + "\n" + additionalInfo.toString();
-        }
-        if(e != null) {
-            Log.e(TAG, errMsg, e);
-        }
-    }
 
     public static void logToFile(Context context, String text) {
         File logFile = new File(context.getExternalFilesDir(null), logFileName);
@@ -85,7 +40,6 @@ public class Logger {
         } catch (IOException e) {
             Log.e(TAG, "Error while 'logToFile': " + logFileName, e);
         }
-
     }
 
     public static void sendLogFile(Context context) {

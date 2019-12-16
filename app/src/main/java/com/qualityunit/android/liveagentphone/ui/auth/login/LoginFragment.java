@@ -17,6 +17,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,7 +34,6 @@ import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.Client;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
-import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 /**
@@ -416,7 +416,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
                     setErrorUrl(message);
                     break;
                 default:
-                    Logger.e(TAG, "Unknown URL tester code: " + code);
+                    Log.e(TAG, "Unknown URL tester code: " + code);
             }
         }
 

@@ -22,6 +22,11 @@ import com.qualityunit.android.liveagentphone.service.CallingCommands;
 import com.qualityunit.android.liveagentphone.service.CallingService;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_DURATION;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_HOLD;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_MUTE;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_SPEAKER;
+
 /**
  * A placeholder fragment containing a simple view.
  * PORTRAIT ONLY!!!
@@ -50,8 +55,11 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         Intent intent = getActivity().getIntent();
         String remoteNumber = intent.getStringExtra("remoteNumber");
         String remoteName = intent.getStringExtra("remoteName");
-        String nameToShow = !TextUtils.isEmpty(remoteName) ? remoteName : !TextUtils.isEmpty(remoteNumber) ? remoteNumber : getString(R.string.unknown);
-        setText(tvRemoteName, nameToShow);
+        setText(tvRemoteName, nameToShow(remoteNumber, remoteName));
+    }
+
+    private String nameToShow(String remoteNumber, String remoteName) {
+        return !TextUtils.isEmpty(remoteName) ? remoteName : (!TextUtils.isEmpty(remoteNumber) ? remoteNumber : getString(R.string.unknown));
     }
 
     @Override
@@ -147,8 +155,8 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
             Bundle extras = intent.getExtras();
             for (String key : extras.keySet()) {
                 switch (key) {
-                    case CallingService.CALL_UPDATE.UPDATE_DURATION:
-                        long duration = intent.getLongExtra(CallingService.CALL_UPDATE.UPDATE_DURATION, 0);
+                    case UPDATE_DURATION:
+                        long duration = intent.getLongExtra(key, 0);
                         if (duration > 0) {
                             tvDuration.setVisibility(View.VISIBLE);
                             if (duration < 3600) {
@@ -158,16 +166,16 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                             }
                         }
                         break;
-                    case CallingService.CALL_UPDATE.UPDATE_HOLD:
-                        boolean isHold = intent.getBooleanExtra(CallingService.CALL_UPDATE.UPDATE_HOLD, false);
+                    case UPDATE_HOLD:
+                        boolean isHold = intent.getBooleanExtra(key, false);
                         toggleImageButton(ibHold, isHold);
                         setText(tvState, getString(isHold ? R.string.call_hold : R.string.call_state_active));
                         break;
-                    case CallingService.CALL_UPDATE.UPDATE_MUTE:
-                        toggleImageButton(ibMute, intent.getBooleanExtra(CallingService.CALL_UPDATE.UPDATE_MUTE, false));
+                    case UPDATE_MUTE:
+                        toggleImageButton(ibMute, intent.getBooleanExtra(key, false));
                         break;
-                    case CallingService.CALL_UPDATE.UPDATE_SPEAKER:
-                        toggleImageButton(ibSpeaker, intent.getBooleanExtra(CallingService.CALL_UPDATE.UPDATE_SPEAKER, false));
+                    case UPDATE_SPEAKER:
+                        toggleImageButton(ibSpeaker, intent.getBooleanExtra(key, false));
                         break;
 
                 }
@@ -198,15 +206,21 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     break;
                 case CallingService.CALL_STATE.DIALING:
                     setText(tvState, getString(R.string.call_state_dialing));
+                    setText(tvRemoteName, nameToShow(intent.getStringExtra("remoteNumber"), intent.getStringExtra("remoteName")));
                     break;
                 case CallingService.CALL_STATE.RINGING:
                     setText(tvState, "");
-                    break;
-                case CallingService.CALL_STATE.CONNECTING:
-                    setText(tvState, getString(R.string.call_state_connecting));
+                    setText(tvRemoteName, nameToShow(intent.getStringExtra("remoteNumber"), intent.getStringExtra("remoteName")));
                     break;
                 case CallingService.CALL_STATE.ACTIVE:
                     setText(tvState, getString(R.string.call_state_active));
+                    setText(tvRemoteName, nameToShow(intent.getStringExtra("remoteNumber"), intent.getStringExtra("remoteName")));
+                    ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
+                    ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
+                    CallingCommands.getCallUpdates(getContext());
+                    break;
+                case CallingService.CALL_STATE.HOLD:
+                    setText(tvState, getString(R.string.call_hold));
                     ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
                     ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
                     CallingCommands.getCallUpdates(getContext());
@@ -222,7 +236,6 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     String error = intent.getStringExtra("error");
                     setText(tvState, error);
                     Toast.makeText(activity, error, Toast.LENGTH_SHORT).show();
-                    break;
             }
 
         }
