@@ -29,26 +29,21 @@ public class Ringer implements MediaPlayer.OnErrorListener {
         if (ringerMode != AudioManager.RINGER_MODE_SILENT) {
             vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
             vibrator.vibrate(VIBRATOR_PATTERN, 1);
-            Log.d(TAG, "Starting vibration...");
         }
         mediaPlayer = createMediaPlayer();
         if (mediaPlayer != null && ringerMode == AudioManager.RINGER_MODE_NORMAL) {
             try {
                 mediaPlayer.prepare();
                 mediaPlayer.start();
-                Log.d(TAG, "Playing ringtone...");
             } catch (IllegalStateException | IOException e) {
                 Log.e(TAG, e.getMessage(), e);
                 mediaPlayer = null;
             }
-        } else {
-            Log.d(TAG, "Not ringing, mode: " + ringerMode);
         }
     }
 
     public void stop() {
         if (vibrator != null) {
-            Log.d(TAG, "Cancelling vibrator...");
             vibrator.cancel();
             vibrator = null;
         }
