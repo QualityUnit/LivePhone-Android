@@ -855,7 +855,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
     private void setOtherCallState(String remoteNumber, String remoteName, int titleRes, int iconRes) {
         String titleText = getString(titleRes);
-        String notificationContentText = !TextUtils.isEmpty(remoteName) ? remoteName : !TextUtils.isEmpty(remoteNumber) ? remoteNumber : getString(R.string.unknown);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), SERVICE_CHANNEL_ID);
         createNotificationChannel(SERVICE_CHANNEL_ID, R.string.ongoing_call, IMPORTANCE_LOW);
         NotificationCompat.Action hangupAction = new NotificationCompat.Action.Builder(R.drawable.ic_call_end_24dp, getString(R.string.hangup), createHangupPendingIntent()).build();
@@ -863,19 +862,24 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 .setSmallIcon(iconRes)
                 .setTicker(titleText)
                 .setContentTitle(titleText)
-                .setContentText(notificationContentText)
+                .setContentText(createRemoteTitle(remoteNumber, remoteName))
                 .setContentIntent(createCallingPendingIntent(false, remoteNumber, remoteName))
                 .addAction(hangupAction)
                 .build();
         startForeground(ONGOING_NOTIFICATION_ID, notification);
     }
 
+    private String createRemoteTitle(String remoteNumber, String remoteName) {
+        return !TextUtils.isEmpty(remoteName) ? remoteName : !TextUtils.isEmpty(remoteNumber) ? remoteNumber : getString(R.string.unknown);
+    }
+
     private void setRingingCallState(String remoteNumber, String remoteName) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) { // pre-oreo versions
             startActivity(createCallingActivityIntent(false, remoteNumber, remoteName));
         } else {
+            String remoteTitle = createRemoteTitle(remoteNumber, remoteName);
             RemoteViews headUpLayout = new RemoteViews(getPackageName(), R.layout.notification_incoming_call);
-            headUpLayout.setTextViewText(R.id.text, remoteName);
+            headUpLayout.setTextViewText(R.id.text, remoteTitle);
             headUpLayout.setOnClickPendingIntent(R.id.accept, createCallingPendingIntent(true, remoteNumber, remoteName));
             headUpLayout.setOnClickPendingIntent(R.id.decline, createHangupPendingIntent());
             createNotificationChannel(INCOMING_CHANNEL_ID, R.string.incoming_call, IMPORTANCE_HIGH);
@@ -885,7 +889,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
                     .setCustomContentView(headUpLayout)
                     .setCustomHeadsUpContentView(headUpLayout)
                     .setContentTitle(getString(R.string.incoming_call))
-                    .setContentText(TextUtils.isEmpty(remoteName) ? remoteNumber : remoteName)
+                    .setContentText(remoteTitle)
                     .setOngoing(true)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setCategory(NotificationCompat.CATEGORY_CALL)

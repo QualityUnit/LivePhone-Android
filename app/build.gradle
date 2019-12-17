@@ -6,10 +6,10 @@ android {
         applicationId "com.qualityunit.android.liveagentphone"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 49
+        versionCode 50
         versionName "1.5.4"
         ndk {
-            abiFilters "armeabi", "armeabi-v7a", "x86", "x86_64"
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
         }
     }
     buildTypes {
