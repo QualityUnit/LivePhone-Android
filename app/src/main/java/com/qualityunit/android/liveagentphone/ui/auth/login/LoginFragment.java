@@ -283,12 +283,13 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         Client.login(activity, apiUrl, userName, userPass, verificationCode, new Client.LoginCallback() {
 
             @Override
-            public void onSuccess(final String apikey) {
+            public void onSuccess(final String apikey, final String apikeyId) {
                 final Intent res = new Intent();
                 res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
                 res.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
                 res.putExtra(AccountManager.KEY_ACCOUNT_TYPE, LaAccount.ACCOUNT_TYPE);
                 res.putExtra(AccountManager.KEY_AUTHTOKEN, apikey);
+                res.putExtra(LaAccount.USERDATA_APIKEY_ID, apikeyId);
                 res.putExtra(LaAccount.USERDATA_URL_API, apiUrl);
                 res.putExtra(LaAccount.USERDATA_URL_TYPED, typedUrl);
                 res.putExtra(AuthActivity.PARAM_USER_PASS, userPass);
@@ -360,6 +361,7 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         accountManager.addAccountExplicitly(account, intent.getStringExtra(AuthActivity.PARAM_USER_PASS), null);
         accountManager.setAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, intent.getStringExtra(AccountManager.KEY_AUTHTOKEN));
         accountManager.setUserData(account, LaAccount.USERDATA_URL_API, intent.getStringExtra(LaAccount.USERDATA_URL_API));
+        accountManager.setUserData(account, LaAccount.USERDATA_APIKEY_ID, intent.getStringExtra(LaAccount.USERDATA_APIKEY_ID));
         String typedUrl = intent.getStringExtra(LaAccount.USERDATA_URL_TYPED);
         accountManager.setUserData(account, LaAccount.USERDATA_URL_TYPED, typedUrl);
         activity.setAccountAuthenticatorResult(intent.getExtras());

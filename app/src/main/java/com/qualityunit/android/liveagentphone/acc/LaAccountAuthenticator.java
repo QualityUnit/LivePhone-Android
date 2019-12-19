@@ -43,10 +43,10 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
 
     @Override
     public Bundle getAuthToken(final AccountAuthenticatorResponse response, final Account account, String authTokenType, Bundle options)  {
-        final AccountManager am = AccountManager.get(context);
-        final String authToken = am.peekAuthToken(account, authTokenType);
-        final String password = am.getPassword(account);
-        final String basepath = am.getUserData(account, LaAccount.USERDATA_URL_API);
+        final AccountManager accountManager = AccountManager.get(context);
+        final String authToken = accountManager.peekAuthToken(account, authTokenType);
+        final String password = accountManager.getPassword(account);
+        final String basepath = accountManager.getUserData(account, LaAccount.USERDATA_URL_API);
 
         // If we get an authToken - we return it
         if (!TextUtils.isEmpty(authToken)) {
@@ -75,7 +75,8 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
                 }
 
                 @Override
-                public void onSuccess(String apikey) {
+                public void onSuccess(String apikey, String apikeyId) {
+                    accountManager.setUserData(LaAccount.get(), LaAccount.USERDATA_APIKEY_ID, apikeyId);
                     response.onResult(createResult(account, apikey));
                 }
 
@@ -128,4 +129,13 @@ public class LaAccountAuthenticator extends AbstractAccountAuthenticator {
     public Bundle hasFeatures(AccountAuthenticatorResponse response, Account account, String[] features) throws NetworkErrorException {
         return null;
     }
+
+    @Override
+    public Bundle getAccountRemovalAllowed(AccountAuthenticatorResponse response, Account account) throws NetworkErrorException {
+        Bundle bundle = new Bundle(1);
+        bundle.putBoolean(AccountManager.KEY_BOOLEAN_RESULT, true);
+        return bundle;
+    }
+
+
 }

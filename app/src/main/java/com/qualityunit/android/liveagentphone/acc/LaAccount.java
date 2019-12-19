@@ -24,6 +24,7 @@ public class LaAccount {
     public static final String USERDATA_SIP_PASS = "USERDATA_SIP_PASS";
     public static final String USERDATA_AGENT_ID = "USERDATA_AGENT_ID";
     public static final String USERDATA_DEVICE_ID = "USERDATA_DEVICE_ID";
+    public static final String USERDATA_APIKEY_ID = "USERDATA_APIKEY_ID";
     private static Account account;
 
     /**

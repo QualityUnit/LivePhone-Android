@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static com.android.volley.Request.Method.DELETE;
 import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
 import static com.android.volley.Request.Method.PUT;
@@ -201,11 +202,13 @@ public class Client {
         void onFailure(Exception e);
     }
 
-    public interface LoginCallback extends Callback<String> {
+    public interface LoginCallback {
         void onInvalidPassword();
         void onVerificationCodeRequired();
         void onVerificationCodeFailure();
         void onTooManyLogins();
+        void onFailure(Exception e);
+        void onSuccess(String apikey, String apikeyId);
     }
 
     /////////////////////// API ///////////////////////
@@ -266,11 +269,12 @@ public class Client {
                         return;
                     }
                     String apikey = object.optString("key");
+                    String apikeyId = object.optString("id");
                     if (TextUtils.isEmpty(apikey)) {
                         callback.onFailure(new Exception("Error: API token not found in login response"));
                         return;
                     }
-                    callback.onSuccess(apikey);
+                    callback.onSuccess(apikey, apikeyId);
                 }
             }, new Response.ErrorListener() {
                 @Override
@@ -307,6 +311,74 @@ public class Client {
         } catch (JSONException e) {
             callback.onFailure(e);
         }
+    }
+
+    public static void logout(final Activity activity, final Callback<JSONObject> callback) {
+        prepare(activity, new AuthCallback() {
+            @Override
+            public void onAuthData(final Client client, final String basepath, final String apikey) {
+                final AccountManager accountManager = AccountManager.get(context);
+                final String deviceId = accountManager.getUserData(LaAccount.get(), LaAccount.USERDATA_DEVICE_ID);
+                final String url = createUrl(basepath, "/devices/" + deviceId);
+                final String deleteDeviceTag = "DELETE " + url;
+                ObjectRequest deleteDeviceRequest = new ObjectRequest(DELETE, url, apikey, null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        if (response == null) {
+                            callback.onFailure(new Exception("Empty response body from '" + url + "'"));
+                            return;
+                        }
+                        // continue logout - delete apikey
+                        deleteApikey(activity, client, basepath, apikey, callback);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        callback.onFailure(processFailure(activity, apikey, error, deleteDeviceTag, new AuthFallback() {
+                            @Override
+                            public void onFallback() {
+                                logout(activity, callback);
+                            }
+                        }));
+                    }
+                });
+                client.addToQueue(deleteDeviceRequest, deleteDeviceTag);
+            }
+
+            @Override
+            public void onException(Exception e) {
+                callback.onFailure(e);
+            }
+        });
+    }
+
+    private static void deleteApikey(final Activity activity, final Client client, final String basepath, final String apikey, final Callback<JSONObject> callback) {
+        final AccountManager accountManager = AccountManager.get(context);
+        final String apikeyId = accountManager.getUserData(LaAccount.get(), LaAccount.USERDATA_APIKEY_ID);
+        final String url = createUrl(basepath, "/apikeys/" + apikeyId);
+        final String deleteApikeyTag = "DELETE " + url;
+        ObjectRequest deleteApikeyRequest = new ObjectRequest(DELETE, url, apikey, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                if (response == null) {
+                    callback.onFailure(new Exception("Empty response body from '" + url + "'"));
+                    return;
+                }
+                accountManager.removeAccountExplicitly(LaAccount.get());
+                callback.onSuccess(response);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                callback.onFailure(processFailure(activity, apikey, error, deleteApikeyTag, new AuthFallback() {
+                    @Override
+                    public void onFallback() {
+                        deleteApikey(activity, client, basepath, apikey, callback);
+                    }
+                }));
+            }
+        });
+        client.addToQueue(deleteApikeyRequest, deleteApikeyTag);
     }
 
     /**
@@ -462,20 +534,19 @@ public class Client {
                         @Override
                         public void onResponse(JSONArray jsonArray) {
                             try {
-                                boolean containsMobileDevice = false;
+                                final AccountManager accountManager = AccountManager.get(context);
                                 final Map<String, JSONObject> devices = new HashMap<>();
                                 for (int i = 0; i < jsonArray.length(); i++) {
                                     JSONObject object = jsonArray.getJSONObject(i);
                                     String type = object.getString("type");
                                     devices.put(type, object);
                                     if ("A".equals(type)) {
-                                        containsMobileDevice = true;
+                                        // mobile device already exists - return statuses
+                                        String deviceId = object.getString("id");
+                                        accountManager.setUserData(LaAccount.get(), LaAccount.USERDATA_DEVICE_ID, deviceId);
+                                        callback.onSuccess(devices);
+                                        return;
                                     }
-                                }
-                                if (containsMobileDevice) {
-                                    // mobile device already exists - return statuses
-                                    callback.onSuccess(devices);
-                                    return;
                                 }
                                 // does not contain mobile device, let's create mobile device
                                 final String agentId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_AGENT_ID);
@@ -493,6 +564,14 @@ public class Client {
                                     public void onResponse(JSONObject response) {
                                         if (response == null) {
                                             callback.onFailure(new Exception("Empty response body from '" + url + "'"));
+                                            return;
+                                        }
+                                        // add deviceId into account manager
+                                        try {
+                                            String deviceId = response.getString("id");
+                                            accountManager.setUserData(LaAccount.get(), LaAccount.USERDATA_DEVICE_ID, deviceId);
+                                        } catch (Exception e) {
+                                            callback.onFailure(e);
                                             return;
                                         }
                                         devices.put("A", response);

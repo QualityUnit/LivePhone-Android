@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -46,11 +47,12 @@ public class InitActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_LOGIN = 0;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final int MAX_RETRY_NUMBER = 3;
+    public static final String PERFORM_LOGOUT = "PERFORM_LOGOUT";
     private TextView tvLoading;
     private LinearLayout pbLoading;
     private View llButtons;
     private Button bRetry;
-    private BroadcastReceiver fcmRegistrationBroadcastReceiver;
+    private BroadcastReceiver fcmRegistrationReceiver;
     private boolean isReceiverRegistered;
     private int retryNumber;
     private boolean isFcmRegistered;
@@ -90,8 +92,13 @@ public class InitActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        registerReceiver(true);
-        startInit(false);
+        boolean performLogout = getIntent().getBooleanExtra("PERFORM_LOGOUT", false);
+        if (performLogout) {
+            logout();
+        } else {
+            registerReceiver(true);
+            startInit(false);
+        }
         super.onResume();
     }
 
@@ -127,6 +134,12 @@ public class InitActivity extends AppCompatActivity {
             overridePendingTransition(0, 0);
             return;
         }
+        final AccountManager accountManager = AccountManager.get(this);
+        final Account account = LaAccount.get();
+        String apikeyId = accountManager.getUserData(account, LaAccount.USERDATA_APIKEY_ID);
+        if (TextUtils.isEmpty(apikeyId)) { // we need this to force relogin because of missing apikey ID (logout feature) update from 1.5.4 to 1.5.5
+            accountManager.setAuthToken(account, LaAccount.AUTH_TOKEN_TYPE, ""); // remove apikey to invoke relogin
+        }
         if (forceReset) {
             isPhoneLoaded = false;
             phoneGet();
@@ -137,6 +150,22 @@ public class InitActivity extends AppCompatActivity {
         } else {
             phoneGet();
         }
+    }
+
+    private void logout() {
+        showProgress();
+        Client.logout(this, new Client.Callback<JSONObject>() {
+            @Override
+            public void onSuccess(JSONObject object) {
+                Toast.makeText(InitActivity.this, getString(R.string.logout_success), Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                showError(e.getMessage());
+            }
+        });
     }
 
     /**
@@ -212,19 +241,19 @@ public class InitActivity extends AppCompatActivity {
     private void registerReceiver(boolean register){
         if (register) {
             // registering receiver
-            if (fcmRegistrationBroadcastReceiver == null) {
-                fcmRegistrationBroadcastReceiver = new FcmRegistrationBroadcastReceiver();
+            if (fcmRegistrationReceiver == null) {
+                fcmRegistrationReceiver = new FcmRegistrationReceiver();
             }
             if (!isReceiverRegistered) {
-                LocalBroadcastManager.getInstance(this).registerReceiver(fcmRegistrationBroadcastReceiver,
+                LocalBroadcastManager.getInstance(this).registerReceiver(fcmRegistrationReceiver,
                         new IntentFilter(PushRegistrationIntentService.INTENT_REGISTRATION_COMPLETE));
                 isReceiverRegistered = true;
             }
         }
         else {
             // unregistering receiver
-            if (fcmRegistrationBroadcastReceiver != null) {
-                LocalBroadcastManager.getInstance(this).unregisterReceiver(fcmRegistrationBroadcastReceiver);
+            if (fcmRegistrationReceiver != null) {
+                LocalBroadcastManager.getInstance(this).unregisterReceiver(fcmRegistrationReceiver);
             }
             isReceiverRegistered = false;
         }
@@ -360,7 +389,7 @@ public class InitActivity extends AppCompatActivity {
     /**
      * This class is receiving local broadcast messages about GCM registration
      */
-    private class FcmRegistrationBroadcastReceiver extends BroadcastReceiver {
+    private class FcmRegistrationReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {

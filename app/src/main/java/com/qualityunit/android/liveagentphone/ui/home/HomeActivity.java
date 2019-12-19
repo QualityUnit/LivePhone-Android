@@ -22,6 +22,7 @@ import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.about.AboutActivity;
 import com.qualityunit.android.liveagentphone.ui.common.ResumePause;
 import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
+import com.qualityunit.android.liveagentphone.ui.init.InitActivity;
 import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
 import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
@@ -70,7 +71,6 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
         tabLayout.getTabAt(1).setIcon(R.drawable.ic_hashtag_24);
 
         store = StatusStore.getInstance(this);
-        store.addCallBacks(this);
         FloatingActionButton fab = findViewById(R.id.fab_dialpad);
         if (fab != null) {
             fab.setOnClickListener(new View.OnClickListener() {
@@ -90,13 +90,14 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             finish();
             return;
         }
+        store.addCallBacks(this);
         store.getDevice(true, false);
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onPause() {
         store.removeCallBacks(this);
-        super.onDestroy();
+        super.onPause();
     }
 
     @Override
@@ -114,10 +115,9 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             case R.id.action_about:
                 startActivity(new Intent(this, AboutActivity.class));
                 return true;
-//            case R.id.action_logout:
-//                isFinishing = true;
-//                store.updateDevice(false);
-//                return true;
+            case R.id.action_logout:
+                logout();
+                return true;
             case R.id.action_status:
                 startActivityForResult(new Intent(this, StatusActivity.class), STATUS_REQUEST_CODE);
                 return true;
@@ -162,6 +162,13 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     @Override
     public void onLoadingDepartmentList() {
         // nothing here
+    }
+
+    private void logout() {
+        finish();
+        Intent intent = new Intent(this, InitActivity.class);
+        intent.putExtra(InitActivity.PERFORM_LOGOUT, true);
+        startActivity(intent);
     }
 
     private void updateStatusItem() {
