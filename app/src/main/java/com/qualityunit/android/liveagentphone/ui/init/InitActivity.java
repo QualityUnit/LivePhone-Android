@@ -92,6 +92,10 @@ public class InitActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0) {
+            // The activity was launched from history
+            getIntent().removeExtra("PERFORM_LOGOUT");
+        }
         boolean performLogout = getIntent().getBooleanExtra("PERFORM_LOGOUT", false);
         if (performLogout) {
             logout();

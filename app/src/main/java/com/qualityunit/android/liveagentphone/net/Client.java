@@ -60,7 +60,7 @@ public class Client {
 
     private static Client instance;
     private RequestQueue queue;
-//    private ImageLoader imageLoader;
+    //    private ImageLoader imageLoader;
     private static Context context;
 
     private Client(Context context) {
@@ -549,46 +549,7 @@ public class Client {
                                     }
                                 }
                                 // does not contain mobile device, let's create mobile device
-                                final String agentId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_AGENT_ID);
-                                final JSONObject body = new JSONObject();
-                                body.put("phone_id", phoneId);
-                                body.put("agent_id", agentId);
-                                body.put("type", "A");
-                                body.put("service_type", "P");
-                                body.put("online_status", STATUS_ONLINE_FLAG);
-                                body.put("preset_status", STATUS_ONLINE_FLAG);
-                                final String url = createUrl(basepath, "/devices");
-                                final String postDeviceTag = "POST " + url;
-                                ObjectRequest postDeviceRequest = new ObjectRequest(POST, url, apikey, body.toString(), new Response.Listener<JSONObject>() {
-                                    @Override
-                                    public void onResponse(JSONObject response) {
-                                        if (response == null) {
-                                            callback.onFailure(new Exception("Empty response body from '" + url + "'"));
-                                            return;
-                                        }
-                                        // add deviceId into account manager
-                                        try {
-                                            String deviceId = response.getString("id");
-                                            accountManager.setUserData(LaAccount.get(), LaAccount.USERDATA_DEVICE_ID, deviceId);
-                                        } catch (Exception e) {
-                                            callback.onFailure(e);
-                                            return;
-                                        }
-                                        devices.put("A", response);
-                                        callback.onSuccess(devices);
-                                    }
-                                }, new Response.ErrorListener() {
-                                    @Override
-                                    public void onErrorResponse(VolleyError error) {
-                                        callback.onFailure(processFailure(activity, apikey, error, postDeviceTag, new AuthFallback() {
-                                            @Override
-                                            public void onFallback() {
-                                                getDevicesPhoneStatus(activity, phoneId, callback);
-                                            }
-                                        }));
-                                    }
-                                });
-                                client.addToQueue(postDeviceRequest, postDeviceTag);
+                                createMobileDevice(activity, phoneId, devices, callback);
                             } catch (JSONException e) {
                                 callback.onFailure(e);
                             }
@@ -605,6 +566,64 @@ public class Client {
                         }
                     });
                     client.addToQueue(getDevicesRequest, getDevicesTag);
+                } catch (JSONException e) {
+                    callback.onFailure(e);
+                }
+            }
+
+            @Override
+            public void onException(Exception e) {
+                callback.onFailure(e);
+            }
+        });
+    }
+
+    private static void createMobileDevice(final Activity activity, final String phoneId, final Map<String, JSONObject> devices, final Callback<Map<String, JSONObject>> callback) {
+        prepare(activity, new AuthCallback() {
+            @Override
+            public void onAuthData(Client client, String basepath, final String apikey) {
+                try {
+                    final AccountManager accountManager = AccountManager.get(context);
+                    final String agentId = accountManager.getUserData(LaAccount.get(), LaAccount.USERDATA_AGENT_ID);
+                    final JSONObject body = new JSONObject();
+                    body.put("phone_id", phoneId);
+                    body.put("agent_id", agentId);
+                    body.put("type", "A");
+                    body.put("service_type", "P");
+                    body.put("online_status", STATUS_ONLINE_FLAG);
+                    body.put("preset_status", STATUS_ONLINE_FLAG);
+                    final String url = createUrl(basepath, "/devices");
+                    final String postDeviceTag = "POST " + url;
+                    ObjectRequest postDeviceRequest = new ObjectRequest(POST, url, apikey, body.toString(), new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            if (response == null) {
+                                callback.onFailure(new Exception("Empty response body from '" + url + "'"));
+                                return;
+                            }
+                            // add deviceId into account manager
+                            try {
+                                String deviceId = response.getString("id");
+                                accountManager.setUserData(LaAccount.get(), LaAccount.USERDATA_DEVICE_ID, deviceId);
+                            } catch (Exception e) {
+                                callback.onFailure(e);
+                                return;
+                            }
+                            devices.put("A", response);
+                            callback.onSuccess(devices);
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            callback.onFailure(processFailure(activity, apikey, error, postDeviceTag, new AuthFallback() {
+                                @Override
+                                public void onFallback() {
+                                    createMobileDevice(activity, phoneId, devices, callback);
+                                }
+                            }));
+                        }
+                    });
+                    client.addToQueue(postDeviceRequest, postDeviceTag);
                 } catch (JSONException e) {
                     callback.onFailure(e);
                 }

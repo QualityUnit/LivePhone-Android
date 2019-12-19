@@ -71,6 +71,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
         tabLayout.getTabAt(1).setIcon(R.drawable.ic_hashtag_24);
 
         store = StatusStore.getInstance(this);
+        store.addCallBacks(this);
         FloatingActionButton fab = findViewById(R.id.fab_dialpad);
         if (fab != null) {
             fab.setOnClickListener(new View.OnClickListener() {
@@ -90,14 +91,13 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             finish();
             return;
         }
-        store.addCallBacks(this);
         store.getDevice(true, false);
     }
 
     @Override
-    protected void onPause() {
+    protected void onDestroy() {
         store.removeCallBacks(this);
-        super.onPause();
+        super.onDestroy();
     }
 
     @Override
