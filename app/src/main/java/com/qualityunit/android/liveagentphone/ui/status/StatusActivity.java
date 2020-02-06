@@ -137,6 +137,7 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     @Override
     public void onRefresh() {
         onLoadingDepartmentList();
+        llStatusWeb.setVisibility(View.GONE);
         swipeRefreshLayout.setRefreshing(false);
         mobileAvailabilitySwitch.setVisibility(View.INVISIBLE);
         mobileStatusLoading.setVisibility(View.VISIBLE);
