@@ -100,6 +100,7 @@ public class Client {
 
     private <T> void addToQueue(Request<T> request, String tag) {
         getQueue().cancelAll(tag);
+        request.setShouldCache(false);
         request.setTag(tag);
         getQueue().add(request);
     }
@@ -229,7 +230,7 @@ public class Client {
             public void onErrorResponse(VolleyError e) {
                 callback.onFailure(new Exception(parseMessage(e, tag)));
             }
-        });
+        }, true);
         getInstance(activity.getApplicationContext()).addToQueue(request, tag);
     }
 
@@ -370,12 +371,7 @@ public class Client {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                callback.onFailure(processFailure(activity, apikey, error, deleteApikeyTag, new AuthFallback() {
-                    @Override
-                    public void onFallback() {
-                        deleteApikey(activity, client, basepath, apikey, callback);
-                    }
-                }));
+                callback.onFailure(processFailure(activity, apikey, error, deleteApikeyTag, null));
             }
         });
         client.addToQueue(deleteApikeyRequest, deleteApikeyTag);

@@ -22,7 +22,6 @@ public class InternalStore implements Store<InternalItem>{
     public static final int ITEMS_PER_PAGE = 9999;
     public static String TAG = InternalStore.class.getSimpleName();
     private static InternalStore instance;
-    private static InternalStore searchInstance;
     private InternalPaginationList ipl = new InternalPaginationList();
 
     public static InternalStore getInstance() {
@@ -32,11 +31,19 @@ public class InternalStore implements Store<InternalItem>{
         return instance;
     }
 
-    public static InternalStore getSearchInstance() {
-        if (searchInstance == null) {
-            searchInstance = new InternalStore();
+    public static InternalStore createSearchInstance() {
+        return new InternalStore();
+    }
+
+    public static boolean hasInstance() {
+        return instance != null;
+    }
+
+    public static void destroyInstances() {
+        if (instance != null) {
+            instance.setListener(null);
         }
-        return searchInstance;
+        instance = null;
     }
 
     private InternalStore() {
@@ -78,7 +85,6 @@ public class InternalStore implements Store<InternalItem>{
     public void clear() {
         ipl.clear();
     }
-
 
     // ************ private methods ************
 

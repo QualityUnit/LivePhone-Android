@@ -40,7 +40,6 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     private InternalListAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar pbLoading;
-    private InternalStore store;
     private TextView tvEmpty;
     // instance variables
     private int scrollIndex;
@@ -78,8 +77,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
             searchTerm = savedInstanceState.getString("searchTerm", "");
             isLastPage = savedInstanceState.getBoolean("isLastPage", false);
         }
-        store = InternalStore.getInstance();
-        store.setListener(this);
+        InternalStore.getInstance().setListener(this);
         init();
     }
 
@@ -94,8 +92,8 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
 
     @Override
     public void onDestroy() {
-        if (store != null) {
-            store.setListener(null);
+        if (InternalStore.hasInstance()) {
+            InternalStore.getInstance().setListener(null);
         }
         scrollIndex = listView.getFirstVisiblePosition();
         View v = listView.getChildAt(0);
@@ -104,7 +102,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     private void init () {
-        store.init(getActivity(), PaginationList.InitFlag.LOAD);
+        InternalStore.getInstance().init(getActivity(), PaginationList.InitFlag.LOAD);
     }
 
     private InternalListAdapter getAdapter() {
@@ -132,9 +130,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     public void onRefresh() {
         swipeRefreshLayout.setRefreshing(true);
         pbLoading.setVisibility(View.GONE);
-        if (store != null) {
-            store.refresh(getActivity());
-        }
+        InternalStore.getInstance().refresh(getActivity());
     }
 
     @Override
@@ -149,9 +145,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
         }
         swipeRefreshLayout.setRefreshing(true);
         pbLoading.setVisibility(View.GONE);
-        if (store != null) {
-            store.nextPage(getActivity());
-        }
+        InternalStore.getInstance().nextPage(getActivity());
     }
 
     @Override

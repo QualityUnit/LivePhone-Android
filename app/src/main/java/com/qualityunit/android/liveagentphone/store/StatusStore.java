@@ -1,4 +1,4 @@
-package com.qualityunit.android.liveagentphone.ui.status;
+package com.qualityunit.android.liveagentphone.store;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -6,6 +6,8 @@ import android.text.TextUtils;
 
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.Client;
+import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
+import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,7 +36,6 @@ public class StatusStore {
     public static final String STATUS_TYPE_ONLINE = "online_status";
     private static StatusStore instance;
     private Activity activity;
-    private String phoneId;
     private Map<String, JSONObject> devices = new HashMap<>();
     private final Set<StatusCallbacks> callbacksSet = new HashSet<>();
 
@@ -76,9 +77,19 @@ public class StatusStore {
         return instance;
     }
 
+    public static boolean hasInstance() {
+        return instance != null;
+    }
+
+    public static void destroyInstance() {
+        if (instance != null) {
+            instance.callbacksSet.clear();
+        }
+        instance = null;
+    }
+
     private StatusStore(Activity activity) {
         this.activity = activity;
-        phoneId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_PHONE_ID);
     }
 
     /**
@@ -108,6 +119,7 @@ public class StatusStore {
         for (StatusCallbacks item : callbacksSet) {
             item.onLoadingDevices();
         }
+        String phoneId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_PHONE_ID);
         Client.getDevicesPhoneStatus(activity, phoneId, new Client.Callback<Map<String, JSONObject>>() {
             @Override
             public void onSuccess(Map<String, JSONObject> object) {

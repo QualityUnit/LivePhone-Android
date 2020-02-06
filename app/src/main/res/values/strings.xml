@@ -20,12 +20,10 @@
     <string name="oops">Oops, something went wrong</string>
     <string name="about">About</string>
     <string name="cancel">Cancel</string>
-    <string name="retry">Retry</string>
     <string name="service_unavailable">Service unavailable</string>
     <string name="phone_number">Phone number</string>
     <string name="play_no_support">This device does not support Google Play Services</string>
     <string name="play_resolvable_problem">Oops, something is wrong with Google Play Services APK</string>
-    <string name="quit">Quit</string>
     <string name="your_number">Your number</string>
     <string name="cannot_call">You can\'t make a call.</string>
     <string name="no_outgoing_numbers">You don\'t have any outgoing number.</string>
@@ -70,5 +68,4 @@
     <string name="google_autenticator">Enter 6-digit number from Google Authenticator application.</string>
     <string name="too_many_logins">Login declined. Wait few minutes before retrying.</string>
     <string name="invalid_credentials">Invalid email or password</string>
-    <string name="manage_overlay_go_to_settings">Go to setting</string>
 </resources>

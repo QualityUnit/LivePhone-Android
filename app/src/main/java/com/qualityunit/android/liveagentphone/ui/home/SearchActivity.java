@@ -56,7 +56,7 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
         swipeRefreshLayout.setOnRefreshListener(this);
         adapter = new SearchParentAdapter(this);
         sections = new ArrayList<>();
-        sections.add(new InternalSection(this, InternalStore.getSearchInstance(), adapter, INDEX_INTERNAL));
+        sections.add(new InternalSection(this, InternalStore.createSearchInstance(), adapter, INDEX_INTERNAL));
         sections.add(new ContactsSection(this, ContactsStore.getInstance(), adapter, INDEX_CONTACTS));
         elv = (ExpandableListView) findViewById(R.id.elv);
         elv.setAdapter(adapter);

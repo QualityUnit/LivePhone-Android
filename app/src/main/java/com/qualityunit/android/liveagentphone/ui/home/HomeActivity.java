@@ -26,7 +26,7 @@ import com.qualityunit.android.liveagentphone.ui.init.InitActivity;
 import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
 import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
-import com.qualityunit.android.liveagentphone.ui.status.StatusStore;
+import com.qualityunit.android.liveagentphone.store.StatusStore;
 
 import java.util.List;
 
@@ -36,7 +36,6 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     private static final String TAG = HomeActivity.class.getSimpleName();
     private static final int STATUS_REQUEST_CODE = 1;
     private MenuItem statusItem;
-    private StatusStore store;
     private RecentFragment fragmentRecents;
     private InternalFragment internalFragment;
     private int statusItemIconRes;
@@ -70,8 +69,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
         tabLayout.getTabAt(0).setIcon(R.drawable.ic_home_white_24dp);
         tabLayout.getTabAt(1).setIcon(R.drawable.ic_hashtag_24);
 
-        store = StatusStore.getInstance(this);
-        store.addCallBacks(this);
+        StatusStore.getInstance(this).addCallBacks(this);
         FloatingActionButton fab = findViewById(R.id.fab_dialpad);
         if (fab != null) {
             fab.setOnClickListener(new View.OnClickListener() {
@@ -91,12 +89,14 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             finish();
             return;
         }
-        store.getDevice(true, false);
+        StatusStore.getInstance(this).getDevice(true, false);
     }
 
     @Override
     protected void onDestroy() {
-        store.removeCallBacks(this);
+        if (StatusStore.hasInstance()) {
+            StatusStore.getInstance(this).removeCallBacks(this);
+        }
         super.onDestroy();
     }
 
@@ -129,7 +129,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == STATUS_REQUEST_CODE) {
-            store.getDevice(false, false);
+            StatusStore.getInstance(this).getDevice(false, false);
         }
     }
 

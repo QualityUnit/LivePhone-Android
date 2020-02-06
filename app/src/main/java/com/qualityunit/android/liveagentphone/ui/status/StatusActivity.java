@@ -13,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
+import com.qualityunit.android.liveagentphone.store.StatusStore;
 
 import java.util.List;
 
@@ -22,7 +23,6 @@ import java.util.List;
 
 public class StatusActivity extends AppCompatActivity implements StatusCallbacks{
 
-    private StatusStore store;
     private Switch mobileAvailabilitySwitch;
     private ListView listView;
     private TextView listMessage;
@@ -52,8 +52,7 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
         listView = (ListView) findViewById(R.id.lv_list);
         listMessage = (TextView) findViewById(R.id.tv_list_message);
         listLoading = (ProgressBar) findViewById(R.id.pb_list_loading);
-        store = StatusStore.getInstance(this);
-        store.addCallBacks(this);
+        StatusStore.getInstance(this).addCallBacks(this);
 
         // browser status stuff
         llStatusWeb = (LinearLayout) findViewById(R.id.ll_status_web);
@@ -63,12 +62,12 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     @Override
     protected void onResume() {
         super.onResume();
-        store.getDevice(true, true);
+        StatusStore.getInstance(this).getDevice(true, true);
     }
 
     @Override
     protected void onDestroy() {
-        store.removeCallBacks(this);
+        StatusStore.getInstance(this).removeCallBacks(this);
         super.onDestroy();
     }
 
@@ -92,7 +91,7 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
             mobileAvailabilitySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    store.updateMobileDevice(isChecked);
+                    StatusStore.getInstance(StatusActivity.this).updateMobileDevice(isChecked);
                 }
             });
             mobileAvailabilitySwitch.setVisibility(View.VISIBLE);

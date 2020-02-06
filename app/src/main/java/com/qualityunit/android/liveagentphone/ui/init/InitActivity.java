@@ -27,8 +27,11 @@ import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.fcm.PushRegistrationIntentService;
 import com.qualityunit.android.liveagentphone.net.Client;
+import com.qualityunit.android.liveagentphone.store.ContactsStore;
+import com.qualityunit.android.liveagentphone.store.InternalStore;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
+import com.qualityunit.android.liveagentphone.store.StatusStore;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
 
 import org.json.JSONException;
@@ -46,15 +49,13 @@ public class InitActivity extends AppCompatActivity {
     private static final String TAG = InitActivity.class.getSimpleName();
     private static final int REQUEST_CODE_LOGIN = 0;
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    private static final int MAX_RETRY_NUMBER = 3;
     public static final String PERFORM_LOGOUT = "PERFORM_LOGOUT";
     private TextView tvLoading;
     private LinearLayout pbLoading;
     private View llButtons;
-    private Button bRetry;
+    private Button bOk;
     private BroadcastReceiver fcmRegistrationReceiver;
     private boolean isReceiverRegistered;
-    private int retryNumber;
     private boolean isFcmRegistered;
     private boolean isPhoneLoaded;
     private String deviceId;
@@ -67,25 +68,11 @@ public class InitActivity extends AppCompatActivity {
         llButtons = findViewById(R.id.ll_buttons);
         tvLoading = findViewById(R.id.tv_loading_status);
         pbLoading = findViewById(R.id.pb_loading);
-        bRetry =  findViewById(R.id.b_retry);
-        bRetry.setOnClickListener(new View.OnClickListener() {
+        bOk = findViewById(R.id.b_ok);
+        bOk.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (retryNumber++ < MAX_RETRY_NUMBER) {
-                    startInit(true);
-                }
-                else {
-                    retryNumber = 0;
-                    startActivityForResult(new Intent(InitActivity.this, AuthActivity.class), REQUEST_CODE_LOGIN);
-                    overridePendingTransition(0, 0);
-                }
-            }
-        });
-        View bQuit = findViewById(R.id.b_quit);
-        bQuit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
+                startInit(true);
             }
         });
     }
@@ -119,7 +106,7 @@ public class InitActivity extends AppCompatActivity {
             if (resultCode == RESULT_CANCELED) {
                 finish();
             } else if (resultCode == RESULT_OK) {
-                startInit(true);
+//                startInit(true); ... do not call this because it'll be called in onResume()
             }
         }
     }
@@ -161,8 +148,12 @@ public class InitActivity extends AppCompatActivity {
         Client.logout(this, new Client.Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject object) {
+                ContactsStore.destroyInstance();
+                InternalStore.destroyInstances();
+                StatusStore.destroyInstance();
                 Toast.makeText(InitActivity.this, getString(R.string.logout_success), Toast.LENGTH_SHORT).show();
                 finish();
+                startActivity(new Intent(InitActivity.this, InitActivity.class));
             }
 
             @Override
@@ -220,8 +211,7 @@ public class InitActivity extends AppCompatActivity {
     private void addAccData(AccountManager accountManager, Account account, JSONObject object, String key, String objectKey, boolean required) throws EmptyValueException, JSONException {
         if (required && (!object.has(objectKey) || TextUtils.isEmpty(object.getString(objectKey)))) {
             throw new EmptyValueException(key);
-        }
-        else {
+        } else {
             accountManager.setUserData(account, key, object.getString(objectKey));
         }
     }
@@ -253,8 +243,7 @@ public class InitActivity extends AppCompatActivity {
                         new IntentFilter(PushRegistrationIntentService.INTENT_REGISTRATION_COMPLETE));
                 isReceiverRegistered = true;
             }
-        }
-        else {
+        } else {
             // unregistering receiver
             if (fcmRegistrationReceiver != null) {
                 LocalBroadcastManager.getInstance(this).unregisterReceiver(fcmRegistrationReceiver);
@@ -280,8 +269,8 @@ public class InitActivity extends AppCompatActivity {
                 String msg = getString(R.string.play_no_support);
                 showError(msg);
                 Log.i(TAG, msg);
-                if (bRetry != null) {
-                    bRetry.setVisibility(View.GONE);
+                if (bOk != null) {
+                    bOk.setVisibility(View.GONE);
                 }
                 showError(msg);
             }

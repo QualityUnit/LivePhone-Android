@@ -13,18 +13,14 @@ import java.util.Map;
 
 public abstract class BaseRequest<T> extends JsonRequest<T> {
 
-    private static final int SOCKET_TIMEOUT = 5000;
-    private static final RetryPolicy RETRY_POLICY = new DefaultRetryPolicy(
-            SOCKET_TIMEOUT,
-            DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-            DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-    private String apikey;
+    private final RetryPolicy retryPolicy;
+    private final String apikey;
 
-    public BaseRequest(int method, String url, @Nullable String apikey, @Nullable String requestBody, Response.Listener<T> listener, @Nullable Response.ErrorListener errorListener) {
+    public BaseRequest(int method, String url, @Nullable String apikey, @Nullable String requestBody, Response.Listener<T> listener, @Nullable Response.ErrorListener errorListener, boolean noRetry) {
         super(method, url, requestBody, listener, errorListener);
         this.apikey = apikey;
+        retryPolicy = noRetry ? new DefaultRetryPolicy(DefaultRetryPolicy.DEFAULT_TIMEOUT_MS, 0, 0) : new DefaultRetryPolicy();
     }
-
 
     @Override
     public Map<String, String> getHeaders() {
@@ -39,7 +35,7 @@ public abstract class BaseRequest<T> extends JsonRequest<T> {
 
     @Override
     public RetryPolicy getRetryPolicy() {
-        return RETRY_POLICY;
+        return retryPolicy;
     }
 
 }

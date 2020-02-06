@@ -16,7 +16,14 @@ public class ObjectRequest extends BaseRequest<JSONObject> {
 
 
     public ObjectRequest(int method, String url, @Nullable String apikey, @Nullable String requestBody, Response.Listener<JSONObject> listener, @Nullable Response.ErrorListener errorListener) {
-        super(method, url, apikey, requestBody, listener, errorListener);
+        super(method, url, apikey, requestBody, listener, errorListener, false);
+    }
+
+    /*
+     Ping request
+     */
+    public ObjectRequest(int method, String url, @Nullable String apikey, @Nullable String requestBody, Response.Listener<JSONObject> listener, @Nullable Response.ErrorListener errorListener, boolean noRetry) {
+        super(method, url, apikey, requestBody, listener, errorListener, noRetry);
     }
 
     @Override

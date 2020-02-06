@@ -34,6 +34,17 @@ public class ContactsStore implements Store<ContactsItem> {
         return instance;
     }
 
+    public static boolean hasInstance() {
+        return instance != null;
+    }
+
+    public static void destroyInstance() {
+        if (instance != null) {
+            instance.setListener(null);
+        }
+        instance = null;
+    }
+
     private ContactsStore() {
     }
 

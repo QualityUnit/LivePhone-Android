@@ -16,7 +16,7 @@ public class ArrayRequest extends BaseRequest<JSONArray> {
 
 
     public ArrayRequest(int method, String url, String apikey, @Nullable String requestBody, Response.Listener<JSONArray> listener, @Nullable Response.ErrorListener errorListener) {
-        super(method, url, apikey, requestBody, listener, errorListener);
+        super(method, url, apikey, requestBody, listener, errorListener, false);
     }
 
     @Override
