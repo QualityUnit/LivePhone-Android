@@ -44,7 +44,6 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
     // instance variables
     private int scrollIndex;
     private int scrollTop;
-    private String searchTerm;
     private boolean isLastPage;
 
     @Override
@@ -71,23 +70,8 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
         listView.setAdapter(getAdapter());
         listView.setOnItemClickListener(this);
         listView.setOnScrollListener(new PaginationScrollListener(this, VISIBLE_THRESHOLD));
-        if (savedInstanceState != null) {
-            scrollIndex = savedInstanceState.getInt("scrollIndex", 0);
-            scrollTop = savedInstanceState.getInt("scrollTop", 0);
-            searchTerm = savedInstanceState.getString("searchTerm", "");
-            isLastPage = savedInstanceState.getBoolean("isLastPage", false);
-        }
         InternalStore.getInstance().setListener(this);
         init();
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putInt("scrollIndex", scrollIndex);
-        outState.putInt("scrollTop", scrollTop);
-        outState.putString("searchTerm", searchTerm);
-        outState.putBoolean("isLastPage", isLastPage);
-        super.onSaveInstanceState(outState);
     }
 
     @Override

@@ -116,17 +116,19 @@ public class StatusStore {
             notifyOnDevices(null);
             return;
         }
-        for (StatusCallbacks item : callbacksSet) {
-            item.onLoadingDevices();
-        }
         String phoneId = AccountManager.get(activity).getUserData(LaAccount.get(), LaAccount.USERDATA_PHONE_ID);
         Client.getDevicesPhoneStatus(activity, phoneId, new Client.Callback<Map<String, JSONObject>>() {
             @Override
-            public void onSuccess(Map<String, JSONObject> object) {
+            public void onSuccess(final Map<String, JSONObject> object) {
                 try {
                     devices = object;
                     if (withDeparments && getDeviceStatus(DEVICE_TYPE_MOBILE, STATUS_TYPE_PRESET) == PHONE_STATUS_OUT_IN) {
                         getDepartments(devices.get(DEVICE_TYPE_MOBILE).getString("id"));
+                    } else {
+                        // clear department listview
+                        for (StatusCallbacks item : callbacksSet) {
+                            item.onDepartmentList(null, null);
+                        }
                     }
                     notifyOnDevices(null); // phoneStatus is updated here
                 } catch (JSONException e) {
@@ -153,9 +155,6 @@ public class StatusStore {
             }
         }
         JSONObject deviceJsonObject = devices.get(DEVICE_TYPE_MOBILE);
-        for (StatusCallbacks item : callbacksSet) {
-            item.onLoadingDevices();
-        }
         Client.updateDevicePhoneStatus(activity, deviceJsonObject, requestedStatus, new Client.Callback<JSONObject>() {
             @Override
             public void onSuccess(JSONObject object) {
@@ -187,7 +186,7 @@ public class StatusStore {
         }
         Client.getDepartmentStatusList(activity, deviceId, new Client.Callback<List<DepartmentStatusItem>>() {
             @Override
-            public void onSuccess(List<DepartmentStatusItem> list) {
+            public void onSuccess(final List<DepartmentStatusItem> list) {
                 for (StatusCallbacks item : callbacksSet) {
                     item.onDepartmentList(list, null);
                 }

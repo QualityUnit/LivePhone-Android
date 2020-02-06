@@ -1,6 +1,7 @@
 package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -21,13 +22,15 @@ import java.util.List;
  * Created by rasto on 8.11.17.
  */
 
-public class StatusActivity extends AppCompatActivity implements StatusCallbacks{
+public class StatusActivity extends AppCompatActivity implements StatusCallbacks, SwipeRefreshLayout.OnRefreshListener {
 
     private Switch mobileAvailabilitySwitch;
     private ListView listView;
     private TextView listMessage;
     private ProgressBar listLoading;
+    private ProgressBar mobileStatusLoading;
     private LinearLayout llStatusWeb;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,12 +49,15 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
 
         // mobile status stuff
         mobileAvailabilitySwitch = (Switch) toolbar.findViewById(R.id.s_mobileStatus);
-        mobileAvailabilitySwitch.setVisibility(View.GONE);
+        mobileAvailabilitySwitch.setVisibility(View.INVISIBLE);
 
         // department list
+        swipeRefreshLayout = findViewById(R.id.srl_list);
+        swipeRefreshLayout.setOnRefreshListener(this);
         listView = (ListView) findViewById(R.id.lv_list);
         listMessage = (TextView) findViewById(R.id.tv_list_message);
         listLoading = (ProgressBar) findViewById(R.id.pb_list_loading);
+        mobileStatusLoading = (ProgressBar) findViewById(R.id.s_mobileStatus_loading);
         StatusStore.getInstance(this).addCallBacks(this);
 
         // browser status stuff
@@ -72,12 +78,9 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     }
 
     @Override
-    public void onLoadingDevices() {
-        // do nothing
-    }
-
-    @Override
     public void onDevices(int mobilePhoneStatus, int browserPhoneStatus, Exception e) {
+        mobileAvailabilitySwitch.setVisibility(View.VISIBLE);
+        mobileStatusLoading.setVisibility(View.INVISIBLE);
         if (browserPhoneStatus > StatusStore.PHONE_STATUS_NULL) {
             if (browserPhoneStatus == StatusStore.PHONE_STATUS_OUT_IN) {
                 llStatusWeb.setVisibility(View.VISIBLE);
@@ -131,4 +134,12 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
         }
     }
 
+    @Override
+    public void onRefresh() {
+        onLoadingDepartmentList();
+        swipeRefreshLayout.setRefreshing(false);
+        mobileAvailabilitySwitch.setVisibility(View.INVISIBLE);
+        mobileStatusLoading.setVisibility(View.VISIBLE);
+        StatusStore.getInstance(this).getDevice(true, true);
+    }
 }

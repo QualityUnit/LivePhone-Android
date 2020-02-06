@@ -21,13 +21,27 @@
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay">
 
-            <Switch
-                android:id="@+id/s_mobileStatus"
+            <FrameLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 android:layout_margin="16dp"
-                android:layout_centerVertical="true"/>
+                android:layout_centerVertical="true">
+
+                <ProgressBar
+                    android:id="@+id/s_mobileStatus_loading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="visible"
+                    android:layout_gravity="center"/>
+
+                <Switch
+                    android:id="@+id/s_mobileStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="invisible"/>
+
+            </FrameLayout>
 
         </android.support.v7.widget.Toolbar>
 
@@ -45,14 +59,20 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <ListView
-                android:id="@+id/lv_list"
+            <android.support.v4.widget.SwipeRefreshLayout
+                android:id="@+id/srl_list"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:choiceMode="none"
-                android:visibility="visible"
-                android:divider="@null"
-                android:dividerHeight="0dp"/>
+                android:layout_height="match_parent">
+
+                <ListView
+                    android:id="@+id/lv_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:choiceMode="none"
+                    android:divider="@null"
+                    android:dividerHeight="0dp"/>
+
+            </android.support.v4.widget.SwipeRefreshLayout>
 
             <ProgressBar
                 android:id="@+id/pb_list_loading"

@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface StatusCallbacks {
 
-    void onLoadingDevices();
     void onDevices(int mobilePhoneStatus, int browserPhoneStatus, Exception e);
     void onLoadingDepartmentList();
     void onDepartmentList(List<DepartmentStatusItem> list, Exception e);
