@@ -58,6 +58,7 @@ public class DialerFragment extends BaseFragment<DialerActivity> {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         etDialInput = (EditText) view.findViewById(R.id.et_dialInput);
+        etDialInput.requestFocus();
         tvOutgoingnumber = (TextView) view.findViewById(R.id.tv_outgoingNumber);
         tvOutgoingnumber.setHint(getString(R.string.choose_number));
         tvOutgoingnumber.setOnClickListener(new View.OnClickListener() {

@@ -2,38 +2,61 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:android.support.design="http://schemas.android.com/apk/res-auto"
               android:orientation="vertical"
+              android:background="@color/background"
               android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:padding="15dp">
+              android:layout_height="match_parent">
+
+
 
     <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/phone_number"
-        android.support.design:hintAnimationEnabled="true"
-        android.support.design:hintEnabled="true">
+        android:padding="24dp"
+        android:background="@color/background"
+        android.support.design:hintAnimationEnabled="false"
+        android.support.design:hintEnabled="false">
 
         <EditText
             android:id="@+id/et_dialInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:singleLine="true"
+            android:gravity="center_horizontal"
+            android:textStyle="bold"
+            android:background="@null"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
             android:inputType="phone"/>
 
     </android.support.design.widget.TextInputLayout>
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:background="@color/accent"/>
+
     <TextView
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="@string/your_number"
+        android:layout_gravity="center_horizontal"
         android:textAppearance="@style/TextAppearance.AppCompat.Small"
-        android:layout_marginTop="15dp"
-        android:layout_height="wrap_content"/>
+        android:layout_marginTop="32dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="8dp"/>
 
     <TextView
         android:id="@+id/tv_outgoingNumber"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
+        android:layout_marginRight="16dp"
+        android:layout_marginLeft="16dp"
         android:text="@string/choose_number"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"/>
 
 </LinearLayout>
