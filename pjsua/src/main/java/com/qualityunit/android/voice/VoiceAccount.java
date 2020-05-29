@@ -51,8 +51,8 @@ public class VoiceAccount extends Account {
 
     public static AccountConfig createAccountConfig(@NonNull String sipHost, @NonNull String sipUser, @NonNull String sipPassword) {
         // create URIs
-        String sipRegisterUri = "sip:" + sipHost;
-        String sipAccountUri = "sip:" + sipUser + "@" + sipHost;
+        String sipRegisterUri = "sip:" + sipHost + ";transport=tcp";
+        String sipAccountUri = "sip:" + sipUser + "@" + sipHost + ";transport=tcp";
         // set voiceAccount config
         AccountConfig accountConfig = new AccountConfig();
         accountConfig.getMediaConfig().getTransportConfig().setQosType(pj_qos_type.PJ_QOS_TYPE_VOICE);

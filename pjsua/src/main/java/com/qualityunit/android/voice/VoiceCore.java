@@ -58,8 +58,6 @@ public class VoiceCore {
         }
         // Init endpoint
         endpoint.libInit(epConfig);
-        // Create UDP transport
-        endpoint.transportCreate(pjsip_transport_type_e.PJSIP_TRANSPORT_UDP, sipTpConfig);
         // Create TCP transport (we need this to be enabled, because UDP supports requests up to 1300 bytes (e.g. hold request has more than 1300 bytes))
         endpoint.transportCreate(pjsip_transport_type_e.PJSIP_TRANSPORT_TCP, sipTpConfig);
         // Start sip lib
