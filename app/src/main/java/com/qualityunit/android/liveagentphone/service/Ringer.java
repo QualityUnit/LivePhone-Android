@@ -4,11 +4,14 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
+import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Vibrator;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Ringer implements MediaPlayer.OnErrorListener {
 
@@ -17,6 +20,7 @@ public class Ringer implements MediaPlayer.OnErrorListener {
     private final Context context;
     private Vibrator vibrator;
     private MediaPlayer mediaPlayer;
+    private Timer timer;
 
     public Ringer(Context context) {
         this.context  = context;
@@ -43,6 +47,10 @@ public class Ringer implements MediaPlayer.OnErrorListener {
     }
 
     public void stop() {
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
         if (vibrator != null) {
             vibrator.cancel();
             vibrator = null;
@@ -58,6 +66,18 @@ public class Ringer implements MediaPlayer.OnErrorListener {
                 mediaPlayer = null;
             }
         }
+    }
+
+    public void startBeeping() {
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_RING, 100);
+                toneGenerator.startTone(ToneGenerator.TONE_CDMA_NETWORK_CALLWAITING,50);
+            }
+        };
+        timer = new Timer("beeping");
+        timer.schedule(timerTask, 0, 5000);
     }
 
     private MediaPlayer createMediaPlayer() {

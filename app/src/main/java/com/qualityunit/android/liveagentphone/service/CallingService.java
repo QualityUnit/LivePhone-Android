@@ -1,6 +1,7 @@
 package com.qualityunit.android.liveagentphone.service;
 
 import android.accounts.AccountManager;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -65,6 +66,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
     private static final long WAITING_TO_CALL_MILLIS = 5000;
     public static final String INTENT_FILTER_CALL_STATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_CALL_STATE";
     public static final String INTENT_FILTER_CALL_UPDATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_CALL_UPDATE";
+
     public static final class COMMANDS {
         public static final String MAKE_CALL = "MAKE_CALL";
         public static final String INCOMING_CALL = "INCOMING_CALL";
@@ -102,6 +104,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
     private Handler mainHandler;
     private HandlerThread workerThread;
     private Handler workerHandler;
+    private TelecomManager telecomManager;
     private volatile boolean nextCallAhead;
     private static PowerManager.WakeLock wakeLock;
     private VoiceConnection activeVoiceConnection;
@@ -205,7 +208,10 @@ public class CallingService extends ConnectionService implements VoiceConnection
     }
 
     private TelecomManager getTelecomManager() {
-        TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+        if (telecomManager != null) {
+            return telecomManager;
+        }
+        telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
         PhoneAccount.Builder builder = PhoneAccount.builder(phoneAccountHandle, PHONE_ACCOUNT_HANDLE_ID);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED);
@@ -902,9 +908,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
     private void startRingtone() {
         mainHandler.post(new Runnable() {
+            @SuppressLint("MissingPermission")
             @Override
             public void run() {
-                ringer.start();
+                if (getTelecomManager().isInCall()) {
+                    ringer.startBeeping();
+                } else {
+                    ringer.start();
+                }
             }
         });
     }

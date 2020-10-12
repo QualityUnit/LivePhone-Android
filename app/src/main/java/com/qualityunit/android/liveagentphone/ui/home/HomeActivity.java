@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
+import com.qualityunit.android.liveagentphone.store.StatusStore;
 import com.qualityunit.android.liveagentphone.ui.about.AboutActivity;
 import com.qualityunit.android.liveagentphone.ui.common.ResumePause;
 import com.qualityunit.android.liveagentphone.ui.dialer.DialerActivity;
@@ -26,7 +27,6 @@ import com.qualityunit.android.liveagentphone.ui.init.InitActivity;
 import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
 import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
-import com.qualityunit.android.liveagentphone.store.StatusStore;
 
 import java.util.List;
 

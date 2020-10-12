@@ -29,14 +29,15 @@ import com.qualityunit.android.liveagentphone.fcm.PushRegistrationIntentService;
 import com.qualityunit.android.liveagentphone.net.Client;
 import com.qualityunit.android.liveagentphone.store.ContactsStore;
 import com.qualityunit.android.liveagentphone.store.InternalStore;
+import com.qualityunit.android.liveagentphone.store.StatusStore;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
-import com.qualityunit.android.liveagentphone.store.StatusStore;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import static android.Manifest.permission.CALL_PHONE;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -284,10 +285,12 @@ public class InitActivity extends AppCompatActivity {
      * @return
      */
     private boolean checkAppPermissions() {
-        // Dangerous permissions: RECORD_AUDIO, READ_PHONE_STATE
+        // Dangerous permissions: RECORD_AUDIO, READ_PHONE_STATE, CALL_PHONE
         if (!checkOnePermission(RECORD_AUDIO, getString(R.string.permission_reason_handle_calls_properly))) {
             return false;
         } else if (!checkOnePermission(READ_PHONE_STATE, getString(R.string.permission_reason_read_phone_state))) {
+            return false;
+        } else if (!checkOnePermission(CALL_PHONE, getString(R.string.permission_reason_handle_calls_properly))) {
             return false;
         }
         return true;
