@@ -8,8 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -29,6 +27,8 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import java.util.Date;
 import java.util.Map;
 
+import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import fr.turri.jiso8601.Iso8601Deserializer;
 
 import static android.app.NotificationManager.IMPORTANCE_HIGH;

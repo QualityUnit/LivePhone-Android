@@ -1,6 +1,6 @@
 package com.qualityunit.android.liveagentphone.net.request;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;

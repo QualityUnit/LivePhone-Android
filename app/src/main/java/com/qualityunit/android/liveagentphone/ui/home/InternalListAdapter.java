@@ -3,7 +3,7 @@ package com.qualityunit.android.liveagentphone.ui.home;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v4.content.ContextCompat;
+import androidx.core.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;

@@ -7,7 +7,6 @@ import android.accounts.AccountManagerFuture;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -21,6 +20,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class PushRegistrationIntentService extends IntentService {
 

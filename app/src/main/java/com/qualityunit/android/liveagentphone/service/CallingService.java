@@ -17,8 +17,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.PowerManager;
 import android.os.Process;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
 import android.telecom.ConnectionService;
@@ -48,6 +46,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import static android.app.NotificationManager.IMPORTANCE_HIGH;
 import static android.app.NotificationManager.IMPORTANCE_LOW;
@@ -104,7 +105,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
     private Handler mainHandler;
     private HandlerThread workerThread;
     private Handler workerHandler;
-    private TelecomManager telecomManager;
     private volatile boolean nextCallAhead;
     private static PowerManager.WakeLock wakeLock;
     private VoiceConnection activeVoiceConnection;
@@ -138,7 +138,9 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             outgoingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
                             outgoingExtras.putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, new Bundle(intent.getExtras()));
                             try {
-                                getTelecomManager().placeCall(outgoingUri, outgoingExtras);
+                                TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+                                registerPhoneAccount(telecomManager);
+                                telecomManager.placeCall(outgoingUri, outgoingExtras);
                             } catch (SecurityException e) {
                                 throw new CallingException(e.getMessage());
                             }
@@ -150,7 +152,9 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             }
                             Bundle incomingExtras = new Bundle();
                             incomingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
-                            getTelecomManager().addNewIncomingCall(phoneAccountHandle, incomingExtras);
+                            TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+                            registerPhoneAccount(telecomManager);
+                            telecomManager.addNewIncomingCall(phoneAccountHandle, incomingExtras);
                             break;
                         case COMMANDS.ANSWER_CALL:
                             dismissIncomingCallNotification();
@@ -207,18 +211,13 @@ public class CallingService extends ConnectionService implements VoiceConnection
         return activeVoiceConnection;
     }
 
-    private TelecomManager getTelecomManager() {
-        if (telecomManager != null) {
-            return telecomManager;
-        }
-        telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+    private void registerPhoneAccount(TelecomManager telecomManager) {
         PhoneAccount.Builder builder = PhoneAccount.builder(phoneAccountHandle, PHONE_ACCOUNT_HANDLE_ID);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setCapabilities(PhoneAccount.CAPABILITY_SELF_MANAGED);
         }
         PhoneAccount phoneAccount = builder.build();
         telecomManager.registerPhoneAccount(phoneAccount);
-        return telecomManager;
     }
 
     @Override
@@ -250,10 +249,13 @@ public class CallingService extends ConnectionService implements VoiceConnection
         super.onCreateOutgoingConnectionFailed(connectionManagerPhoneAccount, request);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public Connection onCreateIncomingConnection(PhoneAccountHandle connectionManagerPhoneAccount, ConnectionRequest request) {
         activeVoiceConnection = new VoiceConnection(this);
         activeVoiceConnection.incomingVoiceCall();
+        TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+        activeVoiceConnection.setInCallOfAnotherApp(telecomManager.isInCall());
         return activeVoiceConnection;
     }
 
@@ -278,6 +280,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         private boolean isSpeaker;
         private boolean isHold;
         private boolean isHangingUp;
+        private boolean isInCallOfAnotherApp;
         private long duration = 0;
         private String lastCallState;
         private String remoteNumber;
@@ -615,6 +618,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
             });
         }
 
+        public boolean isInCallOfAnotherApp() {
+            return isInCallOfAnotherApp;
+        }
+
+        public void setInCallOfAnotherApp(boolean inCallofAnotherApp) {
+            isInCallOfAnotherApp = inCallofAnotherApp;
+        }
+
         /* PJSIP callbacks */
 
         @Override
@@ -908,10 +919,9 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
     private void startRingtone() {
         mainHandler.post(new Runnable() {
-            @SuppressLint("MissingPermission")
             @Override
             public void run() {
-                if (getTelecomManager().isInCall()) {
+                if (activeVoiceConnection.isInCallOfAnotherApp()) {
                     ringer.startBeeping();
                 } else {
                     ringer.start();

@@ -1,6 +1,6 @@
 package com.qualityunit.android.liveagentphone.net.request;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.android.volley.DefaultRetryPolicy;

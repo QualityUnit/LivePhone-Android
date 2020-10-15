@@ -8,11 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -36,6 +31,12 @@ import com.qualityunit.android.liveagentphone.util.EmptyValueException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import static android.Manifest.permission.CALL_PHONE;
 import static android.Manifest.permission.READ_PHONE_STATE;
@@ -296,13 +297,24 @@ public class InitActivity extends AppCompatActivity {
         return true;
     }
 
-    private boolean checkOnePermission(String permissionName, String reason) {
+    private boolean checkOnePermission(final String permissionName, String reason) {
         if (ContextCompat.checkSelfPermission(InitActivity.this, permissionName) != PERMISSION_GRANTED) {
             // Permission is not granted
             // Should we show an explanation?
             // returns false only if the user selected Never ask again
             if (ActivityCompat.shouldShowRequestPermissionRationale(InitActivity.this, permissionName)) {
-                showPermissionNotification(permissionName, reason);
+                AlertDialog alertDialog = new AlertDialog.Builder(InitActivity.this).create();
+                alertDialog.setTitle(permissionName.replace("android.permission.", ""));
+                alertDialog.setMessage(reason);
+                alertDialog.setCancelable(false);
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, 1000);
+                            }
+                        });
+                alertDialog.show();
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
@@ -313,21 +325,6 @@ public class InitActivity extends AppCompatActivity {
             return false;
         }
         return true;
-    }
-
-    private void showPermissionNotification(final String permissionName, final String reason) {
-        AlertDialog alertDialog = new AlertDialog.Builder(InitActivity.this).create();
-        alertDialog.setTitle(permissionName.replace("android.permission.", ""));
-        alertDialog.setMessage(reason);
-        alertDialog.setCancelable(false);
-        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        ActivityCompat.requestPermissions(InitActivity.this, new String[]{ permissionName }, 1000);
-                    }
-                });
-        alertDialog.show();
     }
 
     @Override
@@ -397,7 +394,7 @@ public class InitActivity extends AppCompatActivity {
                 }
                 String errMsg = intent.getStringExtra(PushRegistrationIntentService.FAILURE_MESSAGE);
                 if (!TextUtils.isEmpty(errMsg)) {
-                    errMsg = getString(R.string.oops);
+                    errMsg = "Cannot register to receive push notifications";
                 }
                 showError(errMsg);
             }

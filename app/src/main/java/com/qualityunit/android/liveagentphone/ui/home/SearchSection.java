@@ -1,7 +1,7 @@
 package com.qualityunit.android.liveagentphone.ui.home;
 
 import android.app.Activity;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.widget.Toast;
 
 import com.qualityunit.android.liveagentphone.net.PaginationList;

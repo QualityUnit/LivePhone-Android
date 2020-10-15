@@ -1,15 +1,16 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
-        applicationId "com.qualityunit.android.liveagentphone"
+        applicationId 'com.qualityunit.android.liveagentphone'
         minSdkVersion 23
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 58
-        versionName "1.5.11"
+        versionName '1.5.12'
         ndk {
-            abiFilters "arm64-v8a", "armeabi-v7a", "x86", "x86_64"
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
         }
     }
     buildTypes {
@@ -17,13 +18,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-    packagingOptions {
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
     }
     lintOptions {
         disable 'MissingTranslation'
@@ -35,26 +29,11 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation project(path: ':pjsua')
     implementation 'com.android.volley:volley:1.1.1'
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:support-v4:28.0.0'
-    implementation 'com.android.support:design:28.0.0'
-    implementation 'com.android.support:cardview-v7:28.0.0'
-    implementation 'com.google.firebase:firebase-messaging:15.0.2'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'com.google.firebase:firebase-messaging:20.3.0'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'fr.turri:jISO8601:0.2'
 }
-
-// https://stackoverflow.com/questions/42949974/android-support-repo-46-0-0-with-android-studio-2-3
-configurations.all {
-    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-        def requested = details.requested
-        if (requested.group == 'com.android.support') {
-            // Skip multidex because it follows a different versioning pattern.
-            if (!requested.name.startsWith("multidex")) {
-                details.useVersion '28.0.0'
-            }
-        }
-    }
-}
-
-apply plugin: 'com.google.gms.google-services'
