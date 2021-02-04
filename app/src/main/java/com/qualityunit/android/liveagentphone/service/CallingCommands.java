@@ -2,8 +2,9 @@ package com.qualityunit.android.liveagentphone.service;
 
 import android.content.Context;
 import android.content.Intent;
-import androidx.annotation.NonNull;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by rasto on 7.11.16.
@@ -75,5 +76,31 @@ public final class CallingCommands {
     public static void toggleHold(@NonNull Context context) {
         context.startService(new Intent(context, CallingService.class)
                 .putExtra("command", CallingService.COMMANDS.TOGGLE_HOLD));
+    }
+
+    public static void transferHoldActive(@NonNull Context context) {
+        context.startService(new Intent(context, CallingService.class)
+                .putExtra("command", CallingService.COMMANDS.TRANSFER)
+                .putExtra("step", CallingService.COMMANDS.TRANSFER_STEP.HOLD_ACTIVE));
+    }
+
+    public static void transferCallExtension(@NonNull Context context, String extensionNumber, String extensionName) {
+        context.startService(new Intent(context, CallingService.class)
+                .putExtra("command", CallingService.COMMANDS.TRANSFER)
+                .putExtra("step", CallingService.COMMANDS.TRANSFER_STEP.CALL_EXTENSION)
+                .putExtra("extensionNumber", extensionNumber)
+                .putExtra("extensionName", extensionName));
+    }
+
+    public static void transferCompleteTransfer(@NonNull Context context) {
+        context.startService(new Intent(context, CallingService.class)
+                .putExtra("command", CallingService.COMMANDS.TRANSFER)
+                .putExtra("step", CallingService.COMMANDS.TRANSFER_STEP.COMPLETE_TRANSFER));
+    }
+
+    public static void transferExtensionHangup(@NonNull Context context) {
+        context.startService(new Intent(context, CallingService.class)
+                .putExtra("command", CallingService.COMMANDS.TRANSFER)
+                .putExtra("step", CallingService.COMMANDS.TRANSFER_STEP.HANGUP_EXTENSION));
     }
 }

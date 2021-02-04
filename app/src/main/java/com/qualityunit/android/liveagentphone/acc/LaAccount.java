@@ -2,10 +2,10 @@ package com.qualityunit.android.liveagentphone.acc;
 
 import android.accounts.Account;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.qualityunit.android.liveagentphone.App;
 import com.qualityunit.android.liveagentphone.Const;
+import com.qualityunit.android.liveagentphone.util.Logger;
 
 /**
  * Created by rasto on 28.01.16.
@@ -53,7 +53,7 @@ public class LaAccount {
         if (account == null || !name.equals(account.name)) {
             account = new Account(name, type);
             App.getSharedPreferences().edit().putString(Const.MemoryKeys.CURRENT_ACCOUNT, name).apply();
-            Log.d(TAG, "New current account has been set.\naccount name = '" + name + "'\naccount type = '" + type + "'");
+            Logger.d(TAG, "New current account has been set.\naccount name = '" + name + "'\naccount type = '" + type + "'");
         }
         return account;
     }

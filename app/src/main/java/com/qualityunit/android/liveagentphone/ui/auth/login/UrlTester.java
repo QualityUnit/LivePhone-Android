@@ -4,11 +4,11 @@ import android.app.Activity;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.qualityunit.android.liveagentphone.App;
 import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.net.Client;
+import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 import org.json.JSONObject;
@@ -151,7 +151,7 @@ public abstract class UrlTester implements Handler.Callback {
 
         private void startChecking(final String basePath) {
             try {
-                Log.d(TAG, "Testing URL: '" + basePath + "'");
+                Logger.d(TAG, "Testing URL: '" + basePath + "'");
                 // testing URL validity
                 if (!Tools.isUrlValid(basePath) || (!basePath.startsWith("http://") && !basePath.startsWith("https://"))) {
                     throw new MalformedURLException();

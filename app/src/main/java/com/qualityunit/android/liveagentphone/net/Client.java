@@ -11,8 +11,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.android.volley.DefaultRetryPolicy;
@@ -23,7 +21,6 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.Volley;
-import com.qualityunit.android.liveagentphone.BuildConfig;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.net.request.ArrayRequest;
 import com.qualityunit.android.liveagentphone.net.request.ObjectRequest;
@@ -31,6 +28,7 @@ import com.qualityunit.android.liveagentphone.ui.dialer.DialerFragment;
 import com.qualityunit.android.liveagentphone.ui.home.ContactsItem;
 import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
 import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
+import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 import org.json.JSONArray;
@@ -49,6 +47,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import static com.android.volley.Request.Method.DELETE;
 import static com.android.volley.Request.Method.GET;
 import static com.android.volley.Request.Method.POST;
@@ -65,7 +66,7 @@ public class Client {
 
     private Client(Context context) {
         Client.context = context;
-        VolleyLog.DEBUG = BuildConfig.DEBUG;
+        VolleyLog.DEBUG = Logger.ALLOW_LOGGING;
         queue = getQueue();
 //        imageLoader = new ImageLoader(queue,
 //                new ImageLoader.ImageCache() {
@@ -786,13 +787,13 @@ public class Client {
         });
     }
 
-    public static void getExtensions(final Activity activity, final String requestTag, @Nullable final String searchTerm, final int page, final int perPage, final Callback<List<InternalItem>> callback) {
+    public static void getExtensions(final Activity activity, final String requestTag, @Nullable final String searchTerm, final int page, final int perPage, final boolean onlyActive, final Callback<List<InternalItem>> callback) {
         prepare(activity, new AuthCallback() {
             @Override
             public void onAuthData(Client client, String basepath, final String apikey) {
                 try {
                     final JSONObject filters = new JSONObject() {{
-                        put("computed_status", "A,E"); // default: show only Active and Enabled internals
+                        put("computed_status", onlyActive ? "A" : "A,E"); // default: show only Active and Enabled internals
                         if (!TextUtils.isEmpty(searchTerm)) {
                             put("q", searchTerm);
                         }
@@ -844,7 +845,7 @@ public class Client {
                             callback.onFailure(processFailure(activity, apikey, error, requestTag, new AuthFallback() {
                                 @Override
                                 public void onFallback() {
-                                    getExtensions(activity, requestTag, searchTerm, page, perPage, callback);
+                                    getExtensions(activity, requestTag, searchTerm, page, perPage, onlyActive, callback);
                                 }
                             }));
                         }

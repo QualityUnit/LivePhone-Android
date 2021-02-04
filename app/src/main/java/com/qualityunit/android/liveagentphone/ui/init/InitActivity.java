@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -28,6 +27,7 @@ import com.qualityunit.android.liveagentphone.store.StatusStore;
 import com.qualityunit.android.liveagentphone.ui.auth.AuthActivity;
 import com.qualityunit.android.liveagentphone.ui.home.HomeActivity;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
+import com.qualityunit.android.liveagentphone.util.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -206,7 +206,7 @@ public class InitActivity extends AppCompatActivity {
             registerPushNotifications();
         } catch (EmptyValueException | JSONException e) {
             showError(e.getMessage());
-            Log.e(TAG, e.getMessage(), e);
+            Logger.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -270,7 +270,7 @@ public class InitActivity extends AppCompatActivity {
             } else {
                 String msg = getString(R.string.play_no_support);
                 showError(msg);
-                Log.i(TAG, msg);
+                Logger.i(TAG, msg);
                 if (bOk != null) {
                     bOk.setVisibility(View.GONE);
                 }
@@ -329,7 +329,7 @@ public class InitActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        Log.d(TAG, "Permission '" + permissions[0] + "' granted: " + (grantResults[0] == PERMISSION_GRANTED));
+        Logger.d(TAG, "Permission '" + permissions[0] + "' granted: " + (grantResults[0] == PERMISSION_GRANTED));
     }
 
     /**

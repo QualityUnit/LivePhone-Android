@@ -1,10 +1,6 @@
 package com.qualityunit.android.liveagentphone.ui.home;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +18,11 @@ import com.qualityunit.android.liveagentphone.ui.common.PaginationScrollListener
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import static android.view.View.GONE;
 
@@ -89,7 +90,7 @@ public class InternalFragment extends Fragment implements AdapterView.OnItemClic
         InternalStore.getInstance().init(getActivity(), PaginationList.InitFlag.LOAD);
     }
 
-    private InternalListAdapter getAdapter() {
+    protected InternalListAdapter getAdapter() {
         if (adapter == null) {
             adapter = new InternalListAdapter(getContext(), new ArrayList<InternalItem>());
         }

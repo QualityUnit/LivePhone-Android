@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -131,7 +130,7 @@ public class PushMessagingService extends FirebaseMessagingService {
             }
         } catch (Exception e) {
             Logger.logToFile(getApplicationContext(), "PUSH ERROR: " + e.getMessage());
-            Log.e(TAG, e.getMessage(), e);
+            Logger.e(TAG, e.getMessage(), e);
         }
     }
 

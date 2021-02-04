@@ -25,11 +25,9 @@ import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-import com.qualityunit.android.liveagentphone.BuildConfig;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.call.CallingActivity;
@@ -67,6 +65,8 @@ public class CallingService extends ConnectionService implements VoiceConnection
     private static final long WAITING_TO_CALL_MILLIS = 5000;
     public static final String INTENT_FILTER_CALL_STATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_CALL_STATE";
     public static final String INTENT_FILTER_CALL_UPDATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_CALL_UPDATE";
+    public static final String INTENT_FILTER_EXTENSION_STATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_EXTENSION_STATE";
+    public static final String INTENT_FILTER_EXTENSION_UPDATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_EXTENSION_UPDATE";
 
     public static final class COMMANDS {
         public static final String MAKE_CALL = "MAKE_CALL";
@@ -81,13 +81,29 @@ public class CallingService extends ConnectionService implements VoiceConnection
         public static final String TOGGLE_SPEAKER = "TOGGLE_SPEAKER";
         public static final String GET_CALL_UPDATES = "GET_CALL_UPDATES";
         public static final String GET_CALL_STATE = "GET_CALL_STATE";
+        public static final String TRANSFER = "TRANSFER";
+        public static final class TRANSFER_STEP {
+            public static final String HOLD_ACTIVE = "STEP_HOLD_ACTIVE";
+            public static final String HOLD_EXTENSION = "HOLD_EXTENSION";
+            public static final String CALL_EXTENSION = "STEP_CALL_EXTENSION";
+            public static final String HANGUP_EXTENSION = "STEP_HANGUP_EXTENSION";
+            public static final String COMPLETE_TRANSFER = "STEP_COMPLETE_TRANSFER";
+        }
     }
+
     public static final class CALL_STATE {
         public static final String INITIALIZING_SIP_LIBRARY = "INITIALIZING_SIP_LIBRARY";
         public static final String REGISTERING_SIP_USER = "REGISTERING_SIP_USER";
         public static final String DIALING = "DIALING";
         public static final String WAITING_TO_CALL = "WAITING_TO_CALL";
         public static final String RINGING = "RINGING";
+        public static final String ACTIVE = "ACTIVE";
+        public static final String HOLD = "HOLD";
+        public static final String DISCONNECTED = "DISCONNECTED";
+        public static final String ERROR = "ERROR";
+    }
+    public static final class EXTENSION_STATE {
+        public static final String DIALING = "DIALING";
         public static final String ACTIVE = "ACTIVE";
         public static final String HOLD = "HOLD";
         public static final String DISCONNECTED = "DISCONNECTED";
@@ -133,28 +149,14 @@ public class CallingService extends ConnectionService implements VoiceConnection
                     switch (intent.getStringExtra("command")) {
                         case COMMANDS.MAKE_CALL:
                             if (activeVoiceConnection != null) throw new CallingException(getString(R.string.only_one_call));
-                            Uri outgoingUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, intent.getStringExtra("remoteNumber"), null);
-                            Bundle outgoingExtras = new Bundle();
-                            outgoingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
-                            outgoingExtras.putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, new Bundle(intent.getExtras()));
-                            try {
-                                TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
-                                registerPhoneAccount(telecomManager);
-                                telecomManager.placeCall(outgoingUri, outgoingExtras);
-                            } catch (SecurityException e) {
-                                throw new CallingException(e.getMessage());
-                            }
+                            makeCall(intent);
                             break;
                         case COMMANDS.INCOMING_CALL:
                             if (activeVoiceConnection != null) {
                                 nextCallAhead = true;
                                 return;
                             }
-                            Bundle incomingExtras = new Bundle();
-                            incomingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
-                            TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
-                            registerPhoneAccount(telecomManager);
-                            telecomManager.addNewIncomingCall(phoneAccountHandle, incomingExtras);
+                            incomingCall();
                             break;
                         case COMMANDS.ANSWER_CALL:
                             dismissIncomingCallNotification();
@@ -188,6 +190,27 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         case COMMANDS.GET_CALL_STATE:
                             getActiveConnection().broadcastCallState();
                             break;
+                        case COMMANDS.TRANSFER:
+                            switch (intent.getStringExtra("step")) {
+                                case COMMANDS.TRANSFER_STEP.HOLD_ACTIVE:
+                                    getActiveConnection().setHold(true);
+                                    break;
+                                case COMMANDS.TRANSFER_STEP.CALL_EXTENSION:
+                                    getActiveConnection().callExtension(intent.getStringExtra("extensionNumber"), intent.getStringExtra("extensionName"));
+                                    break;
+                                case COMMANDS.TRANSFER_STEP.HANGUP_EXTENSION:
+                                    getActiveConnection().hangupExtension();
+                                    break;
+                                case COMMANDS.TRANSFER_STEP.COMPLETE_TRANSFER:
+                                    getActiveConnection().completeTransfer();
+                                    break;
+                                case COMMANDS.TRANSFER_STEP.HOLD_EXTENSION:
+                                    getActiveConnection().toggleExtensionHold();
+                                    break;
+                                default:
+                                    throw new CallingException("Unknown transfer step");
+                            }
+                            break;
                     }
                 } catch (Exception e) {
                     onErrorState(e.getMessage(), e);
@@ -195,6 +218,28 @@ public class CallingService extends ConnectionService implements VoiceConnection
             }
         });
         return START_NOT_STICKY;
+    }
+
+    private void incomingCall() {
+        Bundle incomingExtras = new Bundle();
+        incomingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
+        TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+        registerPhoneAccount(telecomManager);
+        telecomManager.addNewIncomingCall(phoneAccountHandle, incomingExtras);
+    }
+
+    private void makeCall(Intent intent) throws CallingException {
+        Uri outgoingUri = Uri.fromParts(PhoneAccount.SCHEME_SIP, intent.getStringExtra("remoteNumber"), null);
+        Bundle outgoingExtras = new Bundle();
+        outgoingExtras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandle);
+        outgoingExtras.putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, new Bundle(intent.getExtras()));
+        try {
+            TelecomManager telecomManager = (TelecomManager) getSystemService(Context.TELECOM_SERVICE);
+            registerPhoneAccount(telecomManager);
+            telecomManager.placeCall(outgoingUri, outgoingExtras);
+        } catch (SecurityException e) {
+            throw new CallingException(e.getMessage());
+        }
     }
 
     private void dismissIncomingCallNotification() {
@@ -273,6 +318,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         private final String sipPassword;
         private PowerManager.WakeLock proximityWakeLock;
         private VoiceCall voiceCall;
+        private VoiceCall extensionCall;
         private VoiceCore voiceCore;
         private VoiceAccount voiceAccount;
         private boolean isOutgoing;
@@ -289,6 +335,9 @@ public class CallingService extends ConnectionService implements VoiceConnection
         private Timer finishTimer;
         private Timer durationTimer;
         private VoiceConnectionCallbacks callbacks;
+        private String lastExtensionState = EXTENSION_STATE.DISCONNECTED;
+        private String extensionNumber;
+        private String extensionName;
 
         public VoiceConnection (VoiceConnectionCallbacks callbacks) {
             setInitializing();
@@ -359,13 +408,17 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void toggleHold() {
+            setHold(!isHold);
+        }
+
+        public void setHold(final boolean hold) {
             mainHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (isHold) {
-                        onUnhold();
-                    } else {
+                    if (hold && !isHold) {
                         onHold();
+                    } else if (!hold && isHold) {
+                        onUnhold();
                     }
                 }
             });
@@ -432,7 +485,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
                     try {
                         log("Making a call...");
                         if (TextUtils.isEmpty(remoteNumber)) throw new CallingException("Argument 'remoteNumber' cannot be empty");
-                        voiceCall = new VoiceCall(voiceAccount, -1, voiceCore, activeVoiceConnection);
+                        voiceCall = new VoiceCall(voiceAccount, -1, voiceCore, VoiceConnection.this);
                         String cleanedRemoteNumber = remoteNumber.replaceAll(" ", "").replaceAll("\\+", "00").replaceAll("\\/", ""); // cleaning number
                         String sipCalleeUri = "sip:" + prefix + cleanedRemoteNumber + "@" + sipHost;
                         voiceCall.makeCall(sipCalleeUri, VoiceCall.createDefaultParams());
@@ -548,6 +601,91 @@ public class CallingService extends ConnectionService implements VoiceConnection
             });
         }
 
+        /** transfer methods **/
+
+        public void callExtension(final String number, final String name) {
+            workerHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        log("Making an extension call...");
+                        extensionNumber = number;
+                        extensionName = name;
+                        if (TextUtils.isEmpty(extensionNumber)) throw new CallingException("Argument 'extensionNumber' cannot be empty");
+                        extensionCall = new VoiceCall(voiceAccount, -2, voiceCore, new VoiceCall.Callbacks() {
+                            @Override
+                            public void onAnswerCall() {
+                                log("Answer extension call...");
+                                setExtensionState(EXTENSION_STATE.ACTIVE);
+                            }
+
+                            @Override
+                            public void onDisconnect() {
+                                log("Disconnect extension call...");
+                                setExtensionState(EXTENSION_STATE.DISCONNECTED);
+                            }
+
+                            @Override
+                            public void onCallError(final Exception e) {
+                                log("Error extension call: " + e.getMessage());
+                                mainHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        lastExtensionState = EXTENSION_STATE.ERROR;
+                                        callbacks.onErrorState("Error while calling extension", e);
+                                    }
+                                });
+                            }
+                        });
+                        String sipCalleeUri = "sip:" + extensionNumber.replaceAll(" ", "") + "@" + sipHost;
+                        extensionCall.makeCall(sipCalleeUri, VoiceCall.createDefaultParams());
+                        setExtensionState(EXTENSION_STATE.DIALING);
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                setInitialized();
+                            }
+                        });
+                        log("Extension call started successfully. Call ID: " + voiceCall.getInfo().getCallIdString());
+                    } catch (final Exception e) {
+                        log("Error while making extension call: " + e.getMessage());
+//                        setErrorState("Error while making extension call:" + e.getMessage(), e);
+//                        hangupAndDestroy(DisconnectCause.ERROR);
+                    }
+                }
+            });
+        }
+
+        public void completeTransfer() {
+            // TODO call api to complete transfer: /calls/{callId}/_merge
+//            if (voiceCall != null) {
+//                CallOpParam prm = VoiceCall.createDefaultParams();
+//                prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
+//                try {
+//                    voiceCall.xferReplaces(extensionCall, prm);
+//                }
+//                catch (Exception e) {
+//                    System.out.println(e);
+//                }
+//            }
+        }
+
+        public void hangupExtension() {
+            CallOpParam prm = VoiceCall.createDefaultParams();
+            prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
+            try {
+                extensionCall.hangup(prm);
+            } catch (Exception e) {
+                setErrorState("Error while hanging up extension call: " + e.getMessage(), e);
+            }
+        }
+
+        public void toggleExtensionHold() {
+
+        }
+
+        /** helper methods **/
+
         private void setErrorState(final String errorMessage, final Exception e) {
             mainHandler.post(new Runnable() {
                 @Override
@@ -578,6 +716,16 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             setOtherCallState(remoteNumber, remoteName, R.string.ongoing_call, R.drawable.ic_call_24dp);
                     }
 
+                }
+            });
+        }
+
+        private void setExtensionState(final String extensionState) {
+            mainHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    lastExtensionState = extensionState;
+                    callbacks.onExtensionState(extensionState, extensionNumber, extensionName);
                 }
             });
         }
@@ -614,6 +762,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 @Override
                 public void run() {
                     callbacks.onCallState(lastCallState, remoteNumber, remoteName);
+                    callbacks.onExtensionState(lastExtensionState, extensionNumber, extensionName);
                 }
             });
         }
@@ -626,7 +775,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
             isInCallOfAnotherApp = inCallofAnotherApp;
         }
 
-        /* PJSIP callbacks */
+        /** PJSIP callbacks **/
 
         @Override
         public void onSipRegistrationSuccess() {
@@ -699,6 +848,13 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         setCallState(CALL_STATE.RINGING);
                     }
                 });
+                log("XXX getCallIdString: " + voiceCall.getInfo().getCallIdString());
+                log("XXX getRemoteContact: " + voiceCall.getInfo().getRemoteContact());
+                log("XXX getRemoteUri: " + voiceCall.getInfo().getRemoteUri());
+                log("XXX getId: " + voiceCall.getInfo().getId());
+                log("XXX getLocalContact: " + voiceCall.getInfo().getLocalContact());
+                log("XXX getLocalUri: " + voiceCall.getInfo().getLocalUri());
+                log("XXX getAccId: " + voiceCall.getInfo().getAccId());
             } catch (Exception e) {
                 setErrorState("Error while notifying incoming call: " + e.getMessage(), e);
                 hangupAndDestroy(DisconnectCause.ERROR);
@@ -967,28 +1123,44 @@ public class CallingService extends ConnectionService implements VoiceConnection
         });
     }
 
-    private void log(String message) {
-        log(message, null);
-    }
-    
-    private void log(String message, Exception e) {
-        Logger.logToFile(getApplicationContext(), message);
-        if (e != null) {
-            Log.e(TAG, message, e);
-        } else {
-            Log.d(TAG, message);
-        }
-    }
-
     @Override
     public void onCallUpdate(final Bundle keyValue) {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
                 localBroadcastManager.sendBroadcast(new Intent(INTENT_FILTER_CALL_UPDATE).putExtras(keyValue));
-                if (BuildConfig.DEBUG) return;
+                if (Logger.ALLOW_LOGGING) return;
                 for (String key : keyValue.keySet()) {
-                    Log.d(TAG, "Call update: " + key + "=" + keyValue.get(key));
+                    Logger.d(TAG, "Call update: " + key + "=" + keyValue.get(key));
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onExtensionState(final String extensionState, final String extensionNumber, final String extensionName) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                log("Extension state: " + extensionState);
+                localBroadcastManager.sendBroadcast(new Intent(INTENT_FILTER_EXTENSION_STATE)
+                        .putExtra("extensionNumber", extensionNumber)
+                        .putExtra("extensionName", extensionName)
+                        .putExtra("extensionState", extensionState));
+
+            }
+        });
+    }
+
+    @Override
+    public void onExtensionUpdate(final Bundle keyValue) {
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                localBroadcastManager.sendBroadcast(new Intent(INTENT_FILTER_EXTENSION_UPDATE).putExtras(keyValue));
+                if (Logger.ALLOW_LOGGING) return;
+                for (String key : keyValue.keySet()) {
+                    Logger.d(TAG, "Extension update: " + key + "=" + keyValue.get(key));
                 }
             }
         });
@@ -1012,5 +1184,19 @@ public class CallingService extends ConnectionService implements VoiceConnection
             }
         });
     }
+
+    private void log(String message) {
+        log(message, null);
+    }
+
+    private void log(String message, Exception e) {
+        Logger.logToFile(getApplicationContext(), message);
+        if (e != null) {
+            Logger.e(TAG, message, e);
+        } else {
+            Logger.d(TAG, message);
+        }
+    }
+
 
 }

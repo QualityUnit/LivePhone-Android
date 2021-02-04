@@ -38,7 +38,7 @@ public abstract class Tools {
             return context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
         } catch (NameNotFoundException e) {
             String msg = "Error while retrieving data about versionName from manifest file.";
-            Log.e(Tools.class.getSimpleName(), msg);
+            Logger.e(Tools.class.getSimpleName(), msg);
         }
         return null;
     }

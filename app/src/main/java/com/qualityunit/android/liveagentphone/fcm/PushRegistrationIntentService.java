@@ -8,11 +8,11 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
+import com.qualityunit.android.liveagentphone.util.Logger;
 import com.qualityunit.android.liveagentphone.util.Tools;
 
 import org.json.JSONException;
@@ -44,7 +44,7 @@ public class PushRegistrationIntentService extends IntentService {
         AccountManager accountManager = AccountManager.get(getApplicationContext());
         try {
             String pushToken = FirebaseInstanceId.getInstance().getToken();
-            Log.d(TAG, "FCM Registration Token: " + pushToken);
+            Logger.d(TAG, "FCM Registration Token: " + pushToken);
             final String phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
             final String deviceId = Tools.getDeviceUniqueId();
             final String remotePushToken = intent.getStringExtra("remotePushToken");
@@ -57,7 +57,7 @@ public class PushRegistrationIntentService extends IntentService {
                 sendFcmRegistraionBroadcast(true, null);
             }
         } catch (Exception e) {
-            Log.d(TAG, e.getMessage());
+            Logger.d(TAG, e.getMessage());
             sendFcmRegistraionBroadcast(false, e.getMessage());
         }
     }
@@ -118,12 +118,12 @@ public class PushRegistrationIntentService extends IntentService {
 
                         @Override
                         public void onFailure(Exception e) {
-                            Log.e(TAG, e.getMessage(), e);
+                            Logger.e(TAG, e.getMessage(), e);
                             sendFcmRegistraionBroadcast(false, e.getMessage());
                         }
                     });
                 } catch (Exception e) {
-                    Log.e(TAG, e.getMessage(), e);
+                    Logger.e(TAG, e.getMessage(), e);
                     sendFcmRegistraionBroadcast(false, e.getMessage());
                 }
             }

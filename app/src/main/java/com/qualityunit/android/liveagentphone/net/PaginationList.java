@@ -2,12 +2,14 @@ package com.qualityunit.android.liveagentphone.net;
 
 import android.app.Activity;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.Log;
+
+import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.qualityunit.android.liveagentphone.net.PaginationList.InitFlag.LOAD;
 import static com.qualityunit.android.liveagentphone.net.PaginationList.InitFlag.RELOAD;
@@ -102,7 +104,7 @@ public abstract class PaginationList<T> {
      */
     public void nextPage (Activity activity) {
         if (currentState.isRefreshing()) {
-            Log.d(TAG, "Error: Loading next page already running. Cannot fire again.");
+            Logger.d(TAG, "Error: Loading next page already running. Cannot fire again.");
             return;
         }
         State newState = currentState.createCopy()

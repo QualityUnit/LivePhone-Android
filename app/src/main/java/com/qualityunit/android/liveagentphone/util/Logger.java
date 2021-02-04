@@ -23,6 +23,31 @@ public class Logger {
 
     private static final String TAG = Logger.class.getSimpleName();
     public static String logFileName = "logfile.log";
+    public static boolean ALLOW_LOGGING = false;
+
+    public static void i(String tag, String message) {
+        if (ALLOW_LOGGING) {
+            Log.d(tag, message);
+        }
+    }
+
+    public static void d(String tag, String message) {
+        if (ALLOW_LOGGING) {
+            Log.d(tag, message);
+        }
+    }
+
+    public static void e(String tag, String message, Throwable e) {
+        if (ALLOW_LOGGING) {
+            Log.e(tag, message, e);
+        }
+    }
+
+    public static void e(String tag, String message) {
+        if (ALLOW_LOGGING) {
+            Log.e(tag, message);
+        }
+    }
 
     public static void logToFile(Context context, String text) {
         File logFile = new File(context.getExternalFilesDir(null), logFileName);

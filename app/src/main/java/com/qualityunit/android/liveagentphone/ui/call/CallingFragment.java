@@ -6,14 +6,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +20,10 @@ import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
 import com.qualityunit.android.liveagentphone.service.CallingService;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_DURATION;
 import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_HOLD;
@@ -38,11 +41,20 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     private ImageButton ibMute;
     private ImageButton ibDialpad;
     private ImageButton ibHold;
+    private ImageButton ibTransfer;
     private CallStateReceiver callStateReceiver;
     private CallUpdateReceiver callUpdateReceiver;
     private TextView tvState;
     private TextView tvDuration;
     private TextView tvRemoteName;
+    private ExtensionStateReceiver extensionStateReceiver;
+    private LinearLayout llExtension;
+    private TextView tvExtensionName;
+    private ImageButton ibExtensionMute;
+    private ImageButton ibExtensionDialpad;
+    private ImageButton ibExtensionHold;
+    private ImageButton ibExtensionHangup;
+    private Button bCompleteTransfer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -105,6 +117,33 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                 CallingCommands.toggleHold(getContext());
             }
         });
+        ibTransfer = (ImageButton) view.findViewById(R.id.ib_transfer);
+        ibTransfer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CallingCommands.transferHoldActive(getContext());
+                activity.switchFragments(new TransferFragment(), TransferFragment.TAG);
+            }
+        });
+        llExtension = (LinearLayout) view.findViewById(R.id.ll_extension);
+        tvExtensionName = (TextView) view.findViewById(R.id.tv_extension_name);
+        ibExtensionHangup = (ImageButton) view.findViewById(R.id.ib_extension_hangup);
+        ibExtensionHangup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CallingCommands.transferExtensionHangup(getContext());
+            }
+        });
+        ibExtensionDialpad = (ImageButton) view.findViewById(R.id.ib_extension_dialpad);
+        ibExtensionHold = (ImageButton) view.findViewById(R.id.ib_extension_hold);
+        ibExtensionMute = (ImageButton) view.findViewById(R.id.ib_extension_mute);
+        bCompleteTransfer = (Button) view.findViewById(R.id.b_complete_transfer);
+        bCompleteTransfer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CallingCommands.transferCompleteTransfer(getContext());
+            }
+        });
     }
 
     @Override
@@ -134,6 +173,10 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
             callUpdateReceiver = new CallUpdateReceiver();
             lbm.registerReceiver(callUpdateReceiver, new IntentFilter(CallingService.INTENT_FILTER_CALL_UPDATE));
         }
+        if (extensionStateReceiver == null) {
+            extensionStateReceiver = new ExtensionStateReceiver();
+            lbm.registerReceiver(extensionStateReceiver, new IntentFilter(CallingService.INTENT_FILTER_EXTENSION_STATE));
+        }
     }
 
     private void unregisterReceivers() {
@@ -145,6 +188,10 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         if (callUpdateReceiver != null) {
             lbm.unregisterReceiver(callUpdateReceiver);
             callUpdateReceiver = null;
+        }
+        if (extensionStateReceiver != null) {
+            lbm.unregisterReceiver(extensionStateReceiver);
+            extensionStateReceiver = null;
         }
     }
 
@@ -168,27 +215,20 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                         break;
                     case UPDATE_HOLD:
                         boolean isHold = intent.getBooleanExtra(key, false);
-                        toggleImageButton(ibHold, isHold);
+                        toggle(ibHold, isHold);
                         setText(tvState, getString(isHold ? R.string.call_hold : R.string.call_state_active));
                         break;
                     case UPDATE_MUTE:
-                        toggleImageButton(ibMute, intent.getBooleanExtra(key, false));
+                        toggle(ibMute, intent.getBooleanExtra(key, false));
                         break;
                     case UPDATE_SPEAKER:
-                        toggleImageButton(ibSpeaker, intent.getBooleanExtra(key, false));
+                        toggle(ibSpeaker, intent.getBooleanExtra(key, false));
                         break;
 
                 }
             }
         }
 
-        private void toggleImageButton(ImageButton imageButton, boolean toggle) {
-            if (toggle) {
-                imageButton.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.bg_calling_toggle));
-            } else {
-                imageButton.setBackgroundColor(Color.TRANSPARENT);
-            }
-        }
     }
 
     private class CallStateReceiver extends BroadcastReceiver {
@@ -217,6 +257,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     setText(tvRemoteName, nameToShow(intent.getStringExtra("remoteNumber"), intent.getStringExtra("remoteName")));
                     ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
                     ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
+                    ((View)ibTransfer.getParent()).setVisibility(View.VISIBLE);
                     CallingCommands.getCallUpdates(getContext());
                     break;
                 case CallingService.CALL_STATE.HOLD:
@@ -231,6 +272,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     ((View)ibSpeaker.getParent()).setVisibility(View.GONE);
                     ((View)ibDialpad.getParent()).setVisibility(View.GONE);
                     ((View)ibHold.getParent()).setVisibility(View.GONE);
+                    ((View)ibTransfer.getParent()).setVisibility(View.GONE);
                     break;
                 case CallingService.CALL_STATE.ERROR:
                     String error = intent.getStringExtra("error");
@@ -240,6 +282,57 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
 
         }
 
+    }
+
+    private class ExtensionStateReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) return;
+            final String extensionState = intent.getStringExtra("extensionState");
+            switch (extensionState) {
+                case CallingService.EXTENSION_STATE.DISCONNECTED:
+                    hide(ibExtensionHold);
+                    hide(ibExtensionDialpad);
+                    hide(ibExtensionMute);
+                    llExtension.setVisibility(View.GONE);
+                    break;
+                case CallingService.EXTENSION_STATE.ACTIVE:
+                    show(ibExtensionHold);
+                    show(ibExtensionDialpad);
+                    show(ibExtensionMute);
+                    bCompleteTransfer.setVisibility(View.VISIBLE);
+                case CallingService.EXTENSION_STATE.DIALING:
+                    llExtension.setVisibility(View.VISIBLE);
+                    tvExtensionName.setText(intent.getStringExtra("extensionName"));
+                    break;
+                case CallingService.EXTENSION_STATE.HOLD:
+                    hide(ibExtensionHold);
+                    hide(ibExtensionDialpad);
+                    hide(ibExtensionMute);
+                    llExtension.setVisibility(View.VISIBLE);
+                    break;
+                case CallingService.EXTENSION_STATE.ERROR:
+                    llExtension.setVisibility(View.VISIBLE);
+                    break;
+            }
+        }
+    }
+
+    private void toggle(ImageButton imageButton, boolean toggle) {
+        if (toggle) {
+            imageButton.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.bg_calling_toggle));
+        } else {
+            imageButton.setBackgroundColor(Color.TRANSPARENT);
+        }
+    }
+
+    private void show(ImageButton imageButton) {
+        ((View)imageButton.getParent()).setVisibility(View.VISIBLE);
+    }
+
+    private void hide(ImageButton imageButton) {
+        ((View)imageButton.getParent()).setVisibility(View.GONE);
     }
 
 }

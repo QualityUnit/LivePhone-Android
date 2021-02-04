@@ -2,7 +2,6 @@ package com.qualityunit.android.liveagentphone.store;
 
 import android.app.Activity;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.qualityunit.android.liveagentphone.net.Client;
@@ -11,6 +10,8 @@ import com.qualityunit.android.liveagentphone.ui.common.Store;
 import com.qualityunit.android.liveagentphone.ui.home.InternalItem;
 
 import java.util.List;
+
+import androidx.annotation.Nullable;
 
 /**
  * Retained fragment for handling extensions list
@@ -107,7 +108,7 @@ public class InternalStore implements Store<InternalItem>{
         @Override
         public void requestPage(Activity activity, String requestTag, int pageToLoad, Bundle args, Client.Callback<List<InternalItem>> callback) {
             String searchTerm = args.getString("searchTerm");
-            Client.getExtensions(activity, requestTag, searchTerm, pageToLoad, ITEMS_PER_PAGE, callback);
+            Client.getExtensions(activity, requestTag, searchTerm, pageToLoad, ITEMS_PER_PAGE, false, callback);
         }
     }
 }

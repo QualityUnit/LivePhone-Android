@@ -11,6 +11,7 @@ import org.pjsip.pjsua2.CallSetting;
 import org.pjsip.pjsua2.Media;
 import org.pjsip.pjsua2.OnCallMediaStateParam;
 import org.pjsip.pjsua2.OnCallStateParam;
+import org.pjsip.pjsua2.OnCallTransferRequestParam;
 import org.pjsip.pjsua2.pjmedia_type;
 import org.pjsip.pjsua2.pjsip_inv_state;
 import org.pjsip.pjsua2.pjsua_call_media_status;
@@ -82,6 +83,11 @@ public class VoiceCall extends Call {
                 }
             }
         }
+    }
+
+    @Override
+    public void onCallTransferRequest(OnCallTransferRequestParam prm) {
+        super.onCallTransferRequest(prm);
     }
 
     public interface Callbacks {

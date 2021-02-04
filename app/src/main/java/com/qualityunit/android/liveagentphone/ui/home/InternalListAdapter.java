@@ -3,9 +3,7 @@ package com.qualityunit.android.liveagentphone.ui.home;
 import android.accounts.AccountManager;
 import android.content.Context;
 import android.graphics.Color;
-import androidx.core.content.ContextCompat;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,9 +15,12 @@ import com.qualityunit.android.liveagentphone.Const;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.ui.common.CircleTransform;
+import com.qualityunit.android.liveagentphone.util.Logger;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
+
+import androidx.core.content.ContextCompat;
 
 /**
  * Created by rasto on 15.12.15.
@@ -105,7 +106,7 @@ public class InternalListAdapter extends ArrayAdapter<InternalItem> {
                 viewHolder.status.setBackgroundResource(R.drawable.bg_extension_enabled);
                 break;
             default:
-                Log.d(TAG, "resolveStatus: Unknown status:'" + item.status + "'");
+                Logger.d(TAG, "resolveStatus: Unknown status:'" + item.status + "'");
                 viewHolder.status.setBackgroundColor(Color.TRANSPARENT);
         }
     }

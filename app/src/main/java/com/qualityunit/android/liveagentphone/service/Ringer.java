@@ -7,7 +7,8 @@ import android.media.RingtoneManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Vibrator;
-import android.util.Log;
+
+import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -40,7 +41,7 @@ public class Ringer implements MediaPlayer.OnErrorListener {
                 mediaPlayer.prepare();
                 mediaPlayer.start();
             } catch (IllegalStateException | IOException e) {
-                Log.e(TAG, e.getMessage(), e);
+                Logger.e(TAG, e.getMessage(), e);
                 mediaPlayer = null;
             }
         }
@@ -61,7 +62,7 @@ public class Ringer implements MediaPlayer.OnErrorListener {
                 mediaPlayer.reset();
                 mediaPlayer.release();
             } catch (Exception e) {
-                Log.e(TAG, "Error while stopping ringtone", e);
+                Logger.e(TAG, "Error while stopping ringtone", e);
             } finally {
                 mediaPlayer = null;
             }
@@ -90,14 +91,14 @@ public class Ringer implements MediaPlayer.OnErrorListener {
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_RING);
             return mediaPlayer;
         } catch (IOException e) {
-            Log.e(TAG, "Failed to create mediaPlayer for incoming call ringer", e);
+            Logger.e(TAG, "Failed to create mediaPlayer for incoming call ringer", e);
             return null;
         }
     }
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.e(TAG, "Error while ringing: " + mp + ", " + what + ", " + extra);
+        Logger.e(TAG, "Error while ringing: " + mp + ", " + what + ", " + extra);
         stop();
         return false;
     }

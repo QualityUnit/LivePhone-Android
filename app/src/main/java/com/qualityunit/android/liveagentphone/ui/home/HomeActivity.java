@@ -27,6 +27,7 @@ import com.qualityunit.android.liveagentphone.ui.init.InitActivity;
 import com.qualityunit.android.liveagentphone.ui.status.DepartmentStatusItem;
 import com.qualityunit.android.liveagentphone.ui.status.StatusActivity;
 import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
+import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.List;
 
@@ -168,7 +169,7 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
 
     private void updateStatusItem() {
         if (statusItem == null) {
-            Log.e(TAG, "statusItem cannot be null");
+            Logger.e(TAG, "statusItem cannot be null");
             return;
         }
         if (statusItemIconRes == 0) {
