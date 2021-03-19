@@ -3,7 +3,7 @@
     android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#fff"
+    android:background="#ffffffff"
     android:padding="8dp">
 
     <ImageView
@@ -34,24 +34,27 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:orientation="horizontal"
+        android:background="#ffffffff"
         android:layout_below="@id/image">
 
         <ImageButton
             android:id="@+id/decline"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="match_parent"
             android:layout_weight="1.0"
-            android:backgroundTint="@color/callButtonRed"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_notification_reject"
             android:src="@drawable/ic_call_end_24dp"/>
 
         <ImageButton
             android:id="@+id/accept"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
+            android:layout_height="match_parent"
             android:layout_weight="1.0"
-            android:backgroundTint="@color/callButtonGreen"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_notification_accept"
             android:src="@drawable/ic_call_24dp"/>
 
     </LinearLayout>
