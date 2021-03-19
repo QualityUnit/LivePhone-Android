@@ -257,7 +257,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     setText(tvRemoteName, nameToShow(intent.getStringExtra("remoteNumber"), intent.getStringExtra("remoteName")));
                     ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
                     ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
-                    ((View)ibTransfer.getParent()).setVisibility(View.VISIBLE);
+//                    ((View)ibTransfer.getParent()).setVisibility(View.VISIBLE);
                     CallingCommands.getCallUpdates(getContext());
                     break;
                 case CallingService.CALL_STATE.HOLD:
@@ -272,7 +272,7 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                     ((View)ibSpeaker.getParent()).setVisibility(View.GONE);
                     ((View)ibDialpad.getParent()).setVisibility(View.GONE);
                     ((View)ibHold.getParent()).setVisibility(View.GONE);
-                    ((View)ibTransfer.getParent()).setVisibility(View.GONE);
+//                    ((View)ibTransfer.getParent()).setVisibility(View.GONE);
                     break;
                 case CallingService.CALL_STATE.ERROR:
                     String error = intent.getStringExtra("error");
