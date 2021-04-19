@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Thiết lập</string>
+    <string name="action_about">Giới thiệu</string>
+    <string name="action_logout">Đăng xuất</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="url">URL</string>
+    <string name="email">Email</string>
+    <string name="password">Mật khẩu</string>
+    <string name="login">Đăng nhập</string>
+    <string name="about">Giới thiệu</string>
+    <string name="cancel">Hủy bỏ</string>
+    <string name="unknown">Không biết</string>
+    <string name="call_state_active">Kích hoạt</string>
+    <string name="internal">Nội bộ</string>
+</resources>

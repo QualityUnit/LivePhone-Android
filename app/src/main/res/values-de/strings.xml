@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Einstellungen</string>
+    <string name="action_about">Über</string>
+    <string name="action_logout">Abmelden</string>
+    <string name="search">Suche</string>
+    <string name="url">URL</string>
+    <string name="email">E-Mail</string>
+    <string name="password">Kennwort</string>
+    <string name="login">Anmeldung</string>
+    <string name="forgotpassword_question">Passwort vergessen?</string>
+    <string name="no_connection">Keine Verbindung</string>
+    <string name="about">Über</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="make_call">Anruf tätigen</string>
+    <string name="duration">Dauer</string>
+    <string name="unknown">Unbekannt</string>
+    <string name="call_state_initializing">Initialisierung</string>
+    <string name="call_state_ringing">Klingeln</string>
+    <string name="call_state_dialing">Verbindung wird aufgebaut</string>
+    <string name="call_state_active">Aktiv</string>
+    <string name="call_state_call_ended">Beendet</string>
+    <string name="call">Anruf</string>
+    <string name="licenses">Lizenzen</string>
+    <string name="action_availability">Verfügbarkeit</string>
+    <string name="incoming_call">Eingehender Anruf</string>
+    <string name="contacts">Kontakte</string>
+    <string name="internal">Intern</string>
+    <string name="verification_code">Bestätigungscode</string>
+    <string name="invalid_verification_code">Ungültiger Bestätigungs-code</string>
+    <string name="google_autenticator">6-stellige Zahl von der Google Sicherheitsanwendung eingeben.</string>
+    <string name="too_many_logins">Anmeldung abgelehnt. Warten Sie einige Minuten, bevor Sie es erneut versuchen.</string>
+    <string name="completeTransfer">Überweisung abschließen</string>
+</resources>

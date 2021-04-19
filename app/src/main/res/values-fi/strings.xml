@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Asetukset</string>
+    <string name="action_about">Tietoja</string>
+    <string name="action_logout">Kirjaudu ulos</string>
+    <string name="search">Etsi</string>
+    <string name="url">Url</string>
+    <string name="email">Sähköpostisi</string>
+    <string name="password">Salasana</string>
+    <string name="login">Kirjaudu sisään</string>
+    <string name="forgotpassword_question">Unohditko salasanasi?</string>
+    <string name="about">Tietoja</string>
+    <string name="cancel">Peruuta</string>
+    <string name="unknown">Tuntematon</string>
+    <string name="call_state_ringing">Soi</string>
+    <string name="call_state_active">Aktiivinen</string>
+    <string name="call">Soita</string>
+    <string name="incoming_call">Saapuva puhelu</string>
+    <string name="contacts">Yhteystiedot</string>
+    <string name="internal">Sisäinen</string>
+</resources>

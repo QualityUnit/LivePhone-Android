@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Configuración</string>
+    <string name="action_about">Acerca</string>
+    <string name="action_logout">Salir</string>
+    <string name="search">Buscar</string>
+    <string name="url">URL</string>
+    <string name="email">Correo electrónico</string>
+    <string name="password">Contraseña</string>
+    <string name="login">Entrada</string>
+    <string name="forgotpassword_question">¿Olvidó su contraseña?</string>
+    <string name="no_connection">Sin conexión</string>
+    <string name="about">Acerca</string>
+    <string name="cancel">Cancelar</string>
+    <string name="make_call">Hacer llamada</string>
+    <string name="duration">Duración</string>
+    <string name="unknown">Desconocido</string>
+    <string name="call_state_initializing">Inicializando</string>
+    <string name="call_state_ringing">sonando a</string>
+    <string name="call_state_dialing">Discando</string>
+    <string name="call_state_active">Activo</string>
+    <string name="call_state_call_ended">Finalizado</string>
+    <string name="call">Llamar</string>
+    <string name="licenses">Licencias</string>
+    <string name="action_availability">Disponibilidad</string>
+    <string name="incoming_call">Llamada entrante</string>
+    <string name="contacts">Contactos</string>
+    <string name="internal">Interno</string>
+    <string name="verification_code">Código de verificación</string>
+    <string name="invalid_verification_code">Código de verificación no válido</string>
+    <string name="google_autenticator">Ingrese el número de 6 dígitos de la aplicación Google Authenticator.</string>
+    <string name="too_many_logins">Inicio de sesión no permitido. Espere unos minutos antes de tratar nuevamente.</string>
+    <string name="completeTransfer">Transferencia completa</string>
+</resources>

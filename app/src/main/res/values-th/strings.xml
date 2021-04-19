@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">การตั้งค่า</string>
+    <string name="action_logout">ออกจากระบบ</string>
+    <string name="url">Url</string>
+    <string name="email">อีเมล</string>
+    <string name="password">รหัสผ่าน</string>
+    <string name="login">เข้าสู่ระบบ</string>
+    <string name="no_connection">ไม่มีการเชื่อมต่อ</string>
+    <string name="cancel">ยกเลิก</string>
+    <string name="call_state_initializing">เริ่มต้น</string>
+</resources>

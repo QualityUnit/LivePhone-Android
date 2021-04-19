@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">설정</string>
+    <string name="action_about">About</string>
+    <string name="action_logout">로그아웃</string>
+    <string name="search">검색</string>
+    <string name="url">Url</string>
+    <string name="email">이메일</string>
+    <string name="password">비밀번호</string>
+    <string name="login">로그인</string>
+    <string name="forgotpassword_question">비밀번호를 잊으셨습니까?</string>
+    <string name="about">About</string>
+    <string name="cancel">취소</string>
+    <string name="unknown">알 수 없음</string>
+    <string name="call_state_ringing">울리는 중</string>
+    <string name="call_state_active">활성화됨</string>
+    <string name="call">전화</string>
+    <string name="incoming_call">수신 전화</string>
+    <string name="contacts">연락처</string>
+    <string name="internal">내부</string>
+</resources>

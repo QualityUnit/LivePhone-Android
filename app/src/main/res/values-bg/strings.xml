@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Настройки</string>
+    <string name="action_about">Относно</string>
+    <string name="action_logout">Изход</string>
+    <string name="search">Търсене</string>
+    <string name="url">URL линк</string>
+    <string name="email">Имейл</string>
+    <string name="password">Парола</string>
+    <string name="login">Вход</string>
+    <string name="forgotpassword_question">Забравена парола?</string>
+    <string name="no_connection">Няма връзка</string>
+    <string name="about">Относно</string>
+    <string name="cancel">Отказ</string>
+    <string name="make_call">Направете обаждане</string>
+    <string name="duration">Продължителност</string>
+    <string name="unknown">Неизвестно</string>
+    <string name="call_state_initializing">Инициализиране...</string>
+    <string name="call_state_ringing">Звъни</string>
+    <string name="call_state_dialing">Набиране</string>
+    <string name="call_state_active">Активен</string>
+    <string name="call_state_call_ended">Приключен</string>
+    <string name="call">Повикване</string>
+    <string name="licenses">Лицензи</string>
+    <string name="action_availability">На разположение</string>
+    <string name="incoming_call">Входящо обаждане</string>
+    <string name="contacts">Контакти</string>
+    <string name="internal">Вътрешен</string>
+    <string name="verification_code">Код за потвърждение</string>
+    <string name="invalid_verification_code">Невалиден верификационен код</string>
+    <string name="google_autenticator">Въведете 6-цифрения номер от приложение Google Удостоверител.</string>
+    <string name="too_many_logins">Влизането е отказано. Изчакайте няколко минути, преди да опитате отново.</string>
+    <string name="completeTransfer">Завършен трансфер</string>
+</resources>

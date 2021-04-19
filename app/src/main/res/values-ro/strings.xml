@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Setari</string>
+    <string name="action_about">Despre</string>
+    <string name="action_logout">Delogare</string>
+    <string name="search">Cautare</string>
+    <string name="url">URL-ul</string>
+    <string name="email">E-mail</string>
+    <string name="password">Parola</string>
+    <string name="forgotpassword_question">Ati uitat parola?</string>
+    <string name="about">Despre</string>
+    <string name="cancel">Anuleaza</string>
+    <string name="unknown">Necunoscut</string>
+    <string name="call_state_active">Activ</string>
+    <string name="call">Suna</string>
+    <string name="incoming_call">Apel primit</string>
+</resources>

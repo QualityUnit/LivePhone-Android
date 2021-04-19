@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">הגדרות</string>
+    <string name="action_about">אודות</string>
+    <string name="action_logout">התנתק</string>
+    <string name="search">חפש</string>
+    <string name="url">URL</string>
+    <string name="email">כתובת מייל</string>
+    <string name="password">סיסמא</string>
+    <string name="login">התחבר</string>
+    <string name="about">אודות</string>
+    <string name="cancel">בטל</string>
+    <string name="unknown">לא ידוע</string>
+    <string name="call_state_active">פעיל</string>
+    <string name="call">שיחה</string>
+</resources>

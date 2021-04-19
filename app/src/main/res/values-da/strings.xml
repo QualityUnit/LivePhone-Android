@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Indstillinger</string>
+    <string name="action_about">Om</string>
+    <string name="action_logout">Logud</string>
+    <string name="search">Søg</string>
+    <string name="url">URL</string>
+    <string name="email">E-mail</string>
+    <string name="password">Adgangskode</string>
+    <string name="login">Login</string>
+    <string name="forgotpassword_question">Glemt password?</string>
+    <string name="about">Om</string>
+    <string name="cancel">Annuller</string>
+    <string name="unknown">Ukendt</string>
+    <string name="call_state_ringing">Ringer</string>
+    <string name="call_state_active">Aktive</string>
+    <string name="call">Opkald</string>
+    <string name="incoming_call">Indgående opkald</string>
+    <string name="contacts">Kontakter</string>
+    <string name="internal">Intern</string>
+</resources>

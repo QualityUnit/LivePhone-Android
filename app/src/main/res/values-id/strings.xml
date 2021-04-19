@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Pengaturan</string>
+    <string name="action_about">Tentang</string>
+    <string name="action_logout">Logout</string>
+    <string name="search">Cari</string>
+    <string name="url">URL</string>
+    <string name="email">Email</string>
+    <string name="password">Sandi</string>
+    <string name="login">Login</string>
+    <string name="forgotpassword_question">Lupa password?</string>
+    <string name="no_connection">Tidak ada koneksi</string>
+    <string name="about">Tentang</string>
+    <string name="cancel">Batal</string>
+    <string name="unknown">Tidak diketahui</string>
+    <string name="call_state_initializing">Inisialisasi</string>
+    <string name="call_state_ringing">Dering</string>
+    <string name="call_state_active">Aktif</string>
+    <string name="call">Panggilan</string>
+    <string name="licenses">Lisensi</string>
+    <string name="incoming_call">Panggilan masuk</string>
+    <string name="contacts">Kontak</string>
+    <string name="internal">Internal</string>
+</resources>

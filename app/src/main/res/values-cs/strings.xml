@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Nastavení</string>
+    <string name="action_about">O aplikaci</string>
+    <string name="action_logout">Odhlásit</string>
+    <string name="search">Hledat</string>
+    <string name="url">URL</string>
+    <string name="email">E-mail</string>
+    <string name="password">Heslo</string>
+    <string name="login">Přihlášení</string>
+    <string name="forgotpassword_question">Zapomněli jste heslo?</string>
+    <string name="no_connection">Žádné spojení</string>
+    <string name="about">O aplikaci</string>
+    <string name="cancel">Zrušit</string>
+    <string name="duration">Doba trvání</string>
+    <string name="unknown">Neznámé</string>
+    <string name="call_state_initializing">Inicializuji</string>
+    <string name="call_state_ringing">Vyzvání</string>
+    <string name="call_state_dialing">Vytáčení</string>
+    <string name="call_state_active">Aktivní</string>
+    <string name="call_state_call_ended">Ukončeno</string>
+    <string name="call">Volání</string>
+    <string name="licenses">Licence</string>
+    <string name="action_availability">Dostupnost</string>
+    <string name="incoming_call">Příchozí hovor</string>
+    <string name="contacts">Kontakty</string>
+    <string name="internal">Vnitřní</string>
+    <string name="verification_code">Ověřovací kód</string>
+    <string name="invalid_verification_code">Neplatný ověřovací kód</string>
+    <string name="google_autenticator">Zadejte šestimístné číslo z aplikace Google Authenticator.</string>
+    <string name="too_many_logins">Přihlášení odmítnuto. Počkejte několik minut před opakováním.</string>
+    <string name="completeTransfer">Dokončit přenos</string>
+</resources>

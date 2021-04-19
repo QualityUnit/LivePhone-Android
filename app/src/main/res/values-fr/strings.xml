@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Réglages</string>
+    <string name="action_about">À propos</string>
+    <string name="action_logout">Déconnexion</string>
+    <string name="search">Rechercher</string>
+    <string name="url">Url</string>
+    <string name="email">Email</string>
+    <string name="password">Mot de passe</string>
+    <string name="login">Connexion</string>
+    <string name="forgotpassword_question">Mot de passe oublié ?</string>
+    <string name="no_connection">Aucune connexion</string>
+    <string name="about">À propos</string>
+    <string name="cancel">Annuler</string>
+    <string name="make_call">Appeler</string>
+    <string name="duration">Durée</string>
+    <string name="unknown">Inconnue</string>
+    <string name="call_state_initializing">Initialisation</string>
+    <string name="call_state_ringing">Sonnerie entrante</string>
+    <string name="call_state_dialing">Numérotation</string>
+    <string name="call_state_active">Actif</string>
+    <string name="call_state_call_ended">Terminé</string>
+    <string name="call">Appel</string>
+    <string name="licenses">Licences</string>
+    <string name="action_availability">Disponibilité</string>
+    <string name="incoming_call">Appel entrant</string>
+    <string name="contacts">Contacts</string>
+    <string name="internal">Interne</string>
+    <string name="verification_code">Code de vérification</string>
+    <string name="invalid_verification_code">Code de vérification invalide</string>
+    <string name="google_autenticator">Entrer le numéro à 6 chiffres de l\'application Google Authenticator.</string>
+    <string name="too_many_logins">Connexion refusée. Attendez quelques minutes avant de réessayer.</string>
+    <string name="completeTransfer">Transfert complet</string>
+</resources>

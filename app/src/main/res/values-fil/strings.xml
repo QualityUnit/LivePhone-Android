@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Mga setting</string>
+    <string name="action_about">Tungkol</string>
+    <string name="action_logout">Mag-logout</string>
+    <string name="search">Maghanap</string>
+    <string name="url">URL</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Mag-login</string>
+    <string name="forgotpassword_question">Nakalimutan ang password?</string>
+    <string name="no_connection">Walang koneksyon</string>
+    <string name="about">Tungkol</string>
+    <string name="cancel">Magkansela</string>
+    <string name="unknown">Hindi malaman</string>
+    <string name="call_state_initializing">Nagsisimula</string>
+    <string name="call_state_ringing">Nagri-ring</string>
+    <string name="call_state_active">Aktibo</string>
+    <string name="call">Tumawag</string>
+    <string name="licenses">Mga lisensiya</string>
+    <string name="incoming_call">Papasok na tawag</string>
+    <string name="contacts">Mga kontak</string>
+    <string name="internal">Panloob</string>
+    <string name="verification_code">Code ng beripikasyon</string>
+</resources>

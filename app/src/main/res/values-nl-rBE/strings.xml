@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Instellingen</string>
+    <string name="action_about">Over</string>
+    <string name="action_logout">Log uit</string>
+    <string name="search">Zoeken</string>
+    <string name="url">Url</string>
+    <string name="email">E-mail</string>
+    <string name="password">Paswoord</string>
+    <string name="login">Login</string>
+    <string name="forgotpassword_question">Wachtwoord vergeten?</string>
+    <string name="about">Over</string>
+    <string name="cancel">Annuleren</string>
+    <string name="unknown">Onbekend</string>
+    <string name="call_state_active">Actief</string>
+    <string name="call">Bel</string>
+    <string name="incoming_call">Inkomend telefoongesprek</string>
+    <string name="internal">Intern</string>
+</resources>

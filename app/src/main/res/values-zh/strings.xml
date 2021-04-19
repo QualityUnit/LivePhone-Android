@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">设置</string>
+    <string name="action_about">关于</string>
+    <string name="action_logout">注销</string>
+    <string name="search">搜索</string>
+    <string name="url">网站地址</string>
+    <string name="email">邮箱</string>
+    <string name="password">密码</string>
+    <string name="login">登录</string>
+    <string name="forgotpassword_question">忘记密码?</string>
+    <string name="about">关于</string>
+    <string name="cancel">取消</string>
+    <string name="make_call">拨打电话</string>
+    <string name="duration">持续时间</string>
+    <string name="unknown">未知</string>
+    <string name="call_state_ringing">响铃中</string>
+    <string name="call_state_dialing">正在拨号</string>
+    <string name="call_state_active">激活</string>
+    <string name="call_state_call_ended">已结束</string>
+    <string name="call">电话</string>
+    <string name="action_availability">可用程度</string>
+    <string name="incoming_call">接入的呼叫</string>
+    <string name="contacts">联系人</string>
+    <string name="internal">内部的</string>
+    <string name="invalid_verification_code">无效的验证代码</string>
+    <string name="google_autenticator">从googleauthenticator应用程序输入6位数字。</string>
+    <string name="too_many_logins">登录被拒绝。请稍等几分钟再重试。</string>
+    <string name="completeTransfer">完全转移</string>
+</resources>

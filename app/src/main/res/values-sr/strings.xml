@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Podešavanje</string>
+    <string name="action_about">O programu</string>
+    <string name="action_logout">Izloguj se</string>
+    <string name="search">Pretraga</string>
+    <string name="url">Adresa</string>
+    <string name="email">Email</string>
+    <string name="password">Lozinka</string>
+    <string name="login">Prijava</string>
+    <string name="forgotpassword_question">Zaboravili ste lozinku?</string>
+    <string name="no_connection">Nema konekcije</string>
+    <string name="about">O programu</string>
+    <string name="cancel">Poništi</string>
+    <string name="make_call">Pozvati</string>
+    <string name="duration">Trajanje</string>
+    <string name="unknown">Nepoznato</string>
+    <string name="call_state_initializing">Inicijalizacija</string>
+    <string name="call_state_ringing">Zvoni</string>
+    <string name="call_state_dialing">Okrećem</string>
+    <string name="call_state_active">Aktivan</string>
+    <string name="call_state_call_ended">Završeno</string>
+    <string name="call">Pozovi</string>
+    <string name="licenses">Licence</string>
+    <string name="action_availability">Dostupnost</string>
+    <string name="incoming_call">Dolazni poziv</string>
+    <string name="contacts">Kontakti</string>
+    <string name="internal">Interno</string>
+    <string name="verification_code">Vеrifikacioni kod</string>
+    <string name="invalid_verification_code">Nevažeći verifikacioni kod</string>
+    <string name="google_autenticator">Unesite 6-cifreni Google Authenticator broj iz aplikacije.</string>
+    <string name="too_many_logins">Prijavljivanje odbijeno. Sačekajte nekoliko minuta pre nego što ponovo probate.</string>
+    <string name="completeTransfer">Kompletan prenos</string>
+</resources>
