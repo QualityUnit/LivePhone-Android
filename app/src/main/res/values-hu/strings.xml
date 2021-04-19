@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Beállítások</string>
+    <string name="action_about">Az alkalmazásról</string>
+    <string name="action_logout">Kilépés</string>
+    <string name="search">Keresés</string>
+    <string name="url">URL-cím</string>
+    <string name="email">E-mail</string>
+    <string name="password">Jelszó</string>
+    <string name="login">Bejelentkezés</string>
+    <string name="forgotpassword_question">Elfelejtett jelszó?</string>
+    <string name="no_connection">Nincs internet összeköttetés, sem lokális hálózat kapcsolat</string>
+    <string name="about">Az alkalmazásról</string>
+    <string name="cancel">Mégsem</string>
+    <string name="make_call">Hívás kezdeményezése</string>
+    <string name="duration">Időtartam</string>
+    <string name="unknown">Ismeretlen</string>
+    <string name="call_state_initializing">Inicializálás</string>
+    <string name="call_state_ringing">Cseng</string>
+    <string name="call_state_dialing">Tárcsázás</string>
+    <string name="call_state_active">Aktív</string>
+    <string name="call_state_call_ended">Befejezve</string>
+    <string name="call">Telefon</string>
+    <string name="licenses">Licenszek</string>
+    <string name="action_availability">Elérhetőség</string>
+    <string name="incoming_call">Bejövő hívás</string>
+    <string name="contacts">Kapcsolatok</string>
+    <string name="internal">Belső</string>
+    <string name="verification_code">Ellenőrző kód</string>
+    <string name="invalid_verification_code">Érvénytelen ellenőrző kód</string>
+    <string name="google_autenticator">Írja be a 6 számból álló számot a Google Hitelesítő alkalmazásból.</string>
+    <string name="too_many_logins">Bejelentkezés elutasítva. Várjon néhány percig mielőtt újrapróbálja.</string>
+    <string name="completeTransfer">Átirányítás teljesítése</string>
+</resources>

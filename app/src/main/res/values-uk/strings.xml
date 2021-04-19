@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Параметри</string>
+    <string name="action_about">Про</string>
+    <string name="action_logout">Вихід</string>
+    <string name="search">Пошук</string>
+    <string name="url">URL-адреса</string>
+    <string name="email">Ел.пошта</string>
+    <string name="password">Пароль</string>
+    <string name="login">Логін</string>
+    <string name="about">Про</string>
+    <string name="cancel">Скасувати</string>
+    <string name="unknown">Невідомо</string>
+    <string name="call_state_active">Активний</string>
+    <string name="call">Виклик</string>
+    <string name="incoming_call">Вхідний дзвінок</string>
+    <string name="internal">Внутрішня</string>
+</resources>

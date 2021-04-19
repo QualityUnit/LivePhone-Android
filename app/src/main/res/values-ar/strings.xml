@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">إعدادات</string>
+    <string name="action_about">حول</string>
+    <string name="action_logout">تسجيل الخروج</string>
+    <string name="search">بحث</string>
+    <string name="url">مسار</string>
+    <string name="email">إيميل</string>
+    <string name="password">كلمة المرور</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="forgotpassword_question">نسيت كلمة المرور؟</string>
+    <string name="about">حول</string>
+    <string name="cancel">إلغاء</string>
+    <string name="unknown">غير معرف</string>
+    <string name="call_state_active">نشط</string>
+    <string name="call">إتصال</string>
+    <string name="incoming_call">إتصال وارد</string>
+    <string name="internal">داخلي</string>
+</resources>

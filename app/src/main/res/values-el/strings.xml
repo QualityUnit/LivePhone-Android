@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Ρυθμίσεις</string>
+    <string name="action_about">Σχετικά με</string>
+    <string name="action_logout">Αποσύνδεση</string>
+    <string name="search">Αναζήτηση</string>
+    <string name="url">URL</string>
+    <string name="email">Ηλεκτρονικό ταχυδρομείο</string>
+    <string name="password">Κωδικός πρόσβασης</string>
+    <string name="login">Σύνδεση</string>
+    <string name="forgotpassword_question">Ξεχάσατε τον κωδικό πρόσβασης;</string>
+    <string name="about">Σχετικά με</string>
+    <string name="cancel">\"Ακύρωση\"</string>
+    <string name="unknown">Άγνωστο</string>
+    <string name="call_state_ringing">Καλεί </string>
+    <string name="call_state_active">Ενεργός</string>
+    <string name="call">Κλήση</string>
+    <string name="incoming_call">Εισερχόμενη κλήση</string>
+    <string name="contacts">Επαφές</string>
+    <string name="internal">Εσωτερικό</string>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">設定</string>
+    <string name="action_about">LiveAgentについて</string>
+    <string name="action_logout">ログアウト</string>
+    <string name="search">検索</string>
+    <string name="url">Url</string>
+    <string name="email">電子メール</string>
+    <string name="password">パスワード</string>
+    <string name="login">ログイン</string>
+    <string name="forgotpassword_question">パスワードをお忘れですか？</string>
+    <string name="no_connection">接続なし</string>
+    <string name="about">LiveAgentについて</string>
+    <string name="cancel">キャンセル</string>
+    <string name="make_call">発信</string>
+    <string name="duration">期間</string>
+    <string name="unknown">未知の</string>
+    <string name="call_state_initializing">初期化中</string>
+    <string name="call_state_ringing">呼出中</string>
+    <string name="call_state_dialing">ダイヤル中</string>
+    <string name="call_state_active">アクティブ</string>
+    <string name="call_state_call_ended">終了しました</string>
+    <string name="call">通話</string>
+    <string name="licenses">ライセンス</string>
+    <string name="action_availability">可用性</string>
+    <string name="incoming_call">受電</string>
+    <string name="contacts">コンタクト</string>
+    <string name="internal">内部</string>
+    <string name="verification_code">確認コード</string>
+    <string name="invalid_verification_code">無効な確認コード</string>
+    <string name="google_autenticator">Google認証システムアプリケーションから6桁の番号を入力します。</string>
+    <string name="too_many_logins">ログインは拒否されました。 数分待ってから再試行してください。</string>
+    <string name="completeTransfer">完全転送</string>
+</resources>

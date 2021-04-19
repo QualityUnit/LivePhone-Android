@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Instellingen</string>
+    <string name="action_about">Over</string>
+    <string name="action_logout">Afmelden</string>
+    <string name="search">Zoeken</string>
+    <string name="url">URL</string>
+    <string name="email">E-mail</string>
+    <string name="password">Wachtwoord</string>
+    <string name="login">Aanmelden</string>
+    <string name="forgotpassword_question">Wachtwoord vergeten?</string>
+    <string name="no_connection">Geen verbinding</string>
+    <string name="about">Over</string>
+    <string name="cancel">Annuleren</string>
+    <string name="duration">Duur</string>
+    <string name="unknown">Onbekend</string>
+    <string name="call_state_initializing">Initialiseren</string>
+    <string name="call_state_ringing">Gaat over</string>
+    <string name="call_state_dialing">Kiezen</string>
+    <string name="call_state_active">Actief</string>
+    <string name="call_state_call_ended">Eindigde</string>
+    <string name="call">Bel</string>
+    <string name="licenses">Licenties</string>
+    <string name="incoming_call">Inkomende oproep</string>
+    <string name="contacts">Contacten</string>
+    <string name="internal">Intern</string>
+    <string name="verification_code">Verificatie code</string>
+    <string name="invalid_verification_code">Ongeldige verificatiecode</string>
+    <string name="google_autenticator">6-cijferige nummer van Google Authenticator invullen.</string>
+    <string name="too_many_logins">Login geweigerd. Wacht een paar minuten en probeer het dan opnieuw.</string>
+    <string name="completeTransfer">Doorschakelen voltooien</string>
+</resources>

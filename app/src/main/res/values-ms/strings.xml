@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Tetapan</string>
+    <string name="action_logout">Log keluar</string>
+    <string name="search">Cari</string>
+    <string name="url">Url</string>
+    <string name="email">E-mel</string>
+    <string name="password">Kata Laluan</string>
+    <string name="login">Daftar masuk</string>
+    <string name="cancel">Batal</string>
+    <string name="unknown">Tidak dikenali</string>
+</resources>

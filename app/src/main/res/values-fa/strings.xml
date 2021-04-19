@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">تنظیمات</string>
+    <string name="action_about">درباره</string>
+    <string name="action_logout">خروج</string>
+    <string name="search">جستجو</string>
+    <string name="url">آدرس وبسایت</string>
+    <string name="email">پست الکترونیک</string>
+    <string name="password">رمز عبور</string>
+    <string name="login">ورود به سیستم</string>
+    <string name="forgotpassword_question">رمز عبور را فراموش کرده اید ؟</string>
+    <string name="no_connection">اتصال برقرار نشد</string>
+    <string name="about">درباره</string>
+    <string name="cancel">لغو کردن</string>
+    <string name="duration">مدت زمان</string>
+    <string name="unknown">ناشناخته</string>
+    <string name="call_state_initializing">در حال راه اندازی</string>
+    <string name="call_state_ringing">در حال تماس</string>
+    <string name="call_state_active">فعال</string>
+    <string name="call">تماس بگیرید</string>
+    <string name="licenses">پروانه ها</string>
+    <string name="incoming_call">تماس ورودی</string>
+    <string name="contacts">اطلاعات تماس</string>
+    <string name="internal">ملی</string>
+</resources>

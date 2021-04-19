@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Nustatymai</string>
+    <string name="action_about">Apie</string>
+    <string name="action_logout">Atsijungti</string>
+    <string name="search">Paieška</string>
+    <string name="url">Tinklapio adresas</string>
+    <string name="email">El. paštas</string>
+    <string name="password">Slaptažodis</string>
+    <string name="login">Prisijungti</string>
+    <string name="forgotpassword_question">Pamiršote slaptažodį?</string>
+    <string name="no_connection">Nėra ryšio</string>
+    <string name="about">Apie</string>
+    <string name="cancel">Atšaukti</string>
+    <string name="make_call">Paskambinti</string>
+    <string name="duration">Trukmė</string>
+    <string name="unknown">Nežinomas</string>
+    <string name="call_state_initializing">Vykdoma</string>
+    <string name="call_state_ringing">Vyksta skambutis</string>
+    <string name="call_state_dialing">Renkamas numeris</string>
+    <string name="call_state_active">Aktyvus</string>
+    <string name="call_state_call_ended">Baigėsi</string>
+    <string name="call">Skambinti</string>
+    <string name="licenses">Licencijos</string>
+    <string name="action_availability">Pasiekiamumas</string>
+    <string name="incoming_call">Įeinantis skambutis</string>
+    <string name="contacts">Kontaktai</string>
+    <string name="internal">Vidinis</string>
+    <string name="verification_code">Patvirtinimo kodas</string>
+    <string name="invalid_verification_code">Neteisingas patvirtinimo kodas</string>
+    <string name="google_autenticator">Įveskite 6-ių skaitmenų numerį iš savo Google Authenticator programos.</string>
+    <string name="too_many_logins">Prisijungimas atmestas. Palaukite keletą minučių prieš bandydami dar kartą.</string>
+    <string name="completeTransfer">Pabaigti perkėlimą</string>
+</resources>

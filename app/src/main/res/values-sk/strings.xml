@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Nastavenia</string>
+    <string name="action_about">O aplikácii</string>
+    <string name="action_logout">Odhlásiť</string>
+    <string name="search">Hľadať</string>
+    <string name="url">URL</string>
+    <string name="email">E-mail</string>
+    <string name="password">Heslo</string>
+    <string name="login">Prihlásenie</string>
+    <string name="forgotpassword_question">Zabudli ste heslo?</string>
+    <string name="no_connection">Neexistuje pripojenie k lokálnej sieti alebo ku sieti internet</string>
+    <string name="about">O aplikácii</string>
+    <string name="cancel">Zrušiť</string>
+    <string name="make_call">Vykonať hovor</string>
+    <string name="duration">Trvanie</string>
+    <string name="unknown">Neznáme</string>
+    <string name="call_state_initializing">Inicializujem</string>
+    <string name="call_state_ringing">Zvoniace</string>
+    <string name="call_state_dialing">Vytáčanie</string>
+    <string name="call_state_active">Aktívne</string>
+    <string name="call_state_call_ended">Skončil</string>
+    <string name="call">Uskutočniť hovor</string>
+    <string name="licenses">Licencie</string>
+    <string name="action_availability">Dostupnosť</string>
+    <string name="incoming_call">Prichádzajúci hovor</string>
+    <string name="contacts">Kontakty</string>
+    <string name="internal">Interný</string>
+    <string name="verification_code">Overovací kód</string>
+    <string name="invalid_verification_code">Nesprávny overovací kód</string>
+    <string name="google_autenticator">Zadajte 6-ciferné číslo z aplikácie Google Authenticator.</string>
+    <string name="too_many_logins">Prihlásenie bolo odmietnuté. Počkajte niekoľko minút pred opakovaním.</string>
+    <string name="completeTransfer">Dokončite prenos</string>
+</resources>

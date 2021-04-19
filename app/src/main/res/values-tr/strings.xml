@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Ayarlar</string>
+    <string name="action_about">Hakkında</string>
+    <string name="action_logout">Çıkış</string>
+    <string name="search">Ara</string>
+    <string name="url">Link</string>
+    <string name="email">E-posta</string>
+    <string name="password">Şifre</string>
+    <string name="login">Giriş</string>
+    <string name="forgotpassword_question">Şifrenizi mi unuttunuz?</string>
+    <string name="no_connection">Bağlantı yok</string>
+    <string name="about">Hakkında</string>
+    <string name="cancel">İptal</string>
+    <string name="duration">Süreli</string>
+    <string name="unknown">Bilinmeyen</string>
+    <string name="call_state_initializing">Başlatılıyor</string>
+    <string name="call_state_ringing">Zil çalıyor</string>
+    <string name="call_state_active">Aktif</string>
+    <string name="call">Ara</string>
+    <string name="licenses">Lisanslar</string>
+    <string name="incoming_call">Gelen arama</string>
+    <string name="contacts">İrtibata geçin</string>
+    <string name="internal">Dahili</string>
+    <string name="invalid_verification_code">Geçersiz doğrulama kodu</string>
+    <string name="google_autenticator">Google Authenticator uygulamasındaki 6-basamaklı numarayı girin.</string>
+    <string name="too_many_logins">Üyelik girişi reddedildi. Tekrar denemeden önce birkaç dakika bekleyin.</string>
+    <string name="completeTransfer">Transfer tamamlandı</string>
+</resources>

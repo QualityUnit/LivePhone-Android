@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Nastavitve</string>
+    <string name="action_about">O</string>
+    <string name="action_logout">Odjava</string>
+    <string name="search">Iskanje</string>
+    <string name="url">URL</string>
+    <string name="email">E-pošta</string>
+    <string name="password">Geslo</string>
+    <string name="login">Prijava</string>
+    <string name="forgotpassword_question">Ste pozabili geslo?</string>
+    <string name="no_connection">Ni povezave</string>
+    <string name="about">O</string>
+    <string name="cancel">Prekliči</string>
+    <string name="unknown">Neznano</string>
+    <string name="call_state_initializing">Zagon</string>
+    <string name="call_state_ringing">Zvonjenje</string>
+    <string name="call_state_active">Aktivna</string>
+    <string name="call">Klic</string>
+    <string name="licenses">Licence</string>
+    <string name="incoming_call">Dohodni klic</string>
+    <string name="contacts">Stiki</string>
+    <string name="internal">Notranji</string>
+    <string name="verification_code">Koda za preverjanje</string>
+</resources>

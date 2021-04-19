@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_settings">Ustawienia</string>
+    <string name="action_about">O Aplikacji Live Agent</string>
+    <string name="action_logout">Wyloguj się</string>
+    <string name="search">Szukaj</string>
+    <string name="url">Url</string>
+    <string name="email">Email</string>
+    <string name="password">Hasło</string>
+    <string name="login">Zaloguj</string>
+    <string name="forgotpassword_question">Zapomniałeś hasła?</string>
+    <string name="no_connection">Brak połączenia</string>
+    <string name="about">O Aplikacji Live Agent</string>
+    <string name="cancel">Anuluj</string>
+    <string name="make_call">Wykonaj połączenie</string>
+    <string name="duration">Czas trwania</string>
+    <string name="unknown">Nieznany</string>
+    <string name="call_state_initializing">Inicjowanie</string>
+    <string name="call_state_ringing">Dzwoni</string>
+    <string name="call_state_dialing">Wybieranie</string>
+    <string name="call_state_active">Aktywny</string>
+    <string name="call_state_call_ended">Zakończono</string>
+    <string name="call">Zadzwoń</string>
+    <string name="licenses">Licencje</string>
+    <string name="action_availability">Dostępność</string>
+    <string name="incoming_call">Połączenie przychodzące</string>
+    <string name="contacts">Kontakty</string>
+    <string name="internal">Wewnętrzny</string>
+    <string name="verification_code">Kod weryfikacyjny</string>
+    <string name="invalid_verification_code">Nieprawidłowy kod weryfikacyjny</string>
+    <string name="google_autenticator">Wprowadź 6-cyfrowy kod z aplikacji Google Authenticator.</string>
+    <string name="too_many_logins">Logowanie odrzucone. Poczekaj kilka minut przed ponowną próbą.</string>
+    <string name="completeTransfer">Zakończ transfer</string>
+</resources>
