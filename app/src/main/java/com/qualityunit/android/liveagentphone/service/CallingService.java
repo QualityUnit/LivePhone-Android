@@ -84,10 +84,10 @@ public class CallingService extends ConnectionService implements VoiceConnection
         public static final String TRANSFER = "TRANSFER";
         public static final class TRANSFER_STEP {
             public static final String HOLD_ACTIVE = "STEP_HOLD_ACTIVE";
-            public static final String HOLD_EXTENSION = "HOLD_EXTENSION";
             public static final String CALL_EXTENSION = "STEP_CALL_EXTENSION";
             public static final String HANGUP_EXTENSION = "STEP_HANGUP_EXTENSION";
             public static final String COMPLETE_TRANSFER = "STEP_COMPLETE_TRANSFER";
+            public static final String HOLD_EXTENSION = "HOLD_EXTENSION";
         }
     }
 
@@ -113,6 +113,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         public static final String UPDATE_MUTE = "TOGGLE_MUTE";
         public static final String UPDATE_SPEAKER = "TOGGLE_SPEAKER";
         public static final String UPDATE_HOLD = "UPDATE_HOLD";
+        public static final String UPDATE_EXTENSION_HOLD = "UPDATE_EXTENSION_HOLD";
         public static final String UPDATE_DURATION = "UPDATE_DURATION";
     }
     private LocalBroadcastManager localBroadcastManager;
@@ -338,6 +339,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         private String lastExtensionState = EXTENSION_STATE.DISCONNECTED;
         private String extensionNumber;
         private String extensionName;
+        private boolean isExtensionHold;
 
         public VoiceConnection (VoiceConnectionCallbacks callbacks) {
             setInitializing();
@@ -608,6 +610,10 @@ public class CallingService extends ConnectionService implements VoiceConnection
                 @Override
                 public void run() {
                     try {
+                        if (extensionCall != null) {
+                            log("Extension call already exists!");
+                            return;
+                        }
                         log("Making an extension call...");
                         extensionNumber = number;
                         extensionName = name;
@@ -623,6 +629,12 @@ public class CallingService extends ConnectionService implements VoiceConnection
                             public void onDisconnect() {
                                 log("Disconnect extension call...");
                                 setExtensionState(EXTENSION_STATE.DISCONNECTED);
+                                workerHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        extensionCall = null;
+                                    }
+                                });
                             }
 
                             @Override
@@ -657,17 +669,17 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void completeTransfer() {
-            // TODO call api to complete transfer: /calls/{callId}/_merge
-//            if (voiceCall != null) {
-//                CallOpParam prm = VoiceCall.createDefaultParams();
-//                prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
-//                try {
-//                    voiceCall.xferReplaces(extensionCall, prm);
-//                }
-//                catch (Exception e) {
-//                    System.out.println(e);
-//                }
-//            }
+            if (voiceCall != null) {
+                CallOpParam prm = VoiceCall.createDefaultParams();
+                prm.setStatusCode(pjsip_status_code.PJSIP_SC_DECLINE);
+                try {
+                    voiceCall.xferReplaces(extensionCall, prm);
+//                    voiceCall.xfer(extensionNumber, prm);
+                }
+                catch (Exception e) {
+                    setErrorState("Cannot complete transfer: " + e.getMessage(), e);
+                }
+            }
         }
 
         public void hangupExtension() {
@@ -681,7 +693,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
         }
 
         public void toggleExtensionHold() {
-
+            setExtensionHold(!isExtensionHold);
         }
 
         /** helper methods **/
@@ -775,6 +787,34 @@ public class CallingService extends ConnectionService implements VoiceConnection
             isInCallOfAnotherApp = inCallofAnotherApp;
         }
 
+        public void setExtensionHold(final boolean extensionHold) {
+            workerHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        if (isExtensionHold == extensionHold) return;
+                        if (extensionHold) {
+                            extensionCall.setHold(VoiceCall.createDefaultParams());
+                            setOnHold();
+                            setExtensionState(EXTENSION_STATE.HOLD);
+                        } else {
+                            CallOpParam param = VoiceCall.createDefaultParams();
+                            param.getOpt().setFlag(pjsua_call_flag.PJSUA_CALL_UNHOLD.swigValue());
+                            extensionCall.reinvite(param);
+                            setActive();
+                            setExtensionState(EXTENSION_STATE.ACTIVE);
+                        }
+                        isExtensionHold = extensionHold;
+                        Bundle keyValue = new Bundle(1);
+                        keyValue.putBoolean(CALL_UPDATE.UPDATE_EXTENSION_HOLD, isExtensionHold);
+                        callbacks.onCallUpdate(keyValue);
+                    } catch (Exception e) {
+                        setErrorState("Error while holding a call: " + e.getMessage(), e);
+                    }
+                }
+            });
+        }
+
         /** PJSIP callbacks **/
 
         @Override
@@ -848,13 +888,6 @@ public class CallingService extends ConnectionService implements VoiceConnection
                         setCallState(CALL_STATE.RINGING);
                     }
                 });
-                log("XXX getCallIdString: " + voiceCall.getInfo().getCallIdString());
-                log("XXX getRemoteContact: " + voiceCall.getInfo().getRemoteContact());
-                log("XXX getRemoteUri: " + voiceCall.getInfo().getRemoteUri());
-                log("XXX getId: " + voiceCall.getInfo().getId());
-                log("XXX getLocalContact: " + voiceCall.getInfo().getLocalContact());
-                log("XXX getLocalUri: " + voiceCall.getInfo().getLocalUri());
-                log("XXX getAccId: " + voiceCall.getInfo().getAccId());
             } catch (Exception e) {
                 setErrorState("Error while notifying incoming call: " + e.getMessage(), e);
                 hangupAndDestroy(DisconnectCause.ERROR);

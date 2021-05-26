@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_DURATION;
+import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_EXTENSION_HOLD;
 import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_HOLD;
 import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_MUTE;
 import static com.qualityunit.android.liveagentphone.service.CallingService.CALL_UPDATE.UPDATE_SPEAKER;
@@ -50,7 +51,6 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
     private ExtensionStateReceiver extensionStateReceiver;
     private LinearLayout llExtension;
     private TextView tvExtensionName;
-    private ImageButton ibExtensionMute;
     private ImageButton ibExtensionDialpad;
     private ImageButton ibExtensionHold;
     private ImageButton ibExtensionHangup;
@@ -136,7 +136,12 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
         });
         ibExtensionDialpad = (ImageButton) view.findViewById(R.id.ib_extension_dialpad);
         ibExtensionHold = (ImageButton) view.findViewById(R.id.ib_extension_hold);
-        ibExtensionMute = (ImageButton) view.findViewById(R.id.ib_extension_mute);
+        ibExtensionHold.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CallingCommands.transferToggleHoldExtension(getContext());
+            }
+        });
         bCompleteTransfer = (Button) view.findViewById(R.id.b_complete_transfer);
         bCompleteTransfer.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -217,6 +222,20 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                         boolean isHold = intent.getBooleanExtra(key, false);
                         toggle(ibHold, isHold);
                         setText(tvState, getString(isHold ? R.string.call_hold : R.string.call_state_active));
+                        if (isHold) {
+                            enable(ibExtensionHold);
+                        } else {
+                            disable(ibExtensionHold);
+                        }
+                        break;
+                    case UPDATE_EXTENSION_HOLD:
+                        boolean isExtensionHold = intent.getBooleanExtra(key, false);
+                        toggle(ibExtensionHold, isExtensionHold);
+                        if (isExtensionHold) {
+                            enable(ibHold);
+                        } else {
+                            disable(ibHold);
+                        }
                         break;
                     case UPDATE_MUTE:
                         toggle(ibMute, intent.getBooleanExtra(key, false));
@@ -255,24 +274,27 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                 case CallingService.CALL_STATE.ACTIVE:
                     setText(tvState, getString(R.string.call_state_active));
                     setText(tvRemoteName, nameToShow(intent.getStringExtra("remoteNumber"), intent.getStringExtra("remoteName")));
-                    ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
-                    ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
-//                    ((View)ibTransfer.getParent()).setVisibility(View.VISIBLE);
+                    show(ibHold);
+                    show(ibDialpad);
+                    show(ibTransfer);
+                    disable(ibExtensionHold);
                     CallingCommands.getCallUpdates(getContext());
                     break;
                 case CallingService.CALL_STATE.HOLD:
                     setText(tvState, getString(R.string.call_hold));
-                    ((View)ibHold.getParent()).setVisibility(View.VISIBLE);
-                    ((View)ibDialpad.getParent()).setVisibility(View.VISIBLE);
+                    show(ibHold);
+                    show(ibDialpad);
+                    show(ibTransfer);
+                    enable(ibExtensionHold);
                     CallingCommands.getCallUpdates(getContext());
                     break;
                 case CallingService.CALL_STATE.DISCONNECTED:
                     setText(tvState, getString(R.string.call_state_call_ended));
-                    ((View)ibMute.getParent()).setVisibility(View.GONE);
-                    ((View)ibSpeaker.getParent()).setVisibility(View.GONE);
-                    ((View)ibDialpad.getParent()).setVisibility(View.GONE);
-                    ((View)ibHold.getParent()).setVisibility(View.GONE);
-//                    ((View)ibTransfer.getParent()).setVisibility(View.GONE);
+                    hide(ibMute);
+                    hide(ibSpeaker);
+                    hide(ibDialpad);
+                    hide(ibHold);
+                    hide(ibTransfer);
                     break;
                 case CallingService.CALL_STATE.ERROR:
                     String error = intent.getStringExtra("error");
@@ -294,22 +316,24 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
                 case CallingService.EXTENSION_STATE.DISCONNECTED:
                     hide(ibExtensionHold);
                     hide(ibExtensionDialpad);
-                    hide(ibExtensionMute);
+                    show(ibTransfer);
                     llExtension.setVisibility(View.GONE);
                     break;
                 case CallingService.EXTENSION_STATE.ACTIVE:
                     show(ibExtensionHold);
                     show(ibExtensionDialpad);
-                    show(ibExtensionMute);
+                    hide(ibTransfer);
+                    disable(ibHold);
                     bCompleteTransfer.setVisibility(View.VISIBLE);
                 case CallingService.EXTENSION_STATE.DIALING:
                     llExtension.setVisibility(View.VISIBLE);
-                    tvExtensionName.setText(intent.getStringExtra("extensionName"));
+                    setText(tvExtensionName, intent.getStringExtra("extensionName"));
+                    hide(ibTransfer);
                     break;
                 case CallingService.EXTENSION_STATE.HOLD:
-                    hide(ibExtensionHold);
-                    hide(ibExtensionDialpad);
-                    hide(ibExtensionMute);
+                    show(ibExtensionHold);
+                    show(ibExtensionDialpad);
+                    enable(ibHold);
                     llExtension.setVisibility(View.VISIBLE);
                     break;
                 case CallingService.EXTENSION_STATE.ERROR:
@@ -333,6 +357,14 @@ public class CallingFragment extends BaseFragment<CallingActivity> {
 
     private void hide(ImageButton imageButton) {
         ((View)imageButton.getParent()).setVisibility(View.GONE);
+    }
+
+    private void enable(ImageButton imageButton) {
+        imageButton.setEnabled(true);
+    }
+
+    private void disable(ImageButton imageButton) {
+        imageButton.setEnabled(false);
     }
 
 }

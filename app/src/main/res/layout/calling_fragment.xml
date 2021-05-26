@@ -108,7 +108,7 @@
                 android:padding="10dp"
                 android:layout_gravity="center"
                 android:background="#00000000"
-                android:src="@drawable/ic_hashtag_24"/>
+                android:src="@drawable/ic_calling_transfer_24dp"/>
 
         </FrameLayout>
 
@@ -120,7 +120,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="gone"
-        android:background="@color/accent">
+        android:background="@color/callButtonGreen">
 
         <TextView
             android:id="@+id/tv_extension_name"
@@ -138,25 +138,8 @@
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:gravity="center_vertical"
-            android:background="@color/accent"
+            android:background="@color/callButtonGreen"
             android:orientation="horizontal">
-
-            <FrameLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1.0"
-                android:visibility="visible">
-
-                <ImageButton
-                    android:id="@+id/ib_extension_mute"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="10dp"
-                    android:layout_gravity="center"
-                    android:src="@drawable/ic_calling_mic_off_24dp"
-                    android:background="#00000000"/>
-
-            </FrameLayout>
 
             <FrameLayout
                 android:layout_width="wrap_content"
@@ -217,7 +200,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="12dp"
             android:elevation="10dp"
-            android:background="@color/callButtonGreen"
+            android:background="@color/accent"
             android:textColor="#FFFFFF"
             android:visibility="gone"
             android:text="@string/completeTransfer" />

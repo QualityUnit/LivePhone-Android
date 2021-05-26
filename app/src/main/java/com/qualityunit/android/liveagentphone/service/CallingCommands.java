@@ -103,4 +103,11 @@ public final class CallingCommands {
                 .putExtra("command", CallingService.COMMANDS.TRANSFER)
                 .putExtra("step", CallingService.COMMANDS.TRANSFER_STEP.HANGUP_EXTENSION));
     }
+
+    public static void transferToggleHoldExtension(@NonNull Context context) {
+        context.startService(new Intent(context, CallingService.class)
+                .putExtra("command", CallingService.COMMANDS.TRANSFER)
+                .putExtra("step", CallingService.COMMANDS.TRANSFER_STEP.HOLD_EXTENSION));
+    }
+
 }
