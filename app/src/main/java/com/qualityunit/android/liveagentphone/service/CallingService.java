@@ -1132,8 +1132,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
     public void onErrorState(final String errorMessage, final Exception e) {
         mainHandler.post(new Runnable() {
             @Override
-            public void run() {
-                log("ERROR: " + errorMessage, e);
+            public void run() { log("ERROR: " + errorMessage, e);
                 localBroadcastManager.sendBroadcast(new Intent(INTENT_FILTER_CALL_STATE)
                         .putExtra("error", errorMessage)
                         .putExtra("callState", CALL_STATE.ERROR));
@@ -1223,7 +1222,7 @@ public class CallingService extends ConnectionService implements VoiceConnection
     }
 
     private void log(String message, Exception e) {
-        Logger.logToFile(getApplicationContext(), message);
+        Logger.logToFile(getApplicationContext(), message, e);
         if (e != null) {
             Logger.e(TAG, message, e);
         } else {

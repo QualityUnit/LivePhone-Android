@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Date;
 
 import androidx.core.content.FileProvider;
@@ -50,6 +52,10 @@ public class Logger {
     }
 
     public static void logToFile(Context context, String text) {
+        logToFile(context, text, null);
+    }
+
+    public static void logToFile(Context context, String text, Exception exception) {
         File logFile = new File(context.getExternalFilesDir(null), logFileName);
         try {
             if (!logFile.exists()) {
@@ -57,9 +63,17 @@ public class Logger {
                     text = Tools.getDeviceName() + System.lineSeparator() + System.lineSeparator() + new Date().toString() + ": " + text; // initial line
                 }
             }
+            String stackTraceString = "";
+            if (exception != null) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                exception.printStackTrace(pw);
+                stackTraceString = sw.toString() + System.lineSeparator();
+            }
+
             FileOutputStream fos = new FileOutputStream(logFile, true);
             OutputStreamWriter osw = new OutputStreamWriter(fos);
-            osw.append(new Date().toString() + ": " + text + System.lineSeparator());
+            osw.append(new Date().toString() + ": " + text + System.lineSeparator() + stackTraceString );
             osw.flush();
             osw.close();
             fos.close();
