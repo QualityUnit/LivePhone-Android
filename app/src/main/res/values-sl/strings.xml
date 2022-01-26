@@ -12,9 +12,11 @@
     <string name="no_connection">Ni povezave</string>
     <string name="about">O</string>
     <string name="cancel">Prekliči</string>
+    <string name="duration">Trajanje</string>
     <string name="unknown">Neznano</string>
     <string name="call_state_initializing">Zagon</string>
     <string name="call_state_ringing">Zvonjenje</string>
+    <string name="call_state_dialing">Klicanje</string>
     <string name="call_state_active">Aktivna</string>
     <string name="call">Klic</string>
     <string name="licenses">Licence</string>
@@ -22,4 +24,7 @@
     <string name="contacts">Stiki</string>
     <string name="internal">Notranji</string>
     <string name="verification_code">Koda za preverjanje</string>
+    <string name="invalid_verification_code">Neveljavna koda za preverjanje</string>
+    <string name="google_autenticator">Vnesite 6 mestno številko iz aplikacije Google Authenticator.</string>
+    <string name="completeTransfer">Celoten prenos</string>
 </resources>
