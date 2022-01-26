@@ -199,9 +199,11 @@ public class InitActivity extends AppCompatActivity {
             isPhoneLoaded = true;
             if (obj.has("params")) {
                 String paramsString = obj.getString("params");
-                JSONObject paramsObj = new JSONObject(paramsString);
-                deviceId = paramsObj.getString("deviceId");
-                pushToken = paramsObj.getString("pushToken");
+                if (!TextUtils.isEmpty(paramsString)) {
+                    JSONObject paramsObj = new JSONObject(paramsString);
+                    deviceId = paramsObj.getString("deviceId");
+                    pushToken = paramsObj.getString("pushToken");
+                }
             }
             registerPushNotifications();
         } catch (EmptyValueException | JSONException e) {
