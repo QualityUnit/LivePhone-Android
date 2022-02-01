@@ -17,6 +17,10 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.fcm.PushRegistrationIntentService;
@@ -32,6 +36,7 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -124,7 +129,7 @@ public class InitActivity extends AppCompatActivity {
         showProgress();
         if (!LaAccount.isSet() || !accountIsAdded()) {
             startActivityForResult(new Intent(this, AuthActivity.class), REQUEST_CODE_LOGIN);
-            overridePendingTransition(0, 0);
+            overridePendingTransition(0, R.anim.fade_out);
             return;
         }
         final AccountManager accountManager = AccountManager.get(this);
@@ -155,7 +160,8 @@ public class InitActivity extends AppCompatActivity {
                 StatusStore.destroyInstance();
                 Toast.makeText(InitActivity.this, getString(R.string.logout_success), Toast.LENGTH_SHORT).show();
                 finish();
-                startActivity(new Intent(InitActivity.this, InitActivity.class));
+                startActivityForResult(new Intent(InitActivity.this, InitActivity.class), 0);
+                overridePendingTransition(0, R.anim.fade_out);
             }
 
             @Override
@@ -223,10 +229,18 @@ public class InitActivity extends AppCompatActivity {
     private void registerPushNotifications() {
         if (!isFcmRegistered) {
             registerReceiver(true);
-            Intent intent = new Intent(InitActivity.this, PushRegistrationIntentService.class);
-            intent.putExtra("remoteDeviceId", deviceId);
-            intent.putExtra("remotePushToken", pushToken);
-            startService(intent);
+            FirebaseApp.initializeApp(InitActivity.this);
+            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(new OnCompleteListener<String>() {
+                @Override
+                public void onComplete(@NonNull Task<String> task) {
+                    String token = task.getResult();
+                    Intent intent = new Intent(InitActivity.this, PushRegistrationIntentService.class);
+                    intent.putExtra("newPushToken", token);
+                    intent.putExtra("remoteDeviceId", deviceId);
+                    intent.putExtra("remotePushToken", pushToken);
+                    startService(intent);
+                }
+            });
         } else {
             go();
         }
@@ -357,8 +371,8 @@ public class InitActivity extends AppCompatActivity {
      */
     private void go() {
         if (isFcmRegistered && isPhoneLoaded) {
-            startActivity(new Intent(this, HomeActivity.class));
-            overridePendingTransition(0, 0);
+            startActivityForResult(new Intent(this, HomeActivity.class), 0);
+            overridePendingTransition(0, R.anim.fade_out);
             finish();
         }
     }

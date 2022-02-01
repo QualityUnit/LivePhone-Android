@@ -1,18 +1,19 @@
 package com.qualityunit.android.liveagentphone.ui.call;
 
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import com.google.android.material.textfield.TextInputEditText;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.service.CallingCommands;
 import com.qualityunit.android.liveagentphone.ui.common.BaseFragment;
 import com.qualityunit.android.liveagentphone.util.Tools;
+
+import androidx.annotation.Nullable;
 
 public class CallingDtmfFragment extends BaseFragment<CallingActivity> implements TextWatcher {
 
@@ -28,7 +29,7 @@ public class CallingDtmfFragment extends BaseFragment<CallingActivity> implement
         super.onViewCreated(view, savedInstanceState);
         TextInputEditText tietDtmfinput = (TextInputEditText) view.findViewById(R.id.tiet_dtmfInput);
         tietDtmfinput.addTextChangedListener(this);
-        Tools.showKeyboard(getContext(), tietDtmfinput);
+        Tools.showKeyboard(getContext(), tietDtmfinput, 20);
     }
 
     @Override

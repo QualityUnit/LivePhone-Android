@@ -864,62 +864,59 @@ public class Client {
         });
     }
 
-    public static void getContacts(final Activity activity, final String requestTag, @Nullable final String searchTerm, final int page, final int perPage, final String sortDirection, final String sortField, final Callback<List<ContactsItem>> callback) {
+    public static void getContactPhones(final Activity activity, final String requestTag, @Nullable final String searchTerm, final int page, final int perPage, final String sortDirection, final String sortField, final Callback<List<ContactsItem>> callback) {
         prepare(activity, new AuthCallback() {
             @Override
             public void onAuthData(Client client, String basepath, final String apikey) {
-                try {
-                    final JSONObject filters = new JSONObject() {{
-                        put("type", "V"); // default
-                        put("hasPhone", "Y"); // default
-                        if (!TextUtils.isEmpty(searchTerm)) {
-                            put("q", searchTerm);
-                        }
-                    }};
-                    final String url = createUrl(basepath, "/contacts", new HashMap<String, Object>(){{
-                        put("_page", page);
-                        put("_perPage", perPage);
-                        put("_sortField", sortField);
-                        put("_sortDir", sortDirection);
-                        put("_filters", filters);
+                final JSONArray filters = new JSONArray();
+                if (!TextUtils.isEmpty(searchTerm)) {
+                    filters.put(new JSONArray() {{
+                        put("search");
+                        put("L");
+                        put(searchTerm);
                     }});
-                    ArrayRequest request = new ArrayRequest(GET, url, apikey, null, new Response.Listener<JSONArray>() {
-                        @Override
-                        public void onResponse(JSONArray array) {
-                            int arrayLength = array.length();
-                            List<ContactsItem> list = new ArrayList<>(arrayLength);
-                            for (int i = 0; i < arrayLength; i++) {
-                                JSONObject obj = array.optJSONObject(i);
-                                ContactsItem contactsItem = new ContactsItem(
-                                        obj.optString("id"),
-                                        obj.optString("firstname"),
-                                        obj.optString("lastname"),
-                                        obj.optString("system_name"),
-                                        obj.optString("avatar_url"),
-                                        obj.optString("type")
-                                );
-                                contactsItem.setEmails(Tools.getStringArrayFromJson(obj, "emails"));
-                                contactsItem.setPhones(Tools.getStringArrayFromJson(obj, "phones"));
-                                list.add(contactsItem);
-                            }
-                            callback.onSuccess(list);
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            callback.onFailure(processFailure(activity, apikey, error, requestTag, new AuthFallback() {
-                                @Override
-                                public void onFallback() {
-                                    getContacts(activity, requestTag, searchTerm, page, perPage, sortDirection, sortField, callback);
-                                }
-                            }));
-                        }
-                    });
-                    client.addToQueue(request, requestTag);
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
-
+                final String url = createUrl(basepath, "/contact_phones", new HashMap<String, Object>(){{
+                    put("_page", page);
+                    put("_perPage", perPage);
+                    put("_sortField", sortField);
+                    put("_sortDir", sortDirection);
+                    put("_filters", filters);
+                }});
+                ArrayRequest request = new ArrayRequest(GET, url, apikey, null, new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray array) {
+                        int arrayLength = array.length();
+                        List<ContactsItem> list = new ArrayList<>(arrayLength);
+                        for (int i = 0; i < arrayLength; i++) {
+                            JSONObject arrObj = array.optJSONObject(i);
+                            if (!arrObj.has("contact")) continue;
+                            JSONObject obj = arrObj.optJSONObject("contact");
+                            ContactsItem contactsItem = new ContactsItem(
+                                    obj.optString("firstname"),
+                                    obj.optString("lastname"),
+                                    obj.optString("system_name"),
+                                    obj.optString("avatar_url"),
+                                    obj.optString("type")
+                            );
+                            contactsItem.setEmails(Tools.getStringArrayFromJson(obj, "emails"));
+                            contactsItem.setPhones(Tools.getStringArrayFromJson(obj, "phones"));
+                            list.add(contactsItem);
+                        }
+                        callback.onSuccess(list);
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        callback.onFailure(processFailure(activity, apikey, error, requestTag, new AuthFallback() {
+                            @Override
+                            public void onFallback() {
+                                getContactPhones(activity, requestTag, searchTerm, page, perPage, sortDirection, sortField, callback);
+                            }
+                        }));
+                    }
+                });
+                client.addToQueue(request, requestTag);
             }
 
             @Override

@@ -44,7 +44,8 @@ public class AuthActivity extends AccountAuthenticatorActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.item_about:
-                startActivity(new Intent(this, AboutActivity.class));
+                startActivityForResult(new Intent(this, AboutActivity.class), 0);
+                overridePendingTransition(0, R.anim.fade_out);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 
-import com.google.firebase.iid.FirebaseInstanceId;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.util.EmptyValueException;
 import com.qualityunit.android.liveagentphone.util.Logger;
@@ -43,7 +42,7 @@ public class PushRegistrationIntentService extends IntentService {
         Account account = LaAccount.get();
         AccountManager accountManager = AccountManager.get(getApplicationContext());
         try {
-            String pushToken = FirebaseInstanceId.getInstance().getToken();
+            String pushToken = intent.getStringExtra("newPushToken");
             Logger.d(TAG, "FCM Registration Token: " + pushToken);
             final String phoneId = accountManager.getUserData(account, LaAccount.USERDATA_PHONE_ID);
             final String deviceId = Tools.getDeviceUniqueId();

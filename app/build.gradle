@@ -22,10 +22,15 @@ android {
     lintOptions {
         disable 'MissingTranslation'
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.google.firebase:firebase-messaging:23.0.0'
     testImplementation 'junit:junit:4.12'
     implementation project(path: ':pjsua')
     implementation 'com.android.volley:volley:1.1.1'
@@ -37,4 +42,5 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'fr.turri:jISO8601:0.2'
+    implementation 'com.google.android.gms:play-services-base:17.3.0' // using com.google.android.gms.common.GoogleApiAvailability
 }

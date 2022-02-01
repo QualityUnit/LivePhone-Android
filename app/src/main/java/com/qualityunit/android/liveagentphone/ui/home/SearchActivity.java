@@ -200,7 +200,8 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
             if (item.getPhones() == null || item.getPhones().size() == 0) {
                 Toast.makeText(SearchActivity.this, getString(R.string.no_number_in_contact), Toast.LENGTH_SHORT).show();
             } else if (item.getPhones().size() == 1){
-                startActivity(intent.putExtra("number", item.getPhones().get(0)));
+                startActivityForResult(intent.putExtra("number", item.getPhones().get(0)), 0);
+                overridePendingTransition(0, R.anim.fade_out);
             } else {
                 ArrayAdapter<String> calleeNumberAdapter = new ArrayAdapter<>(SearchActivity.this, android.R.layout.simple_list_item_1, item.getPhones());
                 AlertDialog.Builder calleeNumberPicker = new AlertDialog.Builder(SearchActivity.this);
@@ -209,7 +210,8 @@ public class SearchActivity extends AppCompatActivity implements SwipeRefreshLay
                 calleeNumberPicker.setAdapter(calleeNumberAdapter, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        startActivity(intent.putExtra("number", item.getPhones().get(which)));
+                        startActivityForResult(intent.putExtra("number", item.getPhones().get(which)), 0);
+                        overridePendingTransition(0, R.anim.fade_out);
                     }
                 });
                 calleeNumberPicker.create().show();

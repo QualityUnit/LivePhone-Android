@@ -26,6 +26,7 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import java.util.Date;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import fr.turri.jiso8601.Iso8601Deserializer;
@@ -37,6 +38,13 @@ import static com.qualityunit.android.liveagentphone.Const.NotificationId.INIT_C
 public class PushMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = PushMessagingService.class.getSimpleName();
+
+    @Override
+    public void onNewToken(@NonNull String pushToken) {
+        Intent intent = new Intent(this, PushRegistrationIntentService.class);
+        intent.putExtra("newPushToken", pushToken);
+        startService(intent);
+    }
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {

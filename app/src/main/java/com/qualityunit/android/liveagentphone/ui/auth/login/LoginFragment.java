@@ -332,27 +332,35 @@ public class LoginFragment extends BaseFragment<AuthActivity> {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.verification_code);
         View viewInflated = LayoutInflater.from(getActivity()).inflate(R.layout.input_two_factor, null);
-        final EditText input = (EditText) viewInflated.findViewById(R.id.et_twofactortoken);
-        builder.setView(viewInflated);
-        builder.setPositiveButton(R.string.login, new DialogInterface.OnClickListener() {
+        final EditText input = viewInflated.findViewById(R.id.et_twofactortoken);
+        input.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                showProgress(true);
-                String twofactortoken = input.getText().toString().trim();
-                if (TextUtils.isEmpty(twofactortoken)) {
-                    requestVerificationCode();
-                    return;
+            public void beforeTextChanged(CharSequence s, int i, int i1, int i2) {}
+
+            @Override
+            public void afterTextChanged(Editable e) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int i, int i1, int i2) {
+                if(s != null && s.length() == 6) {
+                    login(s.toString());
                 }
-                login(twofactortoken);
             }
         });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                showProgress(false);
+        builder.setView(viewInflated);
+        builder.setPositiveButton(R.string.login, (DialogInterface dialog, int which) -> {
+            showProgress(true);
+            String twofactortoken = input.getText().toString().trim();
+            if (TextUtils.isEmpty(twofactortoken)) {
+                requestVerificationCode();
+                return;
             }
+            login(twofactortoken);
         });
+        builder.setNegativeButton(android.R.string.cancel, (DialogInterface dialog, int which) -> showProgress(false));
+        builder.setOnDismissListener((DialogInterface dialogInterface) -> showProgress(false));
         builder.show();
+        Tools.showKeyboard(getContext(), input, 200);
     }
 
     private void finishLogin(Intent intent) {

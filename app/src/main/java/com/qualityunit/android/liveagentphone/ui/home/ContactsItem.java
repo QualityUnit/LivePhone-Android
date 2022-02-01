@@ -8,7 +8,6 @@ import java.util.List;
 
 public class ContactsItem {
 
-    private String id;
     private String firstName;
     private String lastName;
     private String systemName;
@@ -17,17 +16,12 @@ public class ContactsItem {
     private List<String> emails;
     private List<String> phones;
 
-    public ContactsItem(String id, String firstName, String lastName, String systemName, String avatarUrl, String type) {
-        this.id = id;
+    public ContactsItem(String firstName, String lastName, String systemName, String avatarUrl, String type) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.systemName = systemName;
         this.avatarUrl = avatarUrl;
         this.type = type;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getFirstName() {
@@ -56,10 +50,6 @@ public class ContactsItem {
 
     public List<String> getPhones() {
         return phones;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public void setFirstName(String firstName) {

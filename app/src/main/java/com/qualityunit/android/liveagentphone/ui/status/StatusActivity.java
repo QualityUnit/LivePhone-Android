@@ -1,9 +1,6 @@
 package com.qualityunit.android.liveagentphone.ui.status;
 
 import android.os.Bundle;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
@@ -17,6 +14,10 @@ import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.store.StatusStore;
 
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 /**
  * Created by rasto on 8.11.17.
@@ -69,6 +70,12 @@ public class StatusActivity extends AppCompatActivity implements StatusCallbacks
     protected void onResume() {
         super.onResume();
         StatusStore.getInstance(this).getDevice(true, true);
+    }
+
+    @Override
+    protected void onPause() {
+        overridePendingTransition(0, R.anim.fade_out);
+        super.onPause();
     }
 
     @Override

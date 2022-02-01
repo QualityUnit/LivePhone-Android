@@ -29,4 +29,10 @@ public class DialerActivity extends ToolbarActivity {
 
     }
 
+    @Override
+    public void onPause() {
+        overridePendingTransition(0, R.anim.fade_out);
+        super.onPause();
+    }
+
 }

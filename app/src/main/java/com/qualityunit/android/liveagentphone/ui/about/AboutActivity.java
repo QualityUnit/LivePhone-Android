@@ -2,6 +2,7 @@ package com.qualityunit.android.liveagentphone.ui.about;
 
 import android.os.Bundle;
 
+import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.ui.common.ToolbarActivity;
 
 /**
@@ -23,4 +24,9 @@ public class AboutActivity extends ToolbarActivity {
         return true;
     }
 
+    @Override
+    public void onPause() {
+        overridePendingTransition(0, R.anim.fade_out);
+        super.onPause();
+    }
 }

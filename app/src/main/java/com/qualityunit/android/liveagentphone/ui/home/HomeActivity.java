@@ -4,19 +4,13 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.tabs.TabLayout;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.viewpager.widget.ViewPager;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.tabs.TabLayout;
 import com.qualityunit.android.liveagentphone.R;
 import com.qualityunit.android.liveagentphone.acc.LaAccount;
 import com.qualityunit.android.liveagentphone.store.StatusStore;
@@ -30,6 +24,12 @@ import com.qualityunit.android.liveagentphone.ui.status.StatusCallbacks;
 import com.qualityunit.android.liveagentphone.util.Logger;
 
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 
 public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
@@ -51,8 +51,8 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
         cardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(HomeActivity.this, SearchActivity.class));
-                overridePendingTransition(0, R.anim.fade_out);
+                startActivityForResult(new Intent(HomeActivity.this, SearchActivity.class), 0);
+                overridePendingTransition(0,0);
             }
         });
         FragmentStatePagerAdapter sectionsPagerAdapter;
@@ -76,10 +76,17 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    startActivity(new Intent(HomeActivity.this, DialerActivity.class).putExtra("number", ""));
+                    startActivityForResult(new Intent(HomeActivity.this, DialerActivity.class).putExtra("number", ""), 0);
+                    overridePendingTransition(0, R.anim.fade_out);
                 }
             });
         }
+    }
+
+    @Override
+    public void onPause() {
+        overridePendingTransition(0, R.anim.fade_out);
+        super.onPause();
     }
 
     @Override
@@ -114,13 +121,15 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_about:
-                startActivity(new Intent(this, AboutActivity.class));
+                startActivityForResult(new Intent(this, AboutActivity.class), 0);
+                overridePendingTransition(0, R.anim.fade_out);
                 return true;
             case R.id.action_logout:
                 logout();
                 return true;
             case R.id.action_status:
                 startActivityForResult(new Intent(this, StatusActivity.class), STATUS_REQUEST_CODE);
+                overridePendingTransition(0, R.anim.fade_out);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -164,7 +173,8 @@ public class HomeActivity extends AppCompatActivity implements StatusCallbacks {
         finish();
         Intent intent = new Intent(this, InitActivity.class);
         intent.putExtra(InitActivity.PERFORM_LOGOUT, true);
-        startActivity(intent);
+        startActivityForResult(intent, 0);
+        overridePendingTransition(0, R.anim.fade_out);
     }
 
     private void updateStatusItem() {

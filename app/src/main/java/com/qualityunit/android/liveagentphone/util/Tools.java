@@ -8,7 +8,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -112,16 +111,13 @@ public abstract class Tools {
         return networkInfo != null;
     }
 
-    public static void showKeyboard(final Context context, final View view) {
+    public static void showKeyboard(final Context context, final View view, int delayMillis) {
         if (view != null) {
-            view.post(new Runnable() {
-                @Override
-                public void run() {
-                    view.requestFocus();
-                    InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-                    inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
-                }
-            });
+            view.postDelayed(() -> {
+                view.requestFocus();
+                InputMethodManager inputManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+            }, delayMillis);
         }
     }
 
@@ -147,41 +143,6 @@ public abstract class Tools {
             resultMsg += ": (no message)";
         }
         return resultMsg;
-    }
-
-    /**
-     * Exception free parsing<br/>
-     * Get string value from json or get empty string value.
-     *
-     * @param jsonItem
-     * @param key
-     * @return
-     */
-    public static String getStringFromJson(JSONObject jsonItem, String key) {
-        String value;
-        try {
-            value = jsonItem.getString(key);
-        } catch (JSONException e) {
-            return "";
-        }
-        return value;
-    }
-
-    /**
-     * Exception free parsing<br/>
-     * Get int value from json or get -1 value.
-     *
-     * @param jsonItem
-     * @param key
-     * @return -1 when key does not exist
-     */
-    public static int getIntFromJson(JSONObject jsonItem, String key) {
-        int value = -1;
-        try {
-            value = jsonItem.getInt(key);
-        } catch (JSONException e) {
-        }
-        return value;
     }
 
     /**

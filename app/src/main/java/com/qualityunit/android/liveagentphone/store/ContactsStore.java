@@ -2,7 +2,6 @@ package com.qualityunit.android.liveagentphone.store;
 
 import android.app.Activity;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.qualityunit.android.liveagentphone.Const;
@@ -12,6 +11,8 @@ import com.qualityunit.android.liveagentphone.ui.common.Store;
 import com.qualityunit.android.liveagentphone.ui.home.ContactsItem;
 
 import java.util.List;
+
+import androidx.annotation.Nullable;
 
 /**
  * Retained fragment for handling contact list
@@ -100,13 +101,13 @@ public class ContactsStore implements Store<ContactsItem> {
     private class ContactPaginationList extends PaginationList<ContactsItem> {
 
         public ContactPaginationList() {
-            super(FIRST_PAGE, ITEMS_PER_PAGE, "GET /contacts");
+            super(FIRST_PAGE, ITEMS_PER_PAGE, "GET /contact_phones");
         }
 
         @Override
         public void requestPage(Activity activity, String requestTag, int pageToLoad, Bundle args, Client.Callback<List<ContactsItem>> callback) {
             String searchTerm = args.getString("searchTerm");
-            Client.getContacts(activity, requestTag, searchTerm, pageToLoad, ITEMS_PER_PAGE, SORT_DIRECTION, SORT_FIELD, callback);
+            Client.getContactPhones(activity, requestTag, searchTerm, pageToLoad, ITEMS_PER_PAGE, SORT_DIRECTION, SORT_FIELD, callback);
         }
     }
 }
