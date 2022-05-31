@@ -462,6 +462,8 @@ public class Client {
                     }};
                     final String url = createUrl(basepath, "/phone_numbers", new HashMap<String, Object>() {{
                         put("_filters", filters.toString());
+                        put("_perPage", "999");
+                        put("_sortDir", "ASC");
                     }});
                     final String tag = "GET " + url;
                     ArrayRequest request = new ArrayRequest(GET, url, apikey, null, new Response.Listener<JSONArray>() {
