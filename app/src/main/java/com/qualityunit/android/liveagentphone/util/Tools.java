@@ -1,6 +1,5 @@
 package com.qualityunit.android.liveagentphone.util;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -68,11 +67,6 @@ public abstract class Tools {
             name = capitalizeFirstLetter(model);
         } else {
             name = capitalizeFirstLetter(manufacturer) + " " + model;
-        }
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        String bluetoothName = bluetoothAdapter.getName();
-        if (!TextUtils.isEmpty(bluetoothName)) {
-            name += " - " + bluetoothName;
         }
         if (TextUtils.isEmpty(name)) {
             name = "Unknown Android device";

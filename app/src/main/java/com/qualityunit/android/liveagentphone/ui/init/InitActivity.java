@@ -1,13 +1,19 @@
 package com.qualityunit.android.liveagentphone.ui.init;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -36,6 +42,8 @@ import com.qualityunit.android.liveagentphone.util.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,6 +52,7 @@ import androidx.core.content.ContextCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import static android.Manifest.permission.CALL_PHONE;
+import static android.Manifest.permission.POST_NOTIFICATIONS;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.RECORD_AUDIO;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -67,6 +76,8 @@ public class InitActivity extends AppCompatActivity {
     private boolean isPhoneLoaded;
     private String deviceId;
     private String pushToken;
+
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE_R = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -309,9 +320,22 @@ public class InitActivity extends AppCompatActivity {
             return false;
         } else if (!checkOnePermission(CALL_PHONE, getString(R.string.permission_reason_handle_calls_properly))) {
             return false;
+        } else if (!checkOnePermission(POST_NOTIFICATIONS, getString(R.string.permission_reason_handle_calls_properly))) {
+            return false;
         }
         return true;
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1000) {
+            Logger.d(TAG, "Permission '" + permissions[0] + "' granted: " + (grantResults[0] == PERMISSION_GRANTED));
+        // Other 'case' lines to check for other
+        // permissions this app might request.
+    }
+}
 
     private boolean checkOnePermission(final String permissionName, String reason) {
         if (ContextCompat.checkSelfPermission(InitActivity.this, permissionName) != PERMISSION_GRANTED) {
@@ -341,11 +365,6 @@ public class InitActivity extends AppCompatActivity {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        Logger.d(TAG, "Permission '" + permissions[0] + "' granted: " + (grantResults[0] == PERMISSION_GRANTED));
     }
 
     /**

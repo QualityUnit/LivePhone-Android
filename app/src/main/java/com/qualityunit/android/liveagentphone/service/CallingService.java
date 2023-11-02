@@ -68,6 +68,8 @@ public class CallingService extends ConnectionService implements VoiceConnection
     public static final String INTENT_FILTER_EXTENSION_STATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_EXTENSION_STATE";
     public static final String INTENT_FILTER_EXTENSION_UPDATE = "com.qualityunit.android.liveagentphone.INTENT_FILTER_EXTENSION_UPDATE";
 
+    private static final int pendingIntentFlags = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S ? PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE : PendingIntent.FLAG_UPDATE_CURRENT;
+
     public static final class COMMANDS {
         public static final String MAKE_CALL = "MAKE_CALL";
         public static final String INCOMING_CALL = "INCOMING_CALL";
@@ -967,12 +969,12 @@ public class CallingService extends ConnectionService implements VoiceConnection
 
     private PendingIntent createCallingPendingIntent(boolean answer, String remoteNumber, String remoteName) {
         Intent intent = createCallingActivityIntent(answer, remoteNumber, remoteName);
-        return PendingIntent.getActivity(CallingService.this, answer ? 1 : 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getActivity(CallingService.this, answer ? 1 : 0, intent, pendingIntentFlags);
     }
 
     private PendingIntent createHangupPendingIntent() {
         Intent intent = new Intent(CallingService.this, CallingService.class).putExtra("command", COMMANDS.HANGUP_CALL);
-        return PendingIntent.getService(CallingService.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        return PendingIntent.getService(CallingService.this, 0, intent, pendingIntentFlags);
     }
 
     private void createNotificationChannel(String channelId, int channelNameRes, int importance) {

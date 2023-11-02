@@ -38,6 +38,7 @@ import static com.qualityunit.android.liveagentphone.Const.NotificationId.INIT_C
 public class PushMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = PushMessagingService.class.getSimpleName();
+    private static final int pendingIntentFlags = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S ? PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE : PendingIntent.FLAG_UPDATE_CURRENT;
 
     @Override
     public void onNewToken(@NonNull String pushToken) {
@@ -103,10 +104,10 @@ public class PushMessagingService extends FirebaseMessagingService {
                                 .putExtra("prefix", "")
                                 .putExtra("remoteNumber", dialString)
                                 .putExtra("remoteName", contact);
-                        PendingIntent servicePendingIntent = PendingIntent.getService(this, 0, callingServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        PendingIntent servicePendingIntent = PendingIntent.getService(this, 0, callingServiceIntent, pendingIntentFlags);
                         headUpLayout.setOnClickPendingIntent(R.id.call, servicePendingIntent);
                         Intent initCallDismissBroadcast = new Intent(this, InitCallDismissReceiver.class);
-                        PendingIntent initCallDismissPendingIntent = PendingIntent.getBroadcast(this, 0, initCallDismissBroadcast, PendingIntent.FLAG_UPDATE_CURRENT);
+                        PendingIntent initCallDismissPendingIntent = PendingIntent.getBroadcast(this, 0, initCallDismissBroadcast, pendingIntentFlags);
                         headUpLayout.setOnClickPendingIntent(R.id.cancel, initCallDismissPendingIntent);
                         NotificationChannel channel = new NotificationChannel(MAKE_CALL_CHANNEL_ID, getString(R.string.make_call), IMPORTANCE_HIGH);
                         channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
@@ -121,7 +122,7 @@ public class PushMessagingService extends FirebaseMessagingService {
                                 .setContentText(contact)
                                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                                 .setCategory(NotificationCompat.CATEGORY_CALL)
-                                .setFullScreenIntent(PendingIntent.getActivity(this, 0, initCallIntent, PendingIntent.FLAG_UPDATE_CURRENT), true);
+                                .setFullScreenIntent(PendingIntent.getActivity(this, 0, initCallIntent, pendingIntentFlags), true);
                         Notification notification = builder.build();
                         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                         notificationManager.notify(INIT_CALL_NOTIFICATION_ID, notification);
@@ -129,7 +130,7 @@ public class PushMessagingService extends FirebaseMessagingService {
                     break;
                 case Const.Push.PUSH_TYPE_CANCEL_INIT_CALL:
                     Intent initCallDismissBroadcast = new Intent(this, InitCallDismissReceiver.class);
-                    PendingIntent initCallDismissPendingIntent = PendingIntent.getBroadcast(this, 0, initCallDismissBroadcast, PendingIntent.FLAG_UPDATE_CURRENT);
+                    PendingIntent initCallDismissPendingIntent = PendingIntent.getBroadcast(this, 0, initCallDismissBroadcast, pendingIntentFlags);
                     initCallDismissPendingIntent.send();
                     LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(new Intent(InitCallActivity.INTENT_FILTER_INITCALL_DISMISS));
                     break;

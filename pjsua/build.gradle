@@ -9,7 +9,7 @@ android {
         versionName "1.0.0"
 
         ndk {
-            abiFilters "armeabi", "armeabi-v7a", "x86"
+            abiFilters "armeabi-v7a", "x86"
             moduleName "libpjsua2"
         }
 

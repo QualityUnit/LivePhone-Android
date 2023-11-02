@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
 
     <application
         android:name=".App"
@@ -35,6 +37,7 @@
         </provider>
 
         <receiver
+            android:exported="true"
             android:name=".ui.call.InitCallDismissReceiver">
             <intent-filter>
                 <action android:name="com.qualityunit.android.liveagentphone.INITCALL_DISMISS" />
@@ -42,6 +45,7 @@
         </receiver>
 
         <service
+            android:exported="true"
             android:name=".fcm.PushMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
@@ -51,7 +55,7 @@
         <service
             android:name=".fcm.PushRegistrationIntentService" />
 
-        <service android:name=".acc.LaAuthenticatorService">
+        <service android:name=".acc.LaAuthenticatorService" android:exported="true">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -60,6 +64,7 @@
         </service>
 
         <service
+            android:exported="true"
             android:name=".service.CallingService"
             android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
             <intent-filter>
@@ -68,6 +73,7 @@
         </service>
 
         <activity
+            android:exported="true"
             android:name=".ui.init.InitActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
@@ -80,6 +86,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.auth.AuthActivity"
             android:label="@string/login"
             android:screenOrientation="portrait"
@@ -93,6 +100,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.home.HomeActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleInstance"
@@ -105,6 +113,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.dialer.DialerActivity"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
@@ -118,6 +127,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.call.InitCallActivity"
             android:windowSoftInputMode="adjustResize"
             android:launchMode="singleTop"
@@ -133,6 +143,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.call.CallingActivity"
             android:windowSoftInputMode="adjustResize"
             android:screenOrientation="portrait"
@@ -147,6 +158,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.about.AboutActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
@@ -159,6 +171,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.status.StatusActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
@@ -170,6 +183,7 @@
         </activity>
 
         <activity
+            android:exported="true"
             android:name=".ui.home.SearchActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTop"

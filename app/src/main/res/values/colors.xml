@@ -18,4 +18,5 @@
     <color name="extension_enabled">#909091</color>
     <color name="extension_disabled">#A91900</color>
     <color name="extension_active">#75c220</color>
+    <color name="notification_text">#000000</color>
 </resources>
