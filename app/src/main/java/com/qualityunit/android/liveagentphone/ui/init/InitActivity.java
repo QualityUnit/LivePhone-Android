@@ -320,7 +320,7 @@ public class InitActivity extends AppCompatActivity {
             return false;
         } else if (!checkOnePermission(CALL_PHONE, getString(R.string.permission_reason_handle_calls_properly))) {
             return false;
-        } else if (!checkOnePermission(POST_NOTIFICATIONS, getString(R.string.permission_reason_handle_calls_properly))) {
+        } else if (Build.VERSION.SDK_INT >= 33 && !checkOnePermission(POST_NOTIFICATIONS, getString(R.string.permission_reason_handle_calls_properly))) {
             return false;
         }
         return true;
